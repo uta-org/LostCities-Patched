@@ -2,18 +2,26 @@ package mcjty.lostcities.cubic.world;
 
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
+import javafx.beans.binding.MapExpression;
 import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.api.*;
+import mcjty.lostcities.config.LostCityConfiguration;
 import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
+import mcjty.lostcities.cubic.world.driver.ICubeDriver;
 import mcjty.lostcities.cubic.world.generators.BuildingGenerator;
 import mcjty.lostcities.dimensions.world.ChunkHeightmap;
 import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
 import mcjty.lostcities.dimensions.world.WorldTypeTools;
+import mcjty.lostcities.dimensions.world.driver.IPrimerDriver;
+import mcjty.lostcities.dimensions.world.driver.OptimizedDriver;
+import mcjty.lostcities.dimensions.world.driver.SafeDriver;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Railway;
+import mcjty.lostcities.dimensions.world.lost.cityassets.AssetRegistries;
 import mcjty.lostcities.dimensions.world.lost.cityassets.WorldStyle;
 import mcjty.lostcities.varia.Cardinal;
+import mcjty.lostcities.varia.ChunkCoord;
 import mcjty.lostcities.varia.Coord;
 import mcjty.lostcities.varia.VanillaStructure;
 import net.minecraft.block.Block;
@@ -22,10 +30,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.world.WorldServer;
@@ -61,13 +66,29 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
     private static BuildingGenerator buildingGenerator;
 
+    // Needed fields
+    private static int dimensionId;
+    private static long seed;
+
+    private static World worldObj;
+
+    private static WorldStyle worldStyle;
+    private Map<ChunkCoord, CubePrimer> cachedPrimers = new HashMap<>();
+    private Map<ChunkCoord, ICommonHeightmap> cachedHeightmaps = new HashMap<>();
+
+    private static Random random;
+
     private LostCityCubicGenerator() {}
 
-    public LostCityCubicGenerator(World _world) {
+    public LostCityCubicGenerator(World _world, Random _random) {
         if(world != null) return;
 
         driver = new CubeDriver();
         world = (ICubicWorld) _world;
+        worldObj = _world;
+
+        random = _random;
+
         // provider = world.provider;
 
         /*if(generator != null) return;*/ // TODO: Btm, I'll use this implementation, but we need to do something similar to WorldProvider.createChunkGenerator
@@ -87,6 +108,14 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
         // Create generator instances
         buildingGenerator = new BuildingGenerator(driver);
+
+        dimensionId = _world.provider.getDimension();
+        seed = _world.provider.getSeed();
+
+        worldStyle = AssetRegistries.WORLDSTYLES.get(profile.getWorldStyle());
+        if (worldStyle == null) {
+            throw new RuntimeException("Unknown worldstyle '" + profile.getWorldStyle() + "'!");
+        }
     }
 
     // world, random, chunkX, 0, chunkZ
@@ -454,71 +483,109 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     // TODO
     @Override
     public ILostChunkInfo getChunkInfo(int chunkX, int chunkZ) {
-        return null;
+        return BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
     }
 
     @Override
     public int getRealHeight(int level) {
-        return 0;
+        return profile.GROUNDLEVEL + level * 6;
     }
 
     @Override
     public ILostCityAssetRegistry<ILostCityBuilding> getBuildings() {
-        return null;
+        return AssetRegistries.BUILDINGS.cast();
     }
 
     @Override
     public ILostCityAssetRegistry<ILostCityMultiBuilding> getMultiBuildings() {
-        return null;
+        return AssetRegistries.MULTI_BUILDINGS.cast();
     }
 
     @Override
     public ILostCityAssetRegistry<ILostCityCityStyle> getCityStyles() {
-        return null;
+        return AssetRegistries.CITYSTYLES.cast();
     }
 
     @Override
     public int getDimensionId() {
-        return 0;
+        return dimensionId;
     }
 
     @Override
     public WorldStyle getWorldStyle() {
-        return null;
+        return worldStyle;
     }
 
     @Override
     public long getSeed() {
-        return 0;
+        return seed;
     }
 
     @Override
     public LostCityProfile getProfile() {
-        return null;
+        return profile;
     }
 
     @Override
     public LostCityProfile getOutsideProfile() {
-        return null;
+        return profile;
     }
 
     @Override
     public World getWorld() {
-        return null;
+        return worldObj;
     }
 
     @Override
     public boolean hasMansion(int chunkX, int chunkZ) {
-        return false;
+        return false; // TODO
     }
 
     @Override
     public boolean hasOceanMonument(int chunkX, int chunkZ) {
-        return false;
+        return false; // TODO
     }
 
     @Override
     public ICommonHeightmap getHeightmap(int chunkX, int chunkZ) {
-        return null;
+        // TODO
+        ChunkCoord key = new ChunkCoord(worldObj.provider.getDimension(), chunkX, chunkZ);
+        if (cachedHeightmaps.containsKey(key)) {
+            return cachedHeightmaps.get(key);
+        } else if (cachedPrimers.containsKey(key)) {
+            char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
+            CubePrimer primer = cachedPrimers.get(key);
+            ICubeDriver driver = new CubeDriver();
+            driver.setPrimer(primer);
+            CubicHeightmap heightmap = new CubicHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
+            cachedHeightmaps.put(key, (ICommonHeightmap) heightmap);
+            return (ICommonHeightmap) heightmap;
+        } else {
+            CubePrimer primer = generatePrimer(chunkX, chunkZ);
+            cachedPrimers.put(key, primer);
+            char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
+            ICubeDriver driver = new CubeDriver();
+            driver.setPrimer(primer);
+            CubicHeightmap heightmap = new CubicHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
+            cachedHeightmaps.put(key, (ICommonHeightmap) heightmap);
+            return (ICommonHeightmap) heightmap;
+        }
+    }
+
+    public CubePrimer generatePrimer(int chunkX, int chunkZ) {
+        random.setSeed(chunkX * 341873128712L + chunkZ * 132897987541L);
+        CubePrimer cubePrimer = new CubePrimer();
+
+        // TODO?
+        /*
+        if (otherGenerator != null) {
+            // For ATG, experimental
+            otherGenerator.fillChunk(chunkX, chunkZ, chunkprimer);
+        } else {
+            terrainGenerator.doCoreChunk(chunkX, chunkZ, chunkprimer);
+        }
+        */
+
+        return cubePrimer;
     }
 }

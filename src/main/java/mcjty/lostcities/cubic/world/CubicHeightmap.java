@@ -1,13 +1,13 @@
 package mcjty.lostcities.cubic.world;
 
 import mcjty.lostcities.config.LandscapeType;
-import mcjty.lostcities.dimensions.world.driver.IPrimerDriver;
+import mcjty.lostcities.cubic.world.driver.ICubeDriver;
 import mcjty.lostcities.dimensions.world.terraingen.LostCitiesTerrainGenerator;
 
 public class CubicHeightmap {
     private int heightmap[] = new int[16*16];
 
-    public CubicHeightmap(IPrimerDriver driver, LandscapeType type, int groundLevel, char baseChar) {
+    public CubicHeightmap(ICubeDriver driver, LandscapeType type, int groundLevel, char baseChar) {
         char air = LostCitiesTerrainGenerator.airChar;
 
         if (type == LandscapeType.CAVERN) {

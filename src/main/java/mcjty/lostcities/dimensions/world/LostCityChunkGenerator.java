@@ -749,6 +749,7 @@ public class LostCityChunkGenerator implements IChunkGenerator, ICommonGenerator
         }
     }
 
+    @Override
     public boolean hasMansion(int chunkX, int chunkZ) {
         return woodlandMansionGenerator != null && woodlandMansionGenerator.hasStructure(worldObj, chunkX, chunkZ);
     }
@@ -770,7 +771,7 @@ public class LostCityChunkGenerator implements IChunkGenerator, ICommonGenerator
         }
     }
 
-
+    @Override
     public boolean hasOceanMonument(int chunkX, int chunkZ) {
         return oceanMonumentGenerator instanceof LostStructureOceanMonument && ((LostStructureOceanMonument) oceanMonumentGenerator).hasStructure(worldObj, chunkX, chunkZ);
     }
