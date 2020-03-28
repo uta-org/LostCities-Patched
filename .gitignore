@@ -1,5 +1,6 @@
 *.class
 *.iws
+/out/
 
 /.gradle/
 /.metadata/
