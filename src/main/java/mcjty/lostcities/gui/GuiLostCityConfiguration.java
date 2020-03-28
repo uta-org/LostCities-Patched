@@ -17,6 +17,7 @@ public class GuiLostCityConfiguration extends GuiScreen {
 
     private final GuiCreateWorld parent;
     private Map<Integer, Runnable> actionHandler = new HashMap<>();
+    private Map<Integer, String> profileNames = new HashMap<>();
     private int page = 0;
     private int numpages;
     private GuiMutableLabel pagelabel;
@@ -37,13 +38,24 @@ public class GuiLostCityConfiguration extends GuiScreen {
         }
 
         page = 0;
-        numpages = (LostCityConfiguration.profiles.size() + 7) / 8;
+        numpages = (countPublicProfiles() + 7) / 8;
 
         setupGui(profileName);
     }
 
+    private int countPublicProfiles() {
+        int cnt = 0;
+        for (Map.Entry<String, LostCityProfile> entry : LostCityConfiguration.profiles.entrySet()) {
+            if (entry.getValue().isPublic()) {
+                cnt++;
+            }
+        }
+        return cnt;
+    }
+
     private void setupGui(String profileName) {
         actionHandler.clear();
+        profileNames.clear();
         this.buttonList.clear();
         this.labelList.clear();
         int id = 301;
@@ -52,34 +64,32 @@ public class GuiLostCityConfiguration extends GuiScreen {
         int cnt = 0;
 
         List<String> profileKeys = new ArrayList<>(LostCityConfiguration.profiles.keySet());
-        profileKeys.sort(new Comparator<String>() {
-            @Override
-            public int compare(String s, String t1) {
-                return s.compareTo(t1);
-            }
-        });
+        profileKeys.sort(String::compareTo);
         for (String key : profileKeys) {
             LostCityProfile profile = LostCityConfiguration.profiles.get(key);
-            num++;
-            if (num < page*8) {
-                continue;
-            }
-            if (cnt >= 8) {
-                break;
-            }
-            cnt++;
-            GuiButton button = new GuiButton(id, 10, y, 90, 20, key);
-            if (profileName.equals(profile.getName())) {
-                button.packedFGColour = 0xffffff00;
-            }
-            this.buttonList.add(button);
-            actionHandler.put(id, () -> setProfile(profile));
-            id++;
+            if (profile.isPublic()) {
+                num++;
+                if (num < page * 8) {
+                    continue;
+                }
+                if (cnt >= 8) {
+                    break;
+                }
+                cnt++;
+                GuiButton button = new GuiButton(id, 10, y, 90, 20, key);
+                if (profileName.equals(profile.getName())) {
+                    button.packedFGColour = 0xffffff00;
+                }
+                this.buttonList.add(button);
+                actionHandler.put(id, () -> setProfile(profile));
+                profileNames.put(id, profile.getName());
+                id++;
 
-            GuiLabel label = new GuiLabel(Minecraft.getMinecraft().fontRenderer, id++, 110, y, 230, 20, 0xffffffff);
-            label.addLine(profile.getDescription());
-            this.labelList.add(label);
-            y += 22;
+                GuiLabel label = new GuiLabel(Minecraft.getMinecraft().fontRenderer, id++, 110, y, 230, 20, 0xffffffff);
+                label.addLine(profile.getDescription());
+                this.labelList.add(label);
+                y += 22;
+            }
         }
 
 
@@ -126,6 +136,24 @@ public class GuiLostCityConfiguration extends GuiScreen {
             pagelabel.clearLines();
             pagelabel.addLine("" + (page+1) + "/" + numpages);
             pagelabel.drawLabel(Minecraft.getMinecraft(), mouseX, mouseY);
+        }
+
+        for (GuiButton button : buttonList) {
+            if (button.isMouseOver()) {
+                String name = profileNames.get(button.id);
+                if (name != null) {
+                    LostCityProfile profile = LostCityConfiguration.profiles.get(name);
+                    if (profile != null && profile.getIcon() != null) {
+                        int bx = button.x + 95;
+                        int by = button.y + 6;
+                        drawGradientRect(bx-5, by-5, bx + 320, by + 85, 0xffffffff, 0xffffffff);
+                        mc.getTextureManager().bindTexture(profile.getIcon());
+                        drawScaledCustomSizeModalRect(bx, by, 0, 0, 128, 128, 80, 80, 128, 128);
+                        String output = profile.getDescription() + "\n" + profile.getExtraDescription();
+                        mc.fontRenderer.drawSplitString(output, bx + 90, by, 220, 0xff000000);
+                    }
+                }
+            }
         }
     }
 }

@@ -1,19 +1,22 @@
 package mcjty.lostcities.dimensions.world;
 
-import mcjty.lib.compat.CompatWorldProvider;
-import mcjty.lostcities.LostCities;
+import mcjty.lostcities.LostCitiesDebug;
+import mcjty.lostcities.cubic.CubicWorldPopulator;
+import mcjty.lostcities.config.BiomeSelectionStrategy;
 import mcjty.lostcities.config.LostCityConfiguration;
 import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.dimensions.ModDimensions;
+import mcjty.lostcities.setup.ModSetup;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.BiomeProvider;
-import net.minecraft.world.chunk.IChunkGenerator;
+import net.minecraft.world.gen.IChunkGenerator;
 
 import javax.annotation.Nonnull;
 
-public class LostWorldProvider extends CompatWorldProvider {
+public class LostWorldProvider extends WorldProvider {
 
     @Override
     @Nonnull
@@ -24,13 +27,21 @@ public class LostWorldProvider extends CompatWorldProvider {
     @Override
     @Nonnull
     public String getSaveFolder() {
-        return "LOST";
+        if (getDimension() == LostCityConfiguration.DIMENSION_ID) {
+            return "LOST";
+        } else {
+            return "LOST" + getDimension();
+        }
     }
 
     @Override
     @Nonnull
     public IChunkGenerator createChunkGenerator() {
-        return new LostCityChunkGenerator(getWorld(), (getWorld().getSeed() >> 3) ^ 34328884229L);
+        if(CubicWorldPopulator.checkForCubicWorld(world)) {
+            if(LostCitiesDebug.debug) System.out.println("Creatimng a default chunk generator for cubic worlds!");
+            return super.createChunkGenerator(); // Don't register any chunk generator, use the default
+        }
+        return new LostCityChunkGenerator(world, (world.getSeed() >> 3) ^ 34328884229L);
     }
 
     private BiomeProvider getInternalBiomeProvider(World world) {
@@ -49,23 +60,39 @@ public class LostWorldProvider extends CompatWorldProvider {
     }
 
     @Override
-    protected void initialize() {
-        super.initialize();
+    protected void init() {
+        super.init();
 
-        LostCityProfile profile = LostCityConfiguration.profiles.get(LostCityConfiguration.DIMENSION_PROFILE);
+        String profileName = ModDimensions.dimensionProfileMap.get(world.provider.getDimension());
+        LostCityProfile profile = LostCityConfiguration.profiles.get(profileName);
         if (profile == null) {
-            profile = LostWorldType.getProfile(world);
+            profile = WorldTypeTools.getProfile(world);
         }
         BiomeProvider biomeProvider;
-        if (LostCities.biomesoplenty && LostCityConfiguration.DIMENSION_BOP) {
+        if (ModSetup.biomesoplenty && LostCityConfiguration.DIMENSION_BOP) {
             biomeProvider = getInternalBiomeProvider(world);
         } else {
-            biomeProvider = new BiomeProvider(getWorld().getWorldInfo());
+            biomeProvider = new BiomeProvider(world.getWorldInfo());
         }
         if (profile.ALLOWED_BIOME_FACTORS.length == 0) {
             this.biomeProvider = biomeProvider;
         } else {
-            this.biomeProvider = new LostWorldFilteredBiomeProvider(biomeProvider, profile.ALLOWED_BIOME_FACTORS);
+            String[] outsideAllowedbiomeFactors = profile.ALLOWED_BIOME_FACTORS;
+            String[] outsideManualBiomeMapping = profile.MANUAL_BIOME_MAPPINGS;
+            BiomeSelectionStrategy outsideStrategy = null;
+            if (profile.isSpace() && profile.CITYSPHERE_LANDSCAPE_OUTSIDE && !profile.CITYSPHERE_OUTSIDE_PROFILE.isEmpty()) {
+                LostCityProfile outProfile = LostCityConfiguration.profiles.get(profile.CITYSPHERE_OUTSIDE_PROFILE);
+                outsideAllowedbiomeFactors = outProfile.ALLOWED_BIOME_FACTORS;
+                outsideManualBiomeMapping = outProfile.MANUAL_BIOME_MAPPINGS;
+                outsideStrategy = outProfile.BIOME_SELECTION_STRATEGY;
+            }
+            this.biomeProvider = new LostWorldFilteredBiomeProvider(world, biomeProvider,
+                    profile.ALLOWED_BIOME_FACTORS,
+                    profile.MANUAL_BIOME_MAPPINGS,
+                    profile.BIOME_SELECTION_STRATEGY,
+                    outsideAllowedbiomeFactors,
+                    outsideManualBiomeMapping,
+                    outsideStrategy);
         }
     }
 

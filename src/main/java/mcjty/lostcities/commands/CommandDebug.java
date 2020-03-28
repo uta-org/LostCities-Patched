@@ -1,8 +1,9 @@
 package mcjty.lostcities.commands;
 
-import mcjty.lib.compat.CompatCommand;
 import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
+import mcjty.lostcities.dimensions.world.WorldTypeTools;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
+import mcjty.lostcities.dimensions.world.lost.CitySphere;
 import mcjty.lostcities.dimensions.world.lost.Railway;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
@@ -17,7 +18,7 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
-public class CommandDebug implements CompatCommand {
+public class CommandDebug implements ICommand {
 
     @Override
     public String getName() {
@@ -39,26 +40,39 @@ public class CommandDebug implements CompatCommand {
         if (sender instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) sender;
             BlockPos position = player.getPosition();
-            ChunkProviderServer chunkProvider = ((WorldServer) player.getEntityWorld()).getChunkProvider();
-            BuildingInfo info = BuildingInfo.getBuildingInfo(position.getX() >> 4, position.getZ() >> 4, (LostCityChunkGenerator) chunkProvider.chunkGenerator);
-            System.out.println("info.buildingType = " + info.buildingType.getName());
-            System.out.println("info.floors = " + info.getNumFloors());
-            System.out.println("info.floorsBelowGround = " + info.floorsBelowGround);
-            System.out.println("info.cityLevel = " + info.cityLevel);
-            System.out.println("info.isCity = " + info.isCity);
-            System.out.println("info.chunkX = " + info.chunkX);
-            System.out.println("info.chunkZ = " + info.chunkZ);
-            System.out.println("info.getCityStyle() = " + info.getChunkCharacteristics(info.chunkX, info.chunkZ, info.provider).cityStyle.getName());
-            System.out.println("info.ruinHeight = " + info.ruinHeight);
-            System.out.println("info.getHighwayXLevel() = " + info.getHighwayXLevel());
-            System.out.println("info.getHighwayZLevel() = " + info.getHighwayZLevel());
-            Railway.RailChunkInfo railInfo = Railway.getRailChunkType(info.chunkX, info.chunkZ, info.provider);
+            LostCityChunkGenerator provider = WorldTypeTools.getChunkGenerator(sender.getEntityWorld().provider.getDimension());
+            BuildingInfo info = BuildingInfo.getBuildingInfo(position.getX() >> 4, position.getZ() >> 4, provider);
+            System.out.println("profile = " + info.profile.getName());
+            System.out.println("provider.hasMansion = " + info.provider.hasMansion(info.chunkX, info.chunkZ));
+            System.out.println("buildingType = " + info.buildingType.getName());
+            System.out.println("floors = " + info.getNumFloors());
+            System.out.println("floorsBelowGround = " + info.floorsBelowGround);
+            System.out.println("cityLevel = " + info.cityLevel);
+            System.out.println("cityGroundLevel = " + info.getCityGroundLevel());
+            System.out.println("isCity = " + info.isCity);
+            System.out.println("chunkX = " + info.chunkX);
+            System.out.println("chunkZ = " + info.chunkZ);
+            System.out.println("getCityStyle() = " + BuildingInfo.getChunkCharacteristics(info.chunkX, info.chunkZ, info.provider).cityStyle.getName());
+            System.out.println("streetType = " + info.streetType);
+            System.out.println("ruinHeight = " + info.ruinHeight);
+            System.out.println("getHighwayXLevel() = " + info.getHighwayXLevel());
+            System.out.println("getHighwayZLevel() = " + info.getHighwayZLevel());
+            System.out.println("getChestTodo().size() = " + info.getLootTodo().size());
+            System.out.println("getMobSpawnerTodo().size() = " + info.getMobSpawnerTodo().size());
+
+            float reldist = CitySphere.getRelativeDistanceToCityCenter(info.chunkX, info.chunkZ, provider);
+            System.out.println("reldist = " + reldist);
+
+            Railway.RailChunkInfo railInfo = Railway.getRailChunkType(info.chunkX, info.chunkZ, info.provider, info.profile);
             System.out.println("railInfo.getType() = " + railInfo.getType());
             System.out.println("railInfo.getLevel() = " + railInfo.getLevel());
             System.out.println("railInfo.getDirection() = " + railInfo.getDirection());
             System.out.println("railInfo.getRails() = " + railInfo.getRails());
-            System.out.println("info.getChestTodo().size() = " + info.getChestTodo().size());
-            System.out.println("info.getMobSpawnerTodo().size() = " + info.getMobSpawnerTodo().size());
+
+            CitySphere sphere = CitySphere.getCitySphere(info.chunkX, info.chunkZ, provider);
+            System.out.println("sphere.cityCenter = " + sphere.getCenter());
+            System.out.println("sphere.isEnabled() = " + sphere.isEnabled());
+            System.out.println("sphere.radius = " + sphere.getRadius());
         }
     }
 

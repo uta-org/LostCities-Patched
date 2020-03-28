@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import mcjty.lostcities.LostCities;
 import mcjty.lostcities.api.ILostCityAsset;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import org.apache.commons.lang3.StringUtils;
@@ -14,7 +15,7 @@ import java.util.Map;
 /**
  * A structure part
  */
-public class BuildingPart implements ILostCityAsset {
+public class BuildingPart implements IBuildingPart, ILostCityAsset {
 
     private String name;
 
@@ -29,6 +30,7 @@ public class BuildingPart implements ILostCityAsset {
     private char[][] vslices = null;
 
     private Palette localPalette = null;
+    String refPaletteName;
 
 
     private Map<String, Object> metadata = new HashMap<>();
@@ -44,20 +46,25 @@ public class BuildingPart implements ILostCityAsset {
         this.zSize = zSize;
     }
 
+    @Override
     public Character getMetaChar(String key) {
         return (Character) metadata.get(key);
     }
 
+    @Override
     public Integer getMetaInteger(String key) {
         return (Integer) metadata.get(key);
     }
+    @Override
     public boolean getMetaBoolean(String key) {
         Object o = metadata.get(key);
         return o instanceof Boolean ? (Boolean) o : false;
     }
+    @Override
     public Float getMetaFloat(String key) {
         return (Float) metadata.get(key);
     }
+    @Override
     public String getMetaString(String key) {
         return (String) metadata.get(key);
     }
@@ -71,6 +78,7 @@ public class BuildingPart implements ILostCityAsset {
     /**
      * Vertical slices, organized by z*xSize+x
      */
+    @Override
     public char[][] getVslices() {
         if (vslices == null) {
             vslices = new char[xSize * zSize][];
@@ -96,11 +104,20 @@ public class BuildingPart implements ILostCityAsset {
         return vslices;
     }
 
+    @Override
     public char[] getVSlice(int x, int z) {
         return getVslices()[z*xSize + x];
     }
 
+    @Override
     public Palette getLocalPalette() {
+        if (localPalette == null && refPaletteName != null) {
+            localPalette = AssetRegistries.PALETTES.get(refPaletteName);
+            if (localPalette == null) {
+                LostCities.setup.getLogger().error("Could not find palette '" + refPaletteName + "'!");
+                throw new RuntimeException("Could not find palette '" + refPaletteName + "'!");
+            }
+        }
         return localPalette;
     }
 
@@ -121,9 +138,13 @@ public class BuildingPart implements ILostCityAsset {
             slices[i++] = slice;
         }
         if (object.has("palette")) {
-            JsonArray palette = object.get("palette").getAsJsonArray();
-            localPalette = new Palette();
-            localPalette.parsePaletteArray(palette);
+            if (object.get("palette").isJsonArray()) {
+                JsonArray palette = object.get("palette").getAsJsonArray();
+                localPalette = new Palette();
+                localPalette.parsePaletteArray(palette);
+            } else {
+                refPaletteName = object.get("palette").getAsString();
+            }
         }
         if (object.has("meta")) {
             JsonArray metaArray = object.get("meta").getAsJsonArray();
@@ -186,6 +207,7 @@ public class BuildingPart implements ILostCityAsset {
         return object;
     }
 
+    @Override
     public int getSliceCount() {
         return slices.length;
     }
@@ -198,24 +220,22 @@ public class BuildingPart implements ILostCityAsset {
         return slices;
     }
 
+    @Override
     public int getXSize() {
         return xSize;
     }
 
+    @Override
     public int getZSize() {
         return zSize;
     }
 
+    public Character getPaletteChar(int x, int y, int z) {
+        return slices[y].charAt(z * xSize + x);
+    }
+
     public Character get(BuildingInfo info, int x, int y, int z) {
         return info.getCompiledPalette().get(slices[y].charAt(z * xSize + x));
-    }
-
-    public String getMobID(BuildingInfo info, int x, int y, int z) {
-        return info.getCompiledPalette().getMobId(slices[y].charAt(z * xSize + x));
-    }
-
-    public String getLootTable(BuildingInfo info, int x, int y, int z) {
-        return info.getCompiledPalette().getLootTable(slices[y].charAt(z * xSize + x));
     }
 
     public Character getC(int x, int y, int z) {

@@ -1,12 +1,13 @@
 package mcjty.lostcities.dimensions.world.lost.cityassets;
 
+import com.google.common.base.Predicates;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.function.Predicate;
 
-public class ConditionContext {
+public abstract class ConditionContext {
     private final int level;        // Global level in world with 0 being to lowest possible level where a building section can be
     private final int floor;        // Level of the building with 0 being the ground floor. floor == floorsAboveGround means the top of the building section
     private final int floorsBelowGround;    // 0 means nothing below ground
@@ -40,7 +41,7 @@ public class ConditionContext {
         if (obj.has("top")) {
             boolean top = obj.get("top").getAsBoolean();
             if (top) {
-                test = combine(test, levelInfo -> levelInfo.isTopOfBuilding());
+                test = combine(test, ConditionContext::isTopOfBuilding);
             } else {
                 test = combine(test, levelInfo -> !levelInfo.isTopOfBuilding());
             }
@@ -48,9 +49,25 @@ public class ConditionContext {
         if (obj.has("ground")) {
             boolean ground = obj.get("ground").getAsBoolean();
             if (ground) {
-                test = combine(test, levelInfo -> levelInfo.isGroundFloor());
+                test = combine(test, ConditionContext::isGroundFloor);
             } else {
                 test = combine(test, levelInfo -> !levelInfo.isGroundFloor());
+            }
+        }
+        if (obj.has("isbuilding")) {
+            boolean ground = obj.get("isbuilding").getAsBoolean();
+            if (ground) {
+                test = combine(test, ConditionContext::isBuilding);
+            } else {
+                test = combine(test, levelInfo -> !levelInfo.isBuilding());
+            }
+        }
+        if (obj.has("issphere")) {
+            boolean ground = obj.get("issphere").getAsBoolean();
+            if (ground) {
+                test = combine(test, ConditionContext::isSphere);
+            } else {
+                test = combine(test, levelInfo -> !levelInfo.isSphere());
             }
         }
         if (obj.has("chunkx")) {
@@ -69,10 +86,14 @@ public class ConditionContext {
             String building = obj.get("inbuilding").getAsString();
             test = combine(test, context -> building.equals(context.getBuilding()));
         }
+        if (obj.has("inbiome")) {
+            String biome = obj.get("inbiome").getAsString();
+            test = combine(test, context -> biome.equals(context.getBiome()));
+        }
         if (obj.has("cellar")) {
             boolean cellar = obj.get("cellar").getAsBoolean();
             if (cellar) {
-                test = combine(test, levelInfo -> levelInfo.isCellar());
+                test = combine(test, ConditionContext::isCellar);
             } else {
                 test = combine(test, levelInfo -> !levelInfo.isCellar());
             }
@@ -95,7 +116,7 @@ public class ConditionContext {
             }
         }
         if (test == null) {
-            test = levelInfo -> true;
+            test = Predicates.alwaysTrue();
         }
         return test;
     }
@@ -119,6 +140,14 @@ public class ConditionContext {
     public boolean isGroundFloor() {
         return floor == 0;
     }
+
+    public boolean isBuilding() {
+        return !"<none>".equals(building);
+    }
+
+    public abstract boolean isSphere();
+
+    public abstract String getBiome();
 
     public boolean isTopOfBuilding() {
         return floor >= floorsAboveGround;

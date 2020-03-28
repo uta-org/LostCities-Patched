@@ -1,12 +1,13 @@
 package mcjty.lostcities.dimensions.world.lost.cityassets;
 
-import mcjty.lostcities.dimensions.world.LostCitiesTerrainGenerator;
+import mcjty.lostcities.dimensions.world.terraingen.LostCitiesTerrainGenerator;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 /**
@@ -16,15 +17,37 @@ public class CompiledPalette {
 
     private final Map<Character, Object> palette = new HashMap<>();
     private final Map<Character, Character> damagedToBlock = new HashMap<>();
-    private final Map<Character, String> mobIds = new HashMap<>();
-    private final Map<Character, String> lootTables = new HashMap<>();
+    private final Map<Character, Info> information = new HashMap<>();
+
+    public static class Info {
+        private final String mobId;
+        private final String loot;
+        private final Map<String, Integer> torchOrientations;
+
+        public Info(String mobId, String loot, Map<String, Integer> torchOrientations) {
+            this.mobId = mobId;
+            this.loot = loot;
+            this.torchOrientations = torchOrientations;
+        }
+
+        public String getMobId() {
+            return mobId;
+        }
+
+        public String getLoot() {
+            return loot;
+        }
+
+        public Map<String, Integer> getTorchOrientations() {
+            return torchOrientations;
+        }
+    }
 
 
     public CompiledPalette(CompiledPalette other, Palette... palettes) {
         this.palette.putAll(other.palette);
         this.damagedToBlock.putAll(other.damagedToBlock);
-        this.mobIds.putAll(other.mobIds);
-        this.lootTables.putAll(other.lootTables);
+        this.information.putAll(other.information);
         addPalettes(palettes);
     }
 
@@ -99,11 +122,15 @@ public class CompiledPalette {
             }
             for (Map.Entry<Character, String> entry : p.getMobIds().entrySet()) {
                 Character c = entry.getKey();
-                mobIds.put(c, entry.getValue());
+                information.put(c, new Info(entry.getValue(), null, null));
             }
             for (Map.Entry<Character, String> entry : p.getLootTables().entrySet()) {
                 Character c = entry.getKey();
-                lootTables.put(c, entry.getValue());
+                information.put(c, new Info(null, entry.getValue(), null));
+            }
+            for (Map.Entry<Character, Map<String, Integer>> entry : p.getTorchOrientations().entrySet()) {
+                Character c = entry.getKey();
+                information.put(c, new Info(null, null, entry.getValue()));
             }
         }
     }
@@ -137,6 +164,25 @@ public class CompiledPalette {
         return o instanceof Character;
     }
 
+    // Same as get(c) but with a predefined random generator that is predictable
+    public Character get(char c, Random rand) {
+        try {
+            Object o = palette.get(c);
+            if (o instanceof Character) {
+                return (Character) o;
+            } else if (o == null) {
+                return null;
+            } else {
+                char[] randomBlocks = (char[]) o;
+                return randomBlocks[rand.nextInt(128)];
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
     public Character get(char c) {
         try {
             Object o = palette.get(c);
@@ -158,9 +204,5 @@ public class CompiledPalette {
         return damagedToBlock.get(b);
     }
 
-    public String getMobId(Character c) { return mobIds.get(c); }
-
-    public String getLootTable(Character c) {
-        return lootTables.get(c);
-    }
+    public Info getInfo(Character c) { return information.get(c); }
 }

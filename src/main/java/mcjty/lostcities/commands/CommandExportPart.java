@@ -3,9 +3,8 @@ package mcjty.lostcities.commands;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import mcjty.lib.compat.CompatCommand;
-import mcjty.lib.tools.ChatTools;
 import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
+import mcjty.lostcities.dimensions.world.WorldTypeTools;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.cityassets.BuildingPart;
 import mcjty.lostcities.dimensions.world.lost.cityassets.Palette;
@@ -18,7 +17,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraft.world.gen.ChunkProviderServer;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -27,7 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.*;
 
-public class CommandExportPart implements CompatCommand {
+public class CommandExportPart implements ICommand {
 
     @Override
     public String getName() {
@@ -46,22 +44,20 @@ public class CommandExportPart implements CompatCommand {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        PrintWriter writer = null;
         try {
             int cntSlices = Integer.parseInt(args[1]);
 
-            writer = new PrintWriter(new File(args[0]));
             JsonArray array = new JsonArray();
 
             EntityPlayer player = (EntityPlayer) sender;
             BlockPos start = player.getPosition().down();
 
-            String palettechars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            String palettechars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}\\|`~:;',./<>?";
             int idx = 0;
             Map<IBlockState, Character> mapping = new HashMap<>();
             Palette palette = new Palette("old");
             Palette paletteNew = new Palette("new");
-            LostCityChunkGenerator provider = (LostCityChunkGenerator) ((ChunkProviderServer)server.getEntityWorld().getChunkProvider()).chunkGenerator;
+            LostCityChunkGenerator provider = WorldTypeTools.getChunkGenerator(sender.getEntityWorld().provider.getDimension());
             BuildingInfo info = BuildingInfo.getBuildingInfo(start.getX() >> 4, start.getZ() >> 4, provider);
             for (Character character : info.getCompiledPalette().getCharacters()) {
                 IBlockState state = info.getCompiledPalette().getStraight(character);
@@ -120,10 +116,12 @@ public class CommandExportPart implements CompatCommand {
 //            AssetRegistries.MULTI_BUILDINGS.writeToJson(array);
 
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            writer.print(gson.toJson(array));
-            writer.flush();
+            try(PrintWriter writer = new PrintWriter(new File(args[0]))) {
+                writer.print(gson.toJson(array));
+                writer.flush();
+            }
         } catch (FileNotFoundException e) {
-            ChatTools.addChatMessage(sender, new TextComponentString("Error writing to file '" + args[0] + "'!"));
+            sender.sendMessage(new TextComponentString("Error writing to file '" + args[0] + "'!"));
         } catch (Exception e) {
             e.printStackTrace();
         }

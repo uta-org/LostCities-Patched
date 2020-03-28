@@ -1,128 +1,180 @@
 package mcjty.lostcities.dimensions.world;
 
-import mcjty.lostcities.LostCities;
-import net.minecraft.init.Biomes;
-import net.minecraft.util.ResourceLocation;
+import mcjty.lostcities.config.BiomeSelectionStrategy;
+import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.dimensions.world.lost.CitySphere;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.List;
+import java.util.Random;
 
 public class LostWorldFilteredBiomeProvider extends BiomeProvider {
 
+    private final World world;
     private final BiomeProvider original;
-    private final String[] allowedBiomeFactors;
-    private List<Pair<Float,Biome>> biomes = null;
-    private final Map<String, Biome> translationMap = new HashMap<>();
+    private LostCityChunkGenerator provider;
 
-    public LostWorldFilteredBiomeProvider(BiomeProvider original, String[] allowedBiomeFactors) {
+    private final BiomeTranslator biomeTranslator;
+    private final BiomeTranslator outsideTranslator;
+
+    public LostWorldFilteredBiomeProvider(World world, BiomeProvider original,
+                                          String[] allowedBiomeFactors,
+                                          String[] manualBiomeMappings,
+                                          BiomeSelectionStrategy strategy,
+                                          String[] outsideBiomeFactors,
+                                          String[] outsideManualBiomeMappings,
+                                          BiomeSelectionStrategy outsideStrategy) {
+        this.world = world;
         this.original = original;
-        this.allowedBiomeFactors = allowedBiomeFactors;
+        biomeTranslator = new BiomeTranslator(allowedBiomeFactors, manualBiomeMappings, strategy);
+        outsideTranslator = new BiomeTranslator(outsideBiomeFactors.length == 0 ? allowedBiomeFactors : outsideBiomeFactors,
+                outsideManualBiomeMappings,
+                outsideStrategy);
     }
 
-    private void parseAllowedBiomes() {
-        if (biomes != null) {
+
+    private LostCityChunkGenerator getProvider() {
+        if (provider == null) {
+            provider = WorldTypeTools.getChunkGenerator(world.provider.getDimension());
+        }
+        return provider;
+    }
+
+
+    @Override
+    public Biome getBiome(BlockPos pos) {
+        LostCityProfile profile = WorldTypeTools.getProfile(world);
+        Biome originalBiome = original.getBiome(pos);
+        if (!(world instanceof WorldServer)) {
+            return originalBiome;
+        }
+
+        if(getProvider() == null) {
+            return originalBiome;
+        }
+
+        if (profile.isSpace() && profile.CITYSPHERE_LANDSCAPE_OUTSIDE) {
+            int chunkX = (pos.getX()) >> 4;
+            int chunkZ = (pos.getZ()) >> 4;
+            CitySphere sphere = CitySphere.getCitySphere(chunkX, chunkZ, getProvider());
+            if (sphere.isEnabled()) {
+                float radius = sphere.getRadius();
+                BlockPos cc = sphere.getCenterPos();
+                double sqradiusOffset = (radius - 2) * (radius - 2);
+                int cx = cc.getX();
+                int cz = cc.getZ();
+                if (CitySphere.squaredDistance(cx, cz, pos.getX(), pos.getZ()) > sqradiusOffset) {
+                    return outsideTranslator.translate(originalBiome);
+                } else if (sphere.getBiome() != null) {
+                    return sphere.getBiome();
+                }
+            } else {
+                return outsideTranslator.translate(originalBiome);
+            }
+        }
+        return biomeTranslator.translate(originalBiome);
+    }
+
+    private void translateList(Biome[] biomes, int topx, int topz, int width, int height) {
+        if (!(world instanceof WorldServer)) {
             return;
         }
-        biomes = new ArrayList<>();
-        for (String s : allowedBiomeFactors) {
-            String[] split = StringUtils.split(s, '=');
-            float f = Float.parseFloat(split[1]);
-            String biomeId = split[0];
-            Biome biome = Biome.REGISTRY.getObject(new ResourceLocation(biomeId));
-            if (biome == null) {
-                for (Biome b : Biome.REGISTRY) {
-                    ResourceLocation registryName = b.getRegistryName();
-                    if (registryName != null && biomeId.equals(registryName.getResourcePath())) {
-                        biome = b;
-                        break;
+
+        if(getProvider() == null) {
+            return;
+        }
+
+        LostCityProfile profile = WorldTypeTools.getProfile(world);
+        if (profile.isSpace() && profile.CITYSPHERE_LANDSCAPE_OUTSIDE) {
+            int chunkX = (topx) >> 4;
+            int chunkZ = (topz) >> 4;
+            CitySphere sphere = CitySphere.getCitySphere(chunkX, chunkZ, getProvider());
+            if (sphere.isEnabled()) {
+                float radius = sphere.getRadius();
+                double sqradiusOffset = (radius - 2) * (radius - 2);
+                BlockPos cc = sphere.getCenterPos();
+                int cx = cc.getX();
+                int cz = cc.getZ();
+                for (int z = 0; z < height; z++) {
+                    for (int x = 0; x < width; x++) {
+                        int i = x + z * width;
+                        if (CitySphere.squaredDistance(cx, cz, topx+x, topz+z) > sqradiusOffset) {
+                            biomes[i] = outsideTranslator.translate(biomes[i]);
+                        } else if (sphere.getBiome() != null) {
+                            biomes[i] = sphere.getBiome();
+                        } else {
+                            biomes[i] = biomeTranslator.translate(biomes[i]);
+                        }
                     }
                 }
-            }
-            if (biome != null) {
-                biomes.add(Pair.of(f, biome));
             } else {
-                LostCities.logger.warn("Could not find biome '" + biomeId + "'!");
-            }
-        }
-    }
-
-    private Biome translate(Biome biome) {
-        if (!translationMap.containsKey(biome.getBiomeName())) {
-            parseAllowedBiomes();
-
-            Biome bestFit = null;
-            double bestDist = 1000000000.0;
-            for (Pair<Float, Biome> pair : biomes) {
-                Biome b = pair.getRight();
-                double distance = calculateBiomeDistance(biome, b) * pair.getLeft();
-                if (distance < bestDist) {
-                    bestDist = distance;
-                    bestFit = b;
+                for (int i = 0 ; i < biomes.length ; i++) {
+                    biomes[i] = outsideTranslator.translate(biomes[i]);
                 }
             }
-            if (bestFit == null) {
-                bestFit = Biomes.PLAINS;
-            }
-            translationMap.put(biome.getBiomeName(), bestFit);
+            return;
         }
-        return translationMap.get(biome.getBiomeName());
-    }
-
-    private static double calculateBiomeDistance(Biome a, Biome b) {
-        if (a == b) {
-            return -1000;
+        for (int i = 0 ; i < biomes.length ; i++) {
+            biomes[i] = biomeTranslator.translate(biomes[i]);
         }
-        float dr = a.getRainfall() - b.getRainfall();
-        float dt = a.getTemperature() - b.getTemperature();
-        float dv = a.getHeightVariation() - b.getHeightVariation();
-        float dh = a.getBaseHeight() - b.getBaseHeight();
-
-        return Math.sqrt(dr * dr + dt * dt + dv * dv + dh * dh);
     }
 
-
-    public Biome getBiome(BlockPos pos) {
-        return translate(original.getBiome(pos));
-    }
-
+    @Override
     public Biome[] getBiomesForGeneration(Biome[] biomes, int x, int z, int width, int height) {
         biomes = original.getBiomesForGeneration(biomes, x, z, width, height);
-        for (int i = 0 ; i < biomes.length ; i++) {
-            biomes[i] = translate(biomes[i]);
-        }
+        translateList(biomes, x, z, width, height);
         return biomes;
     }
 
+    @Override
     public Biome[] getBiomes(@Nullable Biome[] oldBiomeList, int x, int z, int width, int depth) {
         oldBiomeList = original.getBiomes(oldBiomeList, x, z, width, depth);
+        translateList(oldBiomeList, x, z, width, depth);
+        return oldBiomeList;
+    }
+
+    public Biome[] getBiomesAlternate(@Nullable Biome[] oldBiomeList, int x, int z, int width, int depth) {
+        oldBiomeList = original.getBiomes(oldBiomeList, x, z, width, depth);
         for (int i = 0 ; i < oldBiomeList.length ; i++) {
-            oldBiomeList[i] = translate(oldBiomeList[i]);
+            oldBiomeList[i] = outsideTranslator.translate(oldBiomeList[i]);
         }
         return oldBiomeList;
     }
 
+    @Override
     public Biome[] getBiomes(@Nullable Biome[] listToReuse, int x, int z, int width, int length, boolean cacheFlag) {
         return this.getBiomes(listToReuse, x, z, width, length);
     }
 
+    @Override
     @Nullable
     public BlockPos findBiomePosition(int x, int z, int range, List<Biome> biomes, Random random) {
         return original.findBiomePosition(x, z, range, biomes, random);
     }
 
+    @Override
     public boolean areBiomesViable(int x, int z, int radius, List<Biome> allowed) {
-        return true;
+        boolean result = false;
+        Biome[] biomeList = getBiomes(null, x, z, radius, radius);
+        for (int i = 0 ; i < biomeList.length ; i++) {
+            if ( allowed.contains(biomeList[i]) ) {
+                result = true;
+            }
+        }
+        return result;
     }
 
+    @Override
     public boolean isFixedBiome() {
         return false;
     }
 
+    @Override
     public Biome getFixedBiome() {
         return null;
     }

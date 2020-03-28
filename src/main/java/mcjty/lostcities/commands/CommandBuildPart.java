@@ -1,8 +1,7 @@
 package mcjty.lostcities.commands;
 
-import mcjty.lib.compat.CompatCommand;
-import mcjty.lib.tools.ChatTools;
 import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
+import mcjty.lostcities.dimensions.world.WorldTypeTools;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.cityassets.AssetRegistries;
 import mcjty.lostcities.dimensions.world.lost.cityassets.BuildingPart;
@@ -16,13 +15,12 @@ import net.minecraft.init.Blocks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraft.world.gen.ChunkProviderServer;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
-public class CommandBuildPart implements CompatCommand {
+public class CommandBuildPart implements ICommand {
 
     @Override
     public String getName() {
@@ -45,14 +43,14 @@ public class CommandBuildPart implements CompatCommand {
             String partname = args[0];
             BuildingPart part = AssetRegistries.PARTS.get(partname);
             if (part == null) {
-                ChatTools.addChatMessage(sender, new TextComponentString("Cannot find part '" + partname + "'!"));
+                sender.sendMessage(new TextComponentString("Cannot find part '" + partname + "'!"));
                 return;
             }
 
             EntityPlayer player = (EntityPlayer) sender;
             BlockPos start = player.getPosition();
 
-            LostCityChunkGenerator provider = (LostCityChunkGenerator) ((ChunkProviderServer)server.getEntityWorld().getChunkProvider()).chunkGenerator;
+            LostCityChunkGenerator provider = WorldTypeTools.getChunkGenerator(sender.getEntityWorld().provider.getDimension());
             BuildingInfo info = BuildingInfo.getBuildingInfo(start.getX() >> 4, start.getZ() >> 4, provider);
             CompiledPalette palette = info.getCompiledPalette();
             for (int y = 0 ; y < part.getSliceCount() ; y++) {

@@ -1,5 +1,6 @@
 package mcjty.lostcities.dimensions.world.lost;
 
+import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
 import mcjty.lostcities.dimensions.world.lost.cityassets.AssetRegistries;
 import mcjty.lostcities.dimensions.world.lost.cityassets.CityStyle;
@@ -27,7 +28,7 @@ public class City {
         predefinedStreetMap = null;
     }
 
-    private static PredefinedCity getPredefinedCity(int chunkX, int chunkZ, LostCityChunkGenerator provider) {
+    public static PredefinedCity getPredefinedCity(int chunkX, int chunkZ, LostCityChunkGenerator provider) {
         if (predefinedCityMap == null) {
             predefinedCityMap = new HashMap<>();
             for (PredefinedCity city : AssetRegistries.PREDEFINED_CITIES.getIterable()) {
@@ -72,6 +73,7 @@ public class City {
         return predefinedStreetMap.get(new ChunkCoord(provider.dimensionId, chunkX, chunkZ));
     }
 
+
     public static boolean isCityCenter(int chunkX, int chunkZ, LostCityChunkGenerator provider) {
         PredefinedCity city = getPredefinedCity(chunkX, chunkZ, provider);
         if (city != null) {
@@ -80,9 +82,26 @@ public class City {
         Random rand = new Random(provider.seed + chunkZ * 797003437L + chunkX * 295075153L);
         rand.nextFloat();
         rand.nextFloat();
-        return rand.nextFloat() < provider.profile.CITY_CHANCE;
+        if (provider.getProfile().isSpace()) {
+            // @todo config
+            CitySphere sphere = CitySphere.getCitySphere(chunkX, chunkZ, provider);
+            if (!sphere.isEnabled()) {
+                // No sphere
+                return rand.nextFloat() < provider.getOutsideProfile().CITY_CHANCE;
+            }
+            if (sphere.getCenter().getChunkX() == chunkX && sphere.getCenter().getChunkZ() == chunkZ) {
+                // This chunk is the center of a city
+                return rand.nextFloat() < provider.getProfile().CITY_CHANCE;
+            }
+            return false;
+        } else {
+            return rand.nextFloat() < provider.getProfile().CITY_CHANCE;
+        }
     }
 
+    /**
+     * Return the radius of the city with the given center
+     */
     public static float getCityRadius(int chunkX, int chunkZ, LostCityChunkGenerator provider) {
         PredefinedCity city = getPredefinedCity(chunkX, chunkZ, provider);
         if (city != null) {
@@ -91,7 +110,16 @@ public class City {
         Random rand = new Random(provider.seed + chunkZ * 100001653L + chunkX * 295075153L);
         rand.nextFloat();
         rand.nextFloat();
-        return provider.profile.CITY_MINRADIUS + rand.nextInt(provider.profile.CITY_MAXRADIUS - provider.profile.CITY_MINRADIUS);
+        LostCityProfile profile = provider.getProfile();
+        if (profile.isSpace() && profile.CITYSPHERE_LANDSCAPE_OUTSIDE) {
+            if (CitySphere.intersectsWithCitySphere(chunkX, chunkZ, provider)) {
+                return profile.CITY_MINRADIUS + rand.nextInt(profile.CITY_MAXRADIUS - profile.CITY_MINRADIUS);
+            } else {
+                return provider.getOutsideProfile().CITY_MINRADIUS + rand.nextInt(provider.getOutsideProfile().CITY_MAXRADIUS - provider.getOutsideProfile().CITY_MINRADIUS);
+            }
+        } else {
+            return profile.CITY_MINRADIUS + rand.nextInt(profile.CITY_MAXRADIUS - profile.CITY_MINRADIUS);
+        }
     }
 
     // Call this on a city center to get the style of that city
@@ -110,12 +138,12 @@ public class City {
     }
 
     // Calculate the citystyle based on all surrounding cities
-    public static CityStyle getCityStyle(int chunkX, int chunkZ, LostCityChunkGenerator provider) {
+    public static CityStyle getCityStyle(int chunkX, int chunkZ, LostCityChunkGenerator provider, LostCityProfile profile) {
         Random rand = new Random(provider.seed + chunkZ * 593441843L + chunkX * 217645177L);
         rand.nextFloat();
         rand.nextFloat();
 
-        int offset = (provider.profile.CITY_MAXRADIUS+15) / 16;
+        int offset = (profile.CITY_MAXRADIUS+15) / 16;
         List<Pair<Float, String>> styles = new ArrayList<>();
         for (int cx = chunkX - offset; cx <= chunkX + offset; cx++) {
             for (int cz = chunkZ - offset; cz <= chunkZ + offset; cz++) {
@@ -139,7 +167,7 @@ public class City {
         return AssetRegistries.CITYSTYLES.get(cityStyleName);
     }
 
-    public static float getCityFactor(int chunkX, int chunkZ, LostCityChunkGenerator provider) {
+    public static float getCityFactor(int chunkX, int chunkZ, LostCityChunkGenerator provider, LostCityProfile profile) {
         // If we have a predefined building here we force a high city factor
 
         PredefinedCity.PredefinedBuilding predefinedBuilding = getPredefinedBuilding(chunkX, chunkZ, provider);
@@ -164,6 +192,14 @@ public class City {
             return 1.0f;
         }
 
+        for (int cx = -4 ; cx <= 4 ; cx++) {
+            for (int cz = -4 ; cz <= 4 ; cz++) {
+                if (provider.hasMansion(chunkX+cx, chunkZ+cz)) {
+                    return 0.0f;
+                }
+            }
+        }
+
         for (int cx = -2 ; cx <= 2 ; cx++) {
             for (int cz = -2 ; cz <= 2 ; cz++) {
                 if (provider.hasOceanMonument(chunkX+cx, chunkZ+cz)) {
@@ -172,12 +208,13 @@ public class City {
             }
         }
 
-        long seed = provider.seed;
         float factor = 0;
-        int offset = (provider.profile.CITY_MAXRADIUS+15) / 16;
+        int offset = (profile.CITY_MAXRADIUS+15) / 16;
         for (int cx = chunkX - offset; cx <= chunkX + offset; cx++) {
             for (int cz = chunkZ - offset; cz <= chunkZ + offset; cz++) {
-                if (isCityCenter(cx, cz, provider)) {
+                LostCityProfile pro = BuildingInfo.getProfile(cx, cz, provider);
+                // Only count cities that are in the same 'profile' as this one
+                if (pro == profile && isCityCenter(cx, cz, provider)) {
                     float radius = getCityRadius(cx, cz, provider);
                     float sqdist = (cx * 16 - chunkX * 16) * (cx * 16 - chunkX * 16) + (cz * 16 - chunkZ * 16) * (cz * 16 - chunkZ * 16);
                     if (sqdist < radius * radius) {
@@ -188,7 +225,6 @@ public class City {
             }
         }
 
-        Float foundFactor = null;
         for (int cx = -1 ; cx <= 1 ; cx++) {
             for (int cz = -1 ; cz <= 1 ; cz++) {
                 Biome[] biomes = BiomeInfo.getBiomeInfo(provider, new ChunkCoord(provider.dimensionId, chunkX + cx, chunkZ + cz)).getBiomes();
@@ -198,28 +234,24 @@ public class City {
             }
         }
 
+        float foundFactor = profile.CITY_DEFAULT_BIOME_FACTOR;
         Biome[] biomes = BiomeInfo.getBiomeInfo(provider, new ChunkCoord(provider.dimensionId, chunkX, chunkZ)).getBiomes();
+        Map<String, Float> map = profile.getBiomeFactorMap();
         for (Biome biome : biomes) {
-            Map<String, Float> map = provider.profile.getBiomeFactorMap();
             ResourceLocation object = Biome.REGISTRY.getNameForObject(biome);
-            Float f = map.get(object.toString());
+            Float f;
+            try {
+                f = map.get(object.toString());
+            } catch(NullPointerException e) {
+                throw new RuntimeException("Biome '" + biome.getBiomeName() + "' (" + biome.getBiomeClass().getName() + ") could not be found in the biome registry! This is likely a bug in the mod providing that biome!", e);
+            }
             if (f != null) {
                 foundFactor = f;
                 break;
             }
         }
 
-        if (foundFactor == null) {
-            factor = factor * provider.profile.CITY_DEFAULT_BIOME_FACTOR;
-        } else {
-            factor = factor * foundFactor;
-        }
-        if (factor < 0) {
-            return 0;
-        } else if (factor > 1) {
-            return 1;
-        }
-        return factor;
+        return Math.min(Math.max(factor * foundFactor, 0), 1);
     }
 
     public static boolean isTooHighForBuilding(Biome[] biomes) {

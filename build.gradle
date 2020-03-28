@@ -9,10 +9,17 @@ buildscript {
             name = "sonatype"
             url = "https://oss.sonatype.org/content/repositories/snapshots/"
         }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        maven { url = 'https://plugins.gradle.org/m2' }  
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
     }
+}
+
+plugins {
+    id 'com.matthewprenger.cursegradle' version '1.1.0'
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
@@ -21,7 +28,7 @@ apply plugin: 'maven'
 repositories {
     maven { // The repo from which to get waila
         name "Mobius Repo"
-        url "http://tehnut.info/maven"
+        url "https://tehnut.info/maven"
         //url "http://mobiusstrip.eu/maven"
     }
     maven { // JEI
@@ -33,7 +40,7 @@ repositories {
     }
     maven { // TOP
         name 'tterrag maven'
-        url "http://maven.tterrag.com/"
+        url "https://maven.tterrag.com/"
     }
     maven { // McJtyLib
         url "http://maven.k-4u.nl"
@@ -42,9 +49,19 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/repositories/snapshots/"
     }
+    maven {
+        name = "CoFH Maven"
+        url = "http://maven.covers1624.net"
+    }
+    maven { url = "https://oss.sonatype.org/content/repositories/public/" }
+    maven { url = 'https://repo.spongepowered.org/maven' }
+    // Note: sponge repository needs to be the second one because flow-noise is both in sponge and sonatype repository
+    // but sponge has older one, and we need the newer one from sonatype
+    // currently gradle seems to resolve dependencies from repositories in the order they are defined here 
+    maven { url = "https://minecraft.curseforge.com/api/maven/" }
+    maven { url = "https://repo.elytradev.com" } // jankson snapshot 
 }
 
-version = "1.1x-1.0.2"
 def ENV = System.getenv()
 if (ENV.DRONE_BUILD_NUMBER) {
     version += ".n" + ENV.DRONE_BUILD_NUMBER
@@ -56,10 +73,13 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 minecraft {
-    version = "1.11.2-13.20.0.2282"
+    // version = "${minecraft_version}-${forge_version}"
+    version = "1.12.2-14.23.5.2847"
     runDir = "run"
-    mappings = "snapshot_20170411"
+    // mappings = mcp_mappings
     useDepAts = true
+    mappings = "snapshot_20171003"
+    makeObfSourceJar = false
 }
 
 task deobfJar(type: Jar) {
@@ -74,14 +94,27 @@ artifacts {
 
 
 dependencies {
-    deobfCompile "mcp.mobius.waila:Hwyla:1.8.10-B23_1.11:api"
-    deobfCompile "mezz.jei:jei_1.11.2:4.2.5.234"
-    deobfCompile "mcjty.theoneprobe:TheOneProbe:1.1x-1.4.7-57"
-    deobfCompile "team.chisel:Chisel:MC1.11.2-0.0.10.14"
-    deobfCompile "com.github.mcjty:compatlayer:1.11.2-0.2.6"
-    deobfCompile "com.github.mcjty:intwheel:1.1x-1.2.6"
+    deobfCompile "mezz.jei:jei_${jei_version}"
+    deobfCompile "mcp.mobius.waila:Hwyla:${waila_version}"
+    deobfCompile "mcjty.theoneprobe:TheOneProbe-${top_version}"
+    deobfCompile "cofh:RedstoneFlux:${redstoneflux_version}"
+    //deobfCompile "mcp.mobius.waila:Hwyla:1.8.10-B23_1.11:api"
+    //deobfCompile "mcjty.theoneprobe:TheOneProbe:1.1x-1.4.7-57"
+    //deobfCompile "team.chisel:Chisel:MC1.11.2-0.0.10.14"
+    //deobfCompile "com.github.mcjty:compatlayer:1.11.2-0.2.6"
+    //deobfCompile "com.github.mcjty:intwheel:1.1x-1.2.6"
 
     //compile "li.cil.oc:OpenComputers:MC1.7.10-1.5.+:api"
+
+    compile("org.spongepowered:mixin:0.8.1-SNAPSHOT")
+    {
+        transitive = false
+    }
+
+    deobfCompile("io.github.opencubicchunks:cubicchunks-api:1.12.2-0.0-SNAPSHOT")
+    {
+        transitive = false
+    }
 }
 
 jar {
@@ -152,6 +185,56 @@ task("uploadJars", dependsOn: "reobf") {
                     }
                 }
             }
+        }
+    }
+}
+
+String getChangelogText() {
+    def changelogFile = file('changelog.txt')
+    String str = ''
+    int lineCount = 0
+    boolean done = false
+    changelogFile.eachLine {
+        if (done || it == null) {
+            return
+        }
+        if (it.size() > 1) {
+            def temp = it
+            if (lineCount == 0) {
+                temp = "${modname} ${version}"
+                temp = "<h2>$temp</h2>"
+            } else if (it.startsWith('-')) {
+                temp = "&nbsp;&nbsp;&nbsp;$temp"
+                temp = temp.replaceAll("(\\S+\\/\\S+)#([0-9]+)\\b", "<a href=\"https://github.com/\$1/issues/\$2\">\$0</a>");
+                temp = temp.replaceAll("#([0-9]+)\\b(?!<\\/a>)", "<a href=\"https://github.com/$github_project/issues/\$1\">\$0</a>");
+            } else {
+                temp = "<h4>$temp</h4>"
+            }
+            str += "$temp<br/>"
+            lineCount++
+            return
+        } else {
+            done = true
+        }
+    }
+    return str
+}
+
+tasks.curseforge.enabled = project.hasProperty('curseforge_key')
+
+curseforge {
+    if (project.hasProperty('curseforge_key')) {
+        apiKey = project.curseforge_key
+    }
+
+    project {
+        id = project.projectId
+        changelog = System.getenv('CHANGELOG') == null || System.getenv('CHANGELOG').equals('none') ? getChangelogText() : System.getenv('CHANGELOG')
+        changelogType = 'html'
+        releaseType = project.curse_type
+        addGameVersion '1.12.2'
+        mainArtifact(jar) {
+            displayName = "${modname} - ${version}"
         }
     }
 }
