@@ -54,7 +54,7 @@ public class CubicWorldPopulator implements ICubicPopulator {
     }
 
     private void generate(World world, Random random, CubePos pos, Biome biome, CubePopulatorEvent event) {
-        LostCityCubicGenerator generator = new LostCityCubicGenerator(world);
+        LostCityCubicGenerator generator = new LostCityCubicGenerator(world, random);
         generator.spawnInChunk(world, random, pos.chunkPos().x, pos.getY(), pos.chunkPos().z);
     }
 }
