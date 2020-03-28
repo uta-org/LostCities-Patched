@@ -4,6 +4,7 @@ import mcjty.lostcities.api.LostCityEvent;
 import mcjty.lostcities.api.RailChunkType;
 import mcjty.lostcities.config.LostCityConfiguration;
 import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
 import mcjty.lostcities.dimensions.world.ChunkHeightmap;
 import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
 import mcjty.lostcities.dimensions.world.driver.IIndex;
@@ -852,7 +853,7 @@ public class LostCitiesTerrainGenerator extends NormalTerrainGenerator {
         }
     }
 
-    public static boolean isWaterBiome(LostCityChunkGenerator provider, ChunkCoord coord) {
+    public static boolean isWaterBiome(ICommonGeneratorProvider provider, ChunkCoord coord) {
         BiomeInfo biomeInfo = BiomeInfo.getBiomeInfo(provider, coord);
         Biome[] biomes = biomeInfo.getBiomes();
         return isWaterBiome(biomes[55]) || isWaterBiome(biomes[54]) || isWaterBiome(biomes[56]);

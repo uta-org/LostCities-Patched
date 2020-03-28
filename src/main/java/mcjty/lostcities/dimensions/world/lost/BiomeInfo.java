@@ -1,5 +1,6 @@
 package mcjty.lostcities.dimensions.world.lost;
 
+import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
 import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
 import mcjty.lostcities.varia.ChunkCoord;
 import net.minecraft.world.biome.Biome;
@@ -18,12 +19,12 @@ public class BiomeInfo {
         biomeInfoMap.clear();
     }
 
-    public static BiomeInfo getBiomeInfo(LostCityChunkGenerator provider, ChunkCoord coord) {
+    public static BiomeInfo getBiomeInfo(ICommonGeneratorProvider provider, ChunkCoord coord) {
         if (!biomeInfoMap.containsKey(coord)) {
             BiomeInfo info = new BiomeInfo();
             int chunkX = coord.getChunkX();
             int chunkZ = coord.getChunkZ();
-            info.biomesForBiomeCheck = provider.worldObj.getBiomeProvider().getBiomesForGeneration(info.biomesForBiomeCheck, (chunkX - 1) * 4 - 2, chunkZ * 4 - 2, 10, 10);
+            info.biomesForBiomeCheck = provider.getWorld().getBiomeProvider().getBiomesForGeneration(info.biomesForBiomeCheck, (chunkX - 1) * 4 - 2, chunkZ * 4 - 2, 10, 10);
             biomeInfoMap.put(coord, info);
         }
         return biomeInfoMap.get(coord);

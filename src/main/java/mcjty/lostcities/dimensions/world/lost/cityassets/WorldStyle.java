@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import mcjty.lostcities.api.ILostCityAsset;
+import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
 import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
 import mcjty.lostcities.dimensions.world.lost.BiomeInfo;
 import mcjty.lostcities.varia.ChunkCoord;
@@ -100,8 +101,8 @@ public class WorldStyle implements ILostCityAsset {
     }
 
 
-    public String getRandomCityStyle(LostCityChunkGenerator provider, int chunkX, int chunkZ, Random random) {
-        Biome[] biomes = BiomeInfo.getBiomeInfo(provider, new ChunkCoord(provider.dimensionId, chunkX, chunkZ)).getBiomes();
+    public String getRandomCityStyle(ICommonGeneratorProvider provider, int chunkX, int chunkZ, Random random) {
+        Biome[] biomes = BiomeInfo.getBiomeInfo(provider, new ChunkCoord(provider.getDimensionId(), chunkX, chunkZ)).getBiomes();
         Info info = new Info(biomes, chunkX, chunkZ);
         List<Pair<Float, String>> ct = new ArrayList<>();
         for (Pair<Predicate<Info>, Pair<Float, String>> pair : cityStyleSelector) {

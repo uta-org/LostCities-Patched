@@ -5,6 +5,8 @@ import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityConfiguration;
 import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
+import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.driver.IPrimerDriver;
 import mcjty.lostcities.dimensions.world.driver.OptimizedDriver;
 import mcjty.lostcities.dimensions.world.driver.SafeDriver;
@@ -62,7 +64,7 @@ import java.util.Random;
 
 import static net.minecraftforge.event.terraingen.InitMapGenEvent.EventType.*;
 
-public class LostCityChunkGenerator implements IChunkGenerator, ILostChunkGenerator {
+public class LostCityChunkGenerator implements IChunkGenerator, ICommonGeneratorProvider {
 
     private LostCityProfile profile; // Current profile
     private LostCityProfile outsideProfile; // Outside profile: only for citySphere worlds
@@ -88,7 +90,7 @@ public class LostCityChunkGenerator implements IChunkGenerator, ILostChunkGenera
     // making that primer again
     // @todo, make this cache timed so that primers expire if they are not used quickly enough?
     private Map<ChunkCoord, ChunkPrimer> cachedPrimers = new HashMap<>();
-    private Map<ChunkCoord, ChunkHeightmap> cachedHeightmaps = new HashMap<>();
+    private Map<ChunkCoord, ICommonHeightmap> cachedHeightmaps = new HashMap<>();
 
     private MapGenStronghold strongholdGenerator = new MapGenStronghold();
     private StructureOceanMonument oceanMonumentGenerator = new LostStructureOceanMonument();
@@ -105,12 +107,32 @@ public class LostCityChunkGenerator implements IChunkGenerator, ILostChunkGenera
         return settings;
     }
 
+    @Override
+    public int getDimensionId() {
+        return dimensionId;
+    }
+
+    @Override
+    public WorldStyle getWorldStyle() {
+        return worldStyle;
+    }
+
+    @Override
+    public long getSeed() {
+        return seed;
+    }
+
     public LostCityProfile getProfile() {
         return profile;
     }
 
     public LostCityProfile getOutsideProfile() {
         return outsideProfile;
+    }
+
+    @Override
+    public World getWorld() {
+        return worldObj;
     }
 
     // Holds ravine generator
@@ -187,7 +209,7 @@ public class LostCityChunkGenerator implements IChunkGenerator, ILostChunkGenera
     }
 
     // Get a heightmap for a chunk. If needed calculate (and cache) a primer
-    public ChunkHeightmap getHeightmap(int chunkX, int chunkZ) {
+    public ICommonHeightmap getHeightmap(int chunkX, int chunkZ) {
         ChunkCoord key = new ChunkCoord(worldObj.provider.getDimension(), chunkX, chunkZ);
         if (cachedHeightmaps.containsKey(key)) {
             return cachedHeightmaps.get(key);
@@ -197,8 +219,8 @@ public class LostCityChunkGenerator implements IChunkGenerator, ILostChunkGenera
             IPrimerDriver driver = LostCityConfiguration.OPTIMIZED_CHUNKGEN ? new OptimizedDriver() : new SafeDriver();
             driver.setPrimer(primer);
             ChunkHeightmap heightmap = new ChunkHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
-            cachedHeightmaps.put(key, heightmap);
-            return heightmap;
+            cachedHeightmaps.put(key, (ICommonHeightmap) heightmap);
+            return (ICommonHeightmap) heightmap;
         } else {
             ChunkPrimer primer = generatePrimer(chunkX, chunkZ);
             cachedPrimers.put(key, primer);
@@ -206,8 +228,8 @@ public class LostCityChunkGenerator implements IChunkGenerator, ILostChunkGenera
             IPrimerDriver driver = LostCityConfiguration.OPTIMIZED_CHUNKGEN ? new OptimizedDriver() : new SafeDriver();
             driver.setPrimer(primer);
             ChunkHeightmap heightmap = new ChunkHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
-            cachedHeightmaps.put(key, heightmap);
-            return heightmap;
+            cachedHeightmaps.put(key, (ICommonHeightmap) heightmap);
+            return (ICommonHeightmap) heightmap;
         }
     }
 
@@ -315,7 +337,7 @@ public class LostCityChunkGenerator implements IChunkGenerator, ILostChunkGenera
                 char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
                 IPrimerDriver driver = LostCityConfiguration.OPTIMIZED_CHUNKGEN ? new OptimizedDriver() : new SafeDriver();
                 driver.setPrimer(chunkprimer);
-                cachedHeightmaps.put(key, new ChunkHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar));
+                cachedHeightmaps.put(key, (ICommonHeightmap) new ChunkHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar));
             }
         }
         return chunkprimer;

@@ -3,13 +3,16 @@ package mcjty.lostcities.cubic.world;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import mcjty.lostcities.LostCitiesDebug;
+import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import mcjty.lostcities.cubic.world.generators.BuildingGenerator;
 import mcjty.lostcities.dimensions.world.ChunkHeightmap;
 import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
+import mcjty.lostcities.dimensions.world.WorldTypeTools;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Railway;
+import mcjty.lostcities.dimensions.world.lost.cityassets.WorldStyle;
 import mcjty.lostcities.varia.Cardinal;
 import mcjty.lostcities.varia.Coord;
 import mcjty.lostcities.varia.VanillaStructure;
@@ -35,25 +38,24 @@ import javax.annotation.Nonnull;
 
 import static mcjty.lostcities.dimensions.world.terraingen.LostCitiesTerrainGenerator.bedrockChar;
 
-public class LostCityCubicGenerator {
-    //@Nonnull
-    //private static LostCityChunkGenerator generator;
-
-    private static LostCityChunkGenerator provider;
+public class LostCityCubicGenerator implements ICommonGeneratorProvider {
+    // private static LostCityChunkGenerator provider;
 
     @Nonnull
     private static CubeDriver driver;
 
-    private static boolean isSpawnedOnce, isGenerating;
-
     private static ICubicWorld world;
+    private static LostCityProfile profile;
 
     public static char liquidChar;
     public static char baseChar;
     public static char airChar;
     public static char hardAirChar;
 
-    private static LostCityProfile profile;
+    // Flags
+
+    private static boolean isSpawnedOnce,
+                           isGenerating;
 
     // Generators
 
@@ -61,11 +63,11 @@ public class LostCityCubicGenerator {
 
     private LostCityCubicGenerator() {}
 
-    public LostCityCubicGenerator(World world) {
-        if(provider != null) return;
+    public LostCityCubicGenerator(World _world) {
+        if(world != null) return;
 
         driver = new CubeDriver();
-        this.world = (ICubicWorld) world;
+        world = (ICubicWorld) _world;
         // provider = world.provider;
 
         /*if(generator != null) return;*/ // TODO: Btm, I'll use this implementation, but we need to do something similar to WorldProvider.createChunkGenerator
@@ -73,10 +75,10 @@ public class LostCityCubicGenerator {
         //provider = new LostWorldProvider();
         //provider.setWorld(world);
 
-        provider= new LostCityChunkGenerator(world, (world.getSeed() >> 3) ^ 34328884229L);
+        // provider = new LostCityChunkGenerator(world, (world.getSeed() >> 3) ^ 34328884229L);
                 // (LostCityChunkGenerator) worldProvider.createChunkGenerator();
 
-        profile = provider.getProfile();
+        profile = WorldTypeTools.getProfile(_world);
 
         liquidChar = (char) Block.BLOCK_STATE_IDS.get(profile.getLiquidBlock());
         baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
@@ -196,7 +198,7 @@ public class LostCityCubicGenerator {
 
     public void generate(int chunkX, int chunkZ, CubePrimer primer) {
         driver.setPrimer(primer);
-        BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, provider);
+        BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 
         // @todo this setup is not very clean
         // CityStyle cityStyle = info.getCityStyle();
@@ -263,9 +265,9 @@ public class LostCityCubicGenerator {
         boolean building = info.hasBuilding;
 
         // TODO: Create custom heightmap for Cubic Worlds
-        ChunkHeightmap heightmap = provider.getHeightmap(info.chunkX, info.chunkZ);
+        ICommonHeightmap heightmap = getHeightmap(info.chunkX, info.chunkZ);
 
-        Random rand = new Random(provider.seed * 377 + chunkZ * 341873128712L + chunkX * 132897987541L);
+        Random rand = new Random(((World)world).getSeed() * 377 + chunkZ * 341873128712L + chunkX * 132897987541L);
         rand.nextFloat();
         rand.nextFloat();
 
@@ -290,7 +292,7 @@ public class LostCityCubicGenerator {
         //LostCityEvent.PreGenCityChunkEvent event = new LostCityEvent.PreGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //if (!MinecraftForge.EVENT_BUS.post(event)) {
             if (building) {
-                buildingGenerator.generate(info, heightmap);
+                buildingGenerator.generate(info, (CubicHeightmap) heightmap);
             } else {
                 // generateStreet(info, heightmap, rand); // TODO
             }
@@ -448,4 +450,75 @@ public class LostCityCubicGenerator {
         invalid.add(Material.LEAVES);
         invalid.add(Material.PLANTS);
     };
+
+    // TODO
+    @Override
+    public ILostChunkInfo getChunkInfo(int chunkX, int chunkZ) {
+        return null;
+    }
+
+    @Override
+    public int getRealHeight(int level) {
+        return 0;
+    }
+
+    @Override
+    public ILostCityAssetRegistry<ILostCityBuilding> getBuildings() {
+        return null;
+    }
+
+    @Override
+    public ILostCityAssetRegistry<ILostCityMultiBuilding> getMultiBuildings() {
+        return null;
+    }
+
+    @Override
+    public ILostCityAssetRegistry<ILostCityCityStyle> getCityStyles() {
+        return null;
+    }
+
+    @Override
+    public int getDimensionId() {
+        return 0;
+    }
+
+    @Override
+    public WorldStyle getWorldStyle() {
+        return null;
+    }
+
+    @Override
+    public long getSeed() {
+        return 0;
+    }
+
+    @Override
+    public LostCityProfile getProfile() {
+        return null;
+    }
+
+    @Override
+    public LostCityProfile getOutsideProfile() {
+        return null;
+    }
+
+    @Override
+    public World getWorld() {
+        return null;
+    }
+
+    @Override
+    public boolean hasMansion(int chunkX, int chunkZ) {
+        return false;
+    }
+
+    @Override
+    public boolean hasOceanMonument(int chunkX, int chunkZ) {
+        return false;
+    }
+
+    @Override
+    public ICommonHeightmap getHeightmap(int chunkX, int chunkZ) {
+        return null;
+    }
 }

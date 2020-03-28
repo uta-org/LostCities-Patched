@@ -1,6 +1,7 @@
 package mcjty.lostcities.cubic.world.generators;
 
 import mcjty.lostcities.config.LostCityConfiguration;
+import mcjty.lostcities.cubic.world.CubicHeightmap;
 import mcjty.lostcities.cubic.world.LostCityCubicGenerator;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import mcjty.lostcities.dimensions.world.ChunkHeightmap;
@@ -131,7 +132,7 @@ public class BuildingGenerator {
         }
     }
 
-    public void generate(BuildingInfo info, ChunkHeightmap heightmap) {
+    public void generate(BuildingInfo info, CubicHeightmap heightmap) {
         int lowestLevel = info.getCityGroundLevel() - info.floorsBelowGround * 6;
 
         Character borderBlock = info.getCityStyle().getBorderBlock();

@@ -1,6 +1,7 @@
 package mcjty.lostcities.dimensions.world.lost;
 
 import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
 import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
 import mcjty.lostcities.dimensions.world.lost.cityassets.AssetRegistries;
 import mcjty.lostcities.dimensions.world.lost.cityassets.CityStyle;
@@ -28,7 +29,7 @@ public class City {
         predefinedStreetMap = null;
     }
 
-    public static PredefinedCity getPredefinedCity(int chunkX, int chunkZ, LostCityChunkGenerator provider) {
+    public static PredefinedCity getPredefinedCity(int chunkX, int chunkZ, ICommonGeneratorProvider provider) {
         if (predefinedCityMap == null) {
             predefinedCityMap = new HashMap<>();
             for (PredefinedCity city : AssetRegistries.PREDEFINED_CITIES.getIterable()) {
@@ -38,10 +39,10 @@ public class City {
         if (predefinedCityMap.isEmpty()) {
             return null;
         }
-        return predefinedCityMap.get(new ChunkCoord(provider.dimensionId, chunkX, chunkZ));
+        return predefinedCityMap.get(new ChunkCoord(provider.getDimensionId(), chunkX, chunkZ));
     }
 
-    public static PredefinedCity.PredefinedBuilding getPredefinedBuilding(int chunkX, int chunkZ, LostCityChunkGenerator provider) {
+    public static PredefinedCity.PredefinedBuilding getPredefinedBuilding(int chunkX, int chunkZ, ICommonGeneratorProvider provider) {
         if (predefinedBuildingMap == null) {
             predefinedBuildingMap = new HashMap<>();
             for (PredefinedCity city : AssetRegistries.PREDEFINED_CITIES.getIterable()) {
@@ -54,10 +55,10 @@ public class City {
         if (predefinedBuildingMap.isEmpty()) {
             return null;
         }
-        return predefinedBuildingMap.get(new ChunkCoord(provider.dimensionId, chunkX, chunkZ));
+        return predefinedBuildingMap.get(new ChunkCoord(provider.getDimensionId(), chunkX, chunkZ));
     }
 
-    public static PredefinedCity.PredefinedStreet getPredefinedStreet(int chunkX, int chunkZ, LostCityChunkGenerator provider) {
+    public static PredefinedCity.PredefinedStreet getPredefinedStreet(int chunkX, int chunkZ, ICommonGeneratorProvider provider) {
         if (predefinedStreetMap == null) {
             predefinedStreetMap = new HashMap<>();
             for (PredefinedCity city : AssetRegistries.PREDEFINED_CITIES.getIterable()) {
@@ -70,16 +71,16 @@ public class City {
         if (predefinedStreetMap.isEmpty()) {
             return null;
         }
-        return predefinedStreetMap.get(new ChunkCoord(provider.dimensionId, chunkX, chunkZ));
+        return predefinedStreetMap.get(new ChunkCoord(provider.getDimensionId(), chunkX, chunkZ));
     }
 
 
-    public static boolean isCityCenter(int chunkX, int chunkZ, LostCityChunkGenerator provider) {
+    public static boolean isCityCenter(int chunkX, int chunkZ, ICommonGeneratorProvider provider) {
         PredefinedCity city = getPredefinedCity(chunkX, chunkZ, provider);
         if (city != null) {
             return true;
         }
-        Random rand = new Random(provider.seed + chunkZ * 797003437L + chunkX * 295075153L);
+        Random rand = new Random(provider.getSeed() + chunkZ * 797003437L + chunkX * 295075153L);
         rand.nextFloat();
         rand.nextFloat();
         if (provider.getProfile().isSpace()) {
@@ -102,12 +103,12 @@ public class City {
     /**
      * Return the radius of the city with the given center
      */
-    public static float getCityRadius(int chunkX, int chunkZ, LostCityChunkGenerator provider) {
+    public static float getCityRadius(int chunkX, int chunkZ, ICommonGeneratorProvider provider) {
         PredefinedCity city = getPredefinedCity(chunkX, chunkZ, provider);
         if (city != null) {
             return city.getRadius();
         }
-        Random rand = new Random(provider.seed + chunkZ * 100001653L + chunkX * 295075153L);
+        Random rand = new Random(provider.getSeed() + chunkZ * 100001653L + chunkX * 295075153L);
         rand.nextFloat();
         rand.nextFloat();
         LostCityProfile profile = provider.getProfile();
@@ -123,7 +124,7 @@ public class City {
     }
 
     // Call this on a city center to get the style of that city
-    public static String getCityStyleForCityCenter(int chunkX, int chunkZ, LostCityChunkGenerator provider) {
+    public static String getCityStyleForCityCenter(int chunkX, int chunkZ, ICommonGeneratorProvider provider) {
         PredefinedCity city = getPredefinedCity(chunkX, chunkZ, provider);
         if (city != null) {
             if (city.getCityStyle() != null) {
@@ -131,15 +132,15 @@ public class City {
             }
             // Otherwise we chose a random city style
         }
-        Random rand = new Random(provider.seed + chunkZ * 899809363L + chunkX * 256203221L);
+        Random rand = new Random(provider.getSeed() + chunkZ * 899809363L + chunkX * 256203221L);
         rand.nextFloat();
         rand.nextFloat();
-        return provider.worldStyle.getRandomCityStyle(provider, chunkX, chunkZ, rand);
+        return provider.getWorldStyle().getRandomCityStyle(provider, chunkX, chunkZ, rand);
     }
 
     // Calculate the citystyle based on all surrounding cities
-    public static CityStyle getCityStyle(int chunkX, int chunkZ, LostCityChunkGenerator provider, LostCityProfile profile) {
-        Random rand = new Random(provider.seed + chunkZ * 593441843L + chunkX * 217645177L);
+    public static CityStyle getCityStyle(int chunkX, int chunkZ, ICommonGeneratorProvider provider, LostCityProfile profile) {
+        Random rand = new Random(provider.getSeed() + chunkZ * 593441843L + chunkX * 217645177L);
         rand.nextFloat();
         rand.nextFloat();
 
@@ -160,14 +161,14 @@ public class City {
         }
         String cityStyleName;
         if (styles.isEmpty()) {
-            cityStyleName = provider.worldStyle.getRandomCityStyle(provider, chunkX, chunkZ, rand);
+            cityStyleName = provider.getWorldStyle().getRandomCityStyle(provider, chunkX, chunkZ, rand);
         } else {
             cityStyleName = Tools.getRandomFromList(rand, styles);
         }
         return AssetRegistries.CITYSTYLES.get(cityStyleName);
     }
 
-    public static float getCityFactor(int chunkX, int chunkZ, LostCityChunkGenerator provider, LostCityProfile profile) {
+    public static float getCityFactor(int chunkX, int chunkZ, ICommonGeneratorProvider provider, LostCityProfile profile) {
         // If we have a predefined building here we force a high city factor
 
         PredefinedCity.PredefinedBuilding predefinedBuilding = getPredefinedBuilding(chunkX, chunkZ, provider);
@@ -227,7 +228,7 @@ public class City {
 
         for (int cx = -1 ; cx <= 1 ; cx++) {
             for (int cz = -1 ; cz <= 1 ; cz++) {
-                Biome[] biomes = BiomeInfo.getBiomeInfo(provider, new ChunkCoord(provider.dimensionId, chunkX + cx, chunkZ + cz)).getBiomes();
+                Biome[] biomes = BiomeInfo.getBiomeInfo(provider, new ChunkCoord(provider.getDimensionId(), chunkX + cx, chunkZ + cz)).getBiomes();
                 if (isTooHighForBuilding(biomes)) {
                     return 0;
                 }
@@ -235,7 +236,7 @@ public class City {
         }
 
         float foundFactor = profile.CITY_DEFAULT_BIOME_FACTOR;
-        Biome[] biomes = BiomeInfo.getBiomeInfo(provider, new ChunkCoord(provider.dimensionId, chunkX, chunkZ)).getBiomes();
+        Biome[] biomes = BiomeInfo.getBiomeInfo(provider, new ChunkCoord(provider.getDimensionId(), chunkX, chunkZ)).getBiomes();
         Map<String, Float> map = profile.getBiomeFactorMap();
         for (Biome biome : biomes) {
             ResourceLocation object = Biome.REGISTRY.getNameForObject(biome);
