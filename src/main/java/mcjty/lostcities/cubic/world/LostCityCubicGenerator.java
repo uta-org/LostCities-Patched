@@ -40,8 +40,6 @@ import java.util.*;
 import static mcjty.lostcities.dimensions.world.terraingen.LostCitiesTerrainGenerator.bedrockChar;
 
 public class LostCityCubicGenerator implements ICommonGeneratorProvider {
-    // private static LostCityChunkGenerator provider;
-
     @Nonnull
     private static CubeDriver driver;
 
@@ -74,11 +72,6 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     private static Map<ChunkCoord, Integer> groundLevels = new HashMap<>();
 
     private static Random random;
-
-    // Constant value to enable or disable city spawn
-    private static final boolean spawn = true;
-
-    // private PopulateCubeEvent currentEvent;
 
     private static Perlin perlin;
 
@@ -125,15 +118,6 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
     // world, random, chunkX, 0, chunkZ
     public void spawnInChunk(ICube cube) {
-        // TODO: Find suitable chunks
-
-        // Remove this
-        if(!spawn) return;
-
-        boolean isDebug = LostCitiesDebug.debug;
-
-        // System.out.println("("+chunkX+", "+chunkY+", "+chunkZ+")");
-
         int chunkX = cube.getX();
         int chunkY = cube.getY();
         int chunkZ = cube.getZ();
@@ -141,28 +125,13 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         // We need this in order to generate once per column
         ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
 
-        // flag created to test
-        boolean canSpawnInDebugMode = true;
-                // isDebug && chunkY >= 25;
-        if(canSpawnInChunk(chunkX, chunkZ) && !groundLevels.containsKey(chunkCoord) && canSpawnInDebugMode)
+        if(canSpawnInChunk(chunkX, chunkZ) && !groundLevels.containsKey(chunkCoord))
         {
             // TODO: This will be wrong
             int x = chunkX * 16 + 8;
             int z = chunkZ * 16 + 8;
 
             int y = chunkY * 16;
-
-            // Update the position
-            // driver.current(x, y, z);
-
-            //if(isGenerating)
-            //    return;
-
-            /*
-            if(isDebug) {
-                System.out.println("Attempting to generate city at chunk ("+x+", "+z+"), y = "+y);
-            }
-            */
 
             isGenerating = generateNear(cube, random, x, y, z, chunkX, chunkZ);
             isSpawnedOnce = isGenerating;
@@ -171,20 +140,6 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
     public static boolean canSpawnInChunk(int chunkX, int chunkZ)
     {
-        // if(!RogueConfig.getBoolean(RogueConfig.DONATURALSPAWN)) return false;
-
-        // TODO
-        /*
-        int dim = editor.getInfo(new Coord(chunkX * 16, 0, chunkZ * 16)).getDimension();
-        List<Integer> wl = new ArrayList<Integer>();
-        wl.addAll(RogueConfig.getIntList(RogueConfig.DIMENSIONWL));
-        List<Integer> bl = new ArrayList<Integer>();
-        bl.addAll(RogueConfig.getIntList(RogueConfig.DIMENSIONBL));
-        if(!SpawnCriteria.isValidDimension(dim, wl, bl)) return false;
-        */
-
-        // boolean _spawn = !isSpawnedOnce && LostCitiesDebug.debug;
-        // if(!isVillageChunk(world, chunkX, chunkZ) && !_spawn) return false;
         if(!isCityChunk(chunkX, chunkZ)) return false;
 
         double spawnChance = 1.0; // RogueConfig.getDouble(RogueConfig.SPAWNCHANCE); // * 0.05;
@@ -213,6 +168,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             // Update profile GROUNDLEVEL for this city
             ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
 
+            /*
             if(!groundLevels.containsKey(chunkCoord)) {
                 groundLevels.put(chunkCoord, y);
                 profile.GROUNDLEVEL = y;
@@ -227,14 +183,19 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
                 profile.GROUNDLEVEL = groundlevel;
             }
+             */
+
+            profile.GROUNDLEVEL = y;
+
+            // Btm, use this impl, because we check for entire columns above.
+            if(!groundLevels.containsKey(chunkCoord)) {
+                groundLevels.put(chunkCoord, y);
+            }
 
             driver.setCube(cube);
             BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 
-            // On this test we are looking for a building, so check this.
-            // if(!info.hasBuilding) return false;
-
-            generate(chunkX, chunkZ, cube, info); // .getCubeFromCubeCoords(x, y, z)
+            generate(chunkX, chunkZ, cube, info);
 
             return true;
         }
