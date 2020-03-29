@@ -1,5 +1,6 @@
 package mcjty.lostcities.cubic.world;
 
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
@@ -82,25 +83,25 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     // Constant value to enable or disable city spawn
     private static final boolean spawn = true;
 
-    private PopulateCubeEvent currentEvent;
-    private CubePrimer currentPrimer;
+    // private PopulateCubeEvent currentEvent;
 
     private LostCityCubicGenerator() {}
 
-    public LostCityCubicGenerator(PopulateCubeEvent event) {
-        currentEvent = event;
-        // currentPrimer = event
+    public LostCityCubicGenerator(World _world) {
+        // currentEvent = event;
 
         if(world == null) {
             // if(!spawn) return;
 
             driver = new CubeDriver();
-            world = (ICubicWorld) event.getWorld();
-            worldObj = event.getWorld();
+            driver.useCube();
 
-            random = event.getRand();
+            world = (ICubicWorld)_world;
+            worldObj = _world;
 
-            profile = WorldTypeTools.getProfile(event.getWorld());
+            random = _world.rand;
+
+            profile = WorldTypeTools.getProfile(_world);
 
             liquidChar = (char) Block.BLOCK_STATE_IDS.get(profile.getLiquidBlock());
             baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
@@ -110,8 +111,8 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             // Create generator instances
             buildingGenerator = new BuildingGenerator(driver);
 
-            dimensionId = event.getWorld().provider.getDimension();
-            seed = event.getWorld().provider.getSeed();
+            dimensionId = _world.provider.getDimension();
+            seed = _world.provider.getSeed();
 
             worldStyle = AssetRegistries.WORLDSTYLES.get(profile.getWorldStyle());
             if (worldStyle == null) {
@@ -121,7 +122,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     }
 
     // world, random, chunkX, 0, chunkZ
-    public void spawnInChunk(CubePrimer primer, int chunkX, int chunkY, int chunkZ) {
+    public void spawnInChunk(ICube cube) {
         // TODO: Find suitable chunks
 
         // Remove this
@@ -131,15 +132,22 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
         // System.out.println("("+chunkX+", "+chunkY+", "+chunkZ+")");
 
+        int chunkX = cube.getX();
+        int chunkY = cube.getY();
+        int chunkZ = cube.getZ();
+
         // flag created to test
         boolean canSpawnInDebugMode = isDebug && chunkY >= 25;
         if(canSpawnInChunk(chunkX, chunkZ) && canSpawnInDebugMode)
         {
             // TODO: This will be wrong
-            int x = chunkX * 16 + 4;
-            int z = chunkZ * 16 + 4;
+            int x = chunkX * 16 + 8;
+            int z = chunkZ * 16 + 8;
 
             int y = chunkY * 16;
+
+            // Update the position
+            // driver.current(x, y, z);
 
             if(isGenerating)
                 return;
@@ -148,7 +156,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
                 System.out.println("Attempting to generate city at chunk ("+x+", "+z+"), y = "+y);
             }
 
-            isGenerating = generateNear(primer, random, x, y, z, chunkX, chunkZ);
+            isGenerating = generateNear(cube, random, x, y, z, chunkX, chunkZ);
             isSpawnedOnce = isGenerating;
         }
     }
@@ -204,7 +212,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         return chunkX == m && chunkZ == n;
     }
 
-    public boolean generateNear(CubePrimer primer, Random rand, int x, int y, int z, int chunkX, int chunkZ){
+    public boolean generateNear(ICube cube, Random rand, int x, int y, int z, int chunkX, int chunkZ){
         int attempts = 50;
 
         for(int i = 0; i < attempts; i++){
@@ -221,13 +229,13 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             // Update profile GROUNDLEVEL for this city
             profile.GROUNDLEVEL = y;
 
-            driver.setPrimer(primer);
+            driver.setCube(cube);
             BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 
             // On this test we are looking for a building, so check this.
             if(!info.hasBuilding) return false;
 
-            generate(chunkX, chunkZ, primer, info); // .getCubeFromCubeCoords(x, y, z)
+            generate(chunkX, chunkZ, cube, info); // .getCubeFromCubeCoords(x, y, z)
 
             return true;
         }
@@ -237,7 +245,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     }
 
 
-    public void generate(int chunkX, int chunkZ, CubePrimer primer, BuildingInfo info) {
+    public void generate(int chunkX, int chunkZ, ICube cube, BuildingInfo info) {
         // driver.setPrimer(primer);
         // BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 

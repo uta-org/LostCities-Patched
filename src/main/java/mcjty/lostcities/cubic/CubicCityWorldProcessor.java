@@ -20,13 +20,18 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
     public static boolean isCubicWorld;
     private static boolean checkedCubicWorld;
 
+    // Not used
     private static CubePrimer currentPrimer;
     private static ICubeGenerator terrainProcessor;
 
-    public CubicCityWorldProcessor(World world)
+    private static World world;
+
+    public CubicCityWorldProcessor(World _world)
             throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
     {
-        super(world);
+        super(_world);
+
+        world = _world;
 
         if(LostCitiesDebug.debug) System.out.println("Creating processor!");
 
@@ -49,12 +54,9 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
     @Override
     public void populate(ICube cube) {
         terrainProcessor.populate(cube);
-    }
 
-    @SubscribeEvent
-    public void generate(PopulateCubeEvent event) {
-        LostCityCubicGenerator generator = new LostCityCubicGenerator(event);
-        generator.spawnInChunk(currentPrimer, event.getCubeX(), event.getCubeY(), event.getCubeZ());
+        LostCityCubicGenerator generator = new LostCityCubicGenerator(world);
+        generator.spawnInChunk(cube);
     }
 
     public static boolean checkForCubicWorld(World world) {
@@ -74,4 +76,3 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
     }
 
 }
-

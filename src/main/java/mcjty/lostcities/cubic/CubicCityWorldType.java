@@ -3,7 +3,6 @@ package mcjty.lostcities.cubic;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import mcjty.lostcities.LostCities;
 import mcjty.lostcities.LostCitiesDebug;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
@@ -20,7 +19,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Proxy;
 
 public class CubicCityWorldType extends WorldType implements ICubicWorldType {
     public CubicCityWorldType () { super("CityCubic"); }
