@@ -3,8 +3,8 @@ package mcjty.lostcities.cubic;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import mcjty.lostcities.cubic.utils.AbstractFactory;
-import mcjty.lostcities.cubic.utils.ClassFactory;
+import mcjty.lostcities.LostCities;
+import mcjty.lostcities.LostCitiesDebug;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiScreen;
@@ -80,18 +80,20 @@ public class CubicCityWorldType extends WorldType implements ICubicWorldType {
     private static GuiScreen getEarthGui(GuiCreateWorld guiCreateWorld, Minecraft minecraft)
             throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
     {
-        Class<?> clazz = AbstractFactory.createDefaultImplementation("io.github.terra121.control.EarthGui");
+        if(LostCitiesDebug.debug) System.out.println("getEarthGui");
+        Class<?> clazz = Class.forName("io.github.terra121.control.EarthGui");
         Constructor<?> constructor = clazz.getConstructor(GuiCreateWorld.class, Minecraft.class);
-        Object instance = constructor.newInstance(guiCreateWorld, minecraft);
-        return (GuiScreen) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new ClassFactory(instance));
+        return (GuiScreen) constructor.newInstance(guiCreateWorld, minecraft);
+        // return (GuiScreen) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new ClassFactory(instance));
     }
 
     private static BiomeProvider getEarthBiomeProvider(Biome biomeIn, World world)
             throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
     {
-        Class<?> clazz = AbstractFactory.createDefaultImplementation("io.github.terra121.EarthBiomeProvider");
+        if(LostCitiesDebug.debug) System.out.println("getEarthBiomeProvider");
+        Class<?> clazz = Class.forName("io.github.terra121.EarthBiomeProvider");
         Constructor<?> constructor = clazz.getConstructor(Biome.class, World.class);
-        Object instance = constructor.newInstance(biomeIn, world);
-        return (BiomeProvider) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new ClassFactory(instance));
+        return (BiomeProvider) constructor.newInstance(biomeIn, world);
+        // return (BiomeProvider) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new ClassFactory(instance));
     }
 }

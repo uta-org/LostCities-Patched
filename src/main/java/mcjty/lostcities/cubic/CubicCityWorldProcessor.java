@@ -35,7 +35,9 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
         Class<?> clazz = Class.forName("io.github.terra121.EarthTerrainProcessor");
         Constructor<?> constructor = clazz.getConstructor(World.class);
         Object instance = constructor.newInstance(world);
-        terrainProcessor = (ICubeGenerator) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new ClassFactory(instance));
+        Class<?> interfaze = Class.forName("io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator");
+        terrainProcessor = (ICubeGenerator) interfaze.cast(instance);
+                // (ICubeGenerator) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new ClassFactory(instance));
     }
 
     // @Override

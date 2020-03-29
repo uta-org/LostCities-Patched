@@ -96,8 +96,7 @@ artifacts {
 
 dependencies {
     // https://mvnrepository.com/artifact/cglib/cglib
-    compile group: 'cglib', name: 'cglib', version: '3.3.0'
-
+    // compile group: 'cglib', name: 'cglib', version: '3.3.0' // not compatible with MC
 
     deobfCompile "mezz.jei:jei_${jei_version}"
     deobfCompile "mcp.mobius.waila:Hwyla:${waila_version}"
