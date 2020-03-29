@@ -57,7 +57,7 @@ public class WorldTypeTools {
         if (world instanceof WorldServer) {
             LostCityProfile profile = getProfileOnServer(world);
             profileMap.put(world.provider.getDimension(), profile);
-            return profile;
+            return profile; // TODO: Check this
         } else {
             // We don't know the information yet so we ask the server. We set a timeout to make sure this
             // message is not sent all the time

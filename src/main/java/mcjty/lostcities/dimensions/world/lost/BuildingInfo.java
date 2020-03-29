@@ -2,6 +2,7 @@ package mcjty.lostcities.dimensions.world.lost;
 
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.cubic.CubicWorldPopulator;
 import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.ChunkHeightmap;
@@ -583,7 +584,9 @@ public class BuildingInfo implements ILostChunkInfo {
         }
 
         // Get the (possbily cached) heightmap for this chunk
-        ICommonHeightmap heightmap = provider.getHeightmap(chunkX, chunkZ);
+        ICommonHeightmap heightmap = CubicWorldPopulator.isCubicWorld
+                ? (ICommonHeightmap) provider.getCubicHeightmap(chunkX, chunkZ)
+                : (ICommonHeightmap) provider.getHeightmap(chunkX, chunkZ);
         // The height at which the highway would be + a thresshold of 3
         int highwayHeight = groundLevel + level * 6 + 3;
         // If there are many places in the chunk above this height we will need a tunnel

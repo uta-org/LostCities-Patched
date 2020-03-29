@@ -42,7 +42,7 @@ public class CubeDriver implements ICubeDriver {
 
     @Override
     public IIndex getCurrent() {
-        return new CubeDriver.Index(currentX, currentY, currentZ);
+        return new CubeDriver.Index(currentX, wrapY(currentY), currentZ);
     }
 
     @Override
@@ -88,80 +88,86 @@ public class CubeDriver implements ICubeDriver {
     @Override
     public void setBlockRange(int x, int y, int z, int y2, char c) {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
-        while (y < y2) {
-            primer.setBlockState(x, y, z, state);
-            y++;
+        int wy = wrapY(y);
+        int wy2 = wrapY(y2);
+
+        while (wy < wy2) {
+            primer.setBlockState(x, wy, z, state);
+            wy++;
         }
     }
 
     @Override
     public void setBlockRangeSafe(int x, int y, int z, int y2, char c) {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
-        while (y < y2) {
-            primer.setBlockState(x, y, z, state);
-            y++;
+        int wy = wrapY(y);
+        int wy2 = wrapY(y2);
+
+        while (wy < wy2) {
+            primer.setBlockState(x, wy, z, state);
+            wy++;
         }
     }
 
     @Override
     public ICubeDriver block(char c) {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
-        primer.setBlockState(currentX, currentY, currentZ, state);
+        primer.setBlockState(currentX, wrapY(currentY), currentZ, state);
         return this;
     }
 
     @Override
     public ICubeDriver block(IBlockState c) {
-        primer.setBlockState(currentX, currentY, currentZ, c);
+        primer.setBlockState(currentX, wrapY(currentY), currentZ, c);
         return this;
     }
 
     @Override
     public ICubeDriver add(char c) {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
-        primer.setBlockState(currentX, currentY++, currentZ, state);
+        primer.setBlockState(currentX, wrapY(currentY++), currentZ, state);
         return this;
     }
 
     @Override
     public char getBlock() {
-        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, currentY, currentZ));
+        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, wrapY(currentY), currentZ));
     }
 
     @Override
     public char getBlockDown() {
-        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, currentY-1, currentZ));
+        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, wrapY(currentY-1), currentZ));
     }
 
     @Override
     public char getBlockEast() {
-        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX+1, currentY, currentZ));
+        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX+1, wrapY(currentY), currentZ));
     }
 
     @Override
     public char getBlockWest() {
-        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX-1, currentY, currentZ));
+        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX-1, wrapY(currentY), currentZ));
     }
 
     @Override
     public char getBlockSouth() {
-        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, currentY, currentZ+1));
+        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, wrapY(currentY), currentZ+1));
     }
 
     @Override
     public char getBlockNorth() {
-        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, currentY, currentZ-1));
+        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, wrapY(currentY), currentZ-1));
     }
 
 
     @Override
     public char getBlock(int x, int y, int z) {
-        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(x, y, z));
+        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(x, wrapY(y), z));
     }
 
     @Override
     public IIndex getIndex(int x, int y, int z) {
-        return new CubeDriver.Index(x, y, z);
+        return new CubeDriver.Index(x, wrapY(y), z);
     }
 
 
@@ -200,5 +206,13 @@ public class CubeDriver implements ICubeDriver {
         driver.currentZ = currentZ;
         driver.primer = primer;
         return driver;
+    }
+
+    // TODO: This is not the best approach
+    private int wrapY(int y) {
+        if(y >= 0 && y < 16) return y; // This value is wrapped. But we need to ensure that it comes from a wrapped approach (if not, we would be skipping unwrapped cases)
+        y = y % 15;
+        if (y < 0) y += 16; // wrap negative chunks
+        return y;
     }
 }

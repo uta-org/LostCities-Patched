@@ -1,10 +1,7 @@
 package mcjty.lostcities;
 
 import mcjty.lostcities.api.ILostCities;
-import mcjty.lostcities.commands.CommandBuildPart;
-import mcjty.lostcities.commands.CommandDebug;
-import mcjty.lostcities.commands.CommandExportBuilding;
-import mcjty.lostcities.commands.CommandExportPart;
+import mcjty.lostcities.commands.*;
 import mcjty.lostcities.dimensions.world.WorldTypeTools;
 import mcjty.lostcities.dimensions.world.lost.*;
 import mcjty.lostcities.setup.IProxy;
@@ -60,6 +57,7 @@ public class LostCities {
         event.registerServerCommand(new CommandExportBuilding());
         event.registerServerCommand(new CommandExportPart());
         event.registerServerCommand(new CommandBuildPart());
+        event.registerServerCommand(new CommandResetCubicGen());
         cleanCaches();
     }
 

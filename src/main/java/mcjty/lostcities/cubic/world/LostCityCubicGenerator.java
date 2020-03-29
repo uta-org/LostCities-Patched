@@ -59,8 +59,8 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
     // Flags
 
-    private static boolean isSpawnedOnce,
-                           isGenerating;
+    public static boolean isSpawnedOnce;
+    private static boolean isGenerating;
 
     // Generators
 
@@ -74,30 +74,24 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
     private static WorldStyle worldStyle;
     private Map<ChunkCoord, CubePrimer> cachedPrimers = new HashMap<>();
-    private Map<ChunkCoord, ICommonHeightmap> cachedHeightmaps = new HashMap<>();
+    private Map<ChunkCoord, CubicHeightmap> cachedHeightmaps = new HashMap<>();
 
     private static Random random;
+
+    // Constant value to enable or disable city spawn
+    private static final boolean spawn = true;
 
     private LostCityCubicGenerator() {}
 
     public LostCityCubicGenerator(World _world, Random _random) {
         if(world != null) return;
+        // if(!spawn) return;
 
         driver = new CubeDriver();
         world = (ICubicWorld) _world;
         worldObj = _world;
 
         random = _random;
-
-        // provider = world.provider;
-
-        /*if(generator != null) return;*/ // TODO: Btm, I'll use this implementation, but we need to do something similar to WorldProvider.createChunkGenerator
-
-        //provider = new LostWorldProvider();
-        //provider.setWorld(world);
-
-        // provider = new LostCityChunkGenerator(world, (world.getSeed() >> 3) ^ 34328884229L);
-                // (LostCityChunkGenerator) worldProvider.createChunkGenerator();
 
         profile = WorldTypeTools.getProfile(_world);
 
@@ -122,13 +116,17 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     public void spawnInChunk(World world, Random random, int chunkX, int chunkY, int chunkZ) {
         // TODO: Find suitable chunks
 
+        // Remove this
+        if(!spawn) return;
+
         boolean isDebug = LostCitiesDebug.debug;
 
         // System.out.println("("+chunkX+", "+chunkY+", "+chunkZ+")");
 
         // flag created to test
         boolean canSpawnInDebugMode = isDebug && chunkY >= 25;
-        if(canSpawnInChunk(world, chunkX, chunkZ) && canSpawnInDebugMode){
+        if(canSpawnInChunk(world, chunkX, chunkZ) && canSpawnInDebugMode)
+        {
             int x = chunkX * 16 + 4;
             int z = chunkZ * 16 + 4;
 
@@ -146,8 +144,8 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         }
     }
 
-    public static boolean canSpawnInChunk(World world, int chunkX, int chunkZ){
-
+    public static boolean canSpawnInChunk(World world, int chunkX, int chunkZ)
+    {
         // if(!RogueConfig.getBoolean(RogueConfig.DONATURALSPAWN)) return false;
 
         // TODO
@@ -160,8 +158,8 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         if(!SpawnCriteria.isValidDimension(dim, wl, bl)) return false;
         */
 
-        boolean spawn = !isSpawnedOnce && LostCitiesDebug.debug;
-        // if(!isVillageChunk(world, chunkX, chunkZ) && !spawn) return false;
+        boolean _spawn = !isSpawnedOnce && LostCitiesDebug.debug;
+        // if(!isVillageChunk(world, chunkX, chunkZ) && !_spawn) return false;
 
         double spawnChance = 1.0; // RogueConfig.getDouble(RogueConfig.SPAWNCHANCE); // * 0.05;
         Random rand = new Random(Objects.hash(chunkX, chunkZ, 31));
@@ -208,14 +206,22 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             if(!validLocation(world, rand, location))
                 continue;
 
-            if(LostCitiesDebug.debug) System.out.println("["+chunkX+", "+chunkZ+"] Generating city chunk!");
+            if(LostCitiesDebug.debug) System.out.println("["+chunkX+", "+chunkZ+"] Generating a part of the city on this chunk!");
             // generator.generateChunk(chunkX, chunkZ, true);
 
             // Update profile GROUNDLEVEL for this city
             profile.GROUNDLEVEL = y;
 
             // TODO: new CubePrimer()?
-            generate(chunkX, chunkZ, new CubePrimer()); // .getCubeFromCubeCoords(x, y, z)
+            CubePrimer primer = new CubePrimer();
+
+            driver.setPrimer(primer);
+            BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
+
+            // On this test we are looking for a building, so check this.
+            if(!info.hasBuilding) return false;
+
+            generate(chunkX, chunkZ, primer, info); // .getCubeFromCubeCoords(x, y, z)
 
             return true;
         }
@@ -225,9 +231,9 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     }
 
 
-    public void generate(int chunkX, int chunkZ, CubePrimer primer) {
-        driver.setPrimer(primer);
-        BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
+    public void generate(int chunkX, int chunkZ, CubePrimer primer, BuildingInfo info) {
+        // driver.setPrimer(primer);
+        // BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 
         // @todo this setup is not very clean
         // CityStyle cityStyle = info.getCityStyle();
@@ -242,34 +248,35 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
         doCityChunk(chunkX, chunkZ, info);
 
-        // TODO
-        /*
         Railway.RailChunkInfo railInfo = info.getRailInfo();
         if (railInfo.getType() != RailChunkType.NONE) {
-            generateRailways(info, railInfo);
+            System.out.println("Generating railways");
+            // generateRailways(info, railInfo); // TODO
         }
-        generateRailwayDungeons(info);
+        // generateRailwayDungeons(info);
 
-        if (provider.getProfile().isSpace()) {
-            generateMonorails(info);
+        if (profile.isSpace()) {
+            System.out.println("Generating monorails");
+            // generateMonorails(info); // TODO
         }
 
-        fixTorches(info);
+        // fixTorches(info); // TODO
 
         // We make a new random here because the primer for a normal chunk may have
         // been cached and we want to be able to do the same when returning from a cached
         // primer vs generating it here
-        provider.rand.setSeed(chunkX * 257017164707L + chunkZ * 101754694003L);
+        // TODO
+        // provider.rand.setSeed(chunkX * 257017164707L + chunkZ * 101754694003L);
 
-        LostCityEvent.PreExplosionEvent event = new LostCityEvent.PreExplosionEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
-        if (!MinecraftForge.EVENT_BUS.post(event)) {
+        //LostCityEvent.PreExplosionEvent event = new LostCityEvent.PreExplosionEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
+        //if (!MinecraftForge.EVENT_BUS.post(event)) {
+        // TODO
             if (info.getDamageArea().hasExplosions()) {
-                breakBlocksForDamage(chunkX, chunkZ, info);
-                fixAfterExplosionNew(info, provider.rand);
+                //breakBlocksForDamage(chunkX, chunkZ, info);
+                //fixAfterExplosionNew(info, provider.rand);
             }
-            generateDebris(provider.rand, info);
-        }
-        */
+            //generateDebris(provider.rand, info);
+        //}
     }
 
     // TODO
@@ -294,7 +301,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         boolean building = info.hasBuilding;
 
         // TODO: Create custom heightmap for Cubic Worlds
-        ICommonHeightmap heightmap = getHeightmap(info.chunkX, info.chunkZ);
+        CubicHeightmap heightmap = getCubicHeightmap(info.chunkX, info.chunkZ);
 
         Random rand = new Random(((World)world).getSeed() * 377 + chunkZ * 341873128712L + chunkX * 132897987541L);
         rand.nextFloat();
@@ -321,8 +328,10 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         //LostCityEvent.PreGenCityChunkEvent event = new LostCityEvent.PreGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //if (!MinecraftForge.EVENT_BUS.post(event)) {
             if (building) {
-                buildingGenerator.generate(info, (CubicHeightmap) heightmap);
+                System.out.println("Generating building at ["+(chunkX*16)+", "+(chunkZ*16)+"]");
+                buildingGenerator.generate(info, heightmap);
             } else {
+                System.out.println("Generating street");
                 // generateStreet(info, heightmap, rand); // TODO
             }
         //}
@@ -330,6 +339,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         //MinecraftForge.EVENT_BUS.post(postevent);
 
         if (info.profile.RUINS) {
+            System.out.println("Generating ruins");
             // generateRuins(info); // TODO
         }
 
@@ -338,15 +348,18 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         if (!building) {
             Railway.RailChunkInfo railInfo = info.getRailInfo();
             if (levelX < 0 && levelZ < 0 && !railInfo.getType().isSurface()) {
+                System.out.println("Generating street decorations");
                 // generateStreetDecorations(info); // TODO
             }
         }
         if (levelX >= 0 || levelZ >= 0) {
+            System.out.println("Generating highways");
             // generateHighways(chunkX, chunkZ, info); // TODO
         }
 
         if (info.profile.RUBBLELAYER) {
             if (!info.hasBuilding || info.ruinHeight >= 0) {
+                System.out.println("Generating rubble");
                 // generateRubble(chunkX, chunkZ, info); // TODO
             }
         }
@@ -547,7 +560,12 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     }
 
     @Override
-    public ICommonHeightmap getHeightmap(int chunkX, int chunkZ) {
+    public ChunkHeightmap getHeightmap(int chunkX, int chunkZ) {
+        throw new IllegalStateException("Can't use chunk heightmaps on cubic worlds.");
+    }
+
+    @Override
+    public CubicHeightmap getCubicHeightmap(int chunkX, int chunkZ) {
         // TODO
         ChunkCoord key = new ChunkCoord(worldObj.provider.getDimension(), chunkX, chunkZ);
         if (cachedHeightmaps.containsKey(key)) {
@@ -558,8 +576,8 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             ICubeDriver driver = new CubeDriver();
             driver.setPrimer(primer);
             CubicHeightmap heightmap = new CubicHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
-            cachedHeightmaps.put(key, (ICommonHeightmap) heightmap);
-            return (ICommonHeightmap) heightmap;
+            cachedHeightmaps.put(key, heightmap);
+            return heightmap;
         } else {
             CubePrimer primer = generatePrimer(chunkX, chunkZ);
             cachedPrimers.put(key, primer);
@@ -567,8 +585,8 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             ICubeDriver driver = new CubeDriver();
             driver.setPrimer(primer);
             CubicHeightmap heightmap = new CubicHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
-            cachedHeightmaps.put(key, (ICommonHeightmap) heightmap);
-            return (ICommonHeightmap) heightmap;
+            cachedHeightmaps.put(key, heightmap);
+            return heightmap;
         }
     }
 

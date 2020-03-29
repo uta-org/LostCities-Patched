@@ -3,6 +3,7 @@ package mcjty.lostcities.cubic.world;
 import mcjty.lostcities.api.IChunkPrimerFactory;
 import mcjty.lostcities.api.ILostChunkGenerator;
 import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.dimensions.world.ChunkHeightmap;
 import mcjty.lostcities.dimensions.world.lost.cityassets.WorldStyle;
 import net.minecraft.world.World;
 
@@ -28,5 +29,7 @@ public interface ICommonGeneratorProvider extends ILostChunkGenerator {
 
     boolean hasOceanMonument(int chunkX, int chunkZ);
 
-    ICommonHeightmap getHeightmap(int chunkX, int chunkZ);
+    CubicHeightmap getCubicHeightmap(int chunkX, int chunkZ);
+
+    ChunkHeightmap getHeightmap(int chunkX, int chunkZ);
 }

@@ -38,7 +38,7 @@ public class LostWorldProvider extends WorldProvider {
     @Nonnull
     public IChunkGenerator createChunkGenerator() {
         if(CubicWorldPopulator.checkForCubicWorld(world)) {
-            if(LostCitiesDebug.debug) System.out.println("Creatimng a default chunk generator for cubic worlds!");
+            if(LostCitiesDebug.debug) System.out.println("Creating a default chunk generator for cubic worlds!");
             return super.createChunkGenerator(); // Don't register any chunk generator, use the default
         }
         return new LostCityChunkGenerator(world, (world.getSeed() >> 3) ^ 34328884229L);

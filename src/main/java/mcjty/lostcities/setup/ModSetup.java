@@ -36,6 +36,13 @@ public class ModSetup {
     public static File modConfigDir;
 
     public void preInit(FMLPreInitializationEvent e) {
+        // TODO: Refactor
+        CubicWorldPopulator wrapper = new CubicWorldPopulator();
+
+        MinecraftForge.EVENT_BUS.register(wrapper);
+        MinecraftForge.TERRAIN_GEN_BUS.register(wrapper);
+        CubeGeneratorsRegistry.register(wrapper, 0);
+
         logger = e.getModLog();
         PacketHandler.registerMessages("lostcities");
 
@@ -44,12 +51,6 @@ public class ModSetup {
         modConfigDir = e.getModConfigurationDirectory();
         ConfigSetup.init();
         ModDimensions.init();
-
-        // TODO: Refactor
-        CubicWorldPopulator wrapper = new CubicWorldPopulator();
-
-        MinecraftForge.EVENT_BUS.register(wrapper);
-        CubeGeneratorsRegistry.register(wrapper, 0);
 
         LootTableList.register(new ResourceLocation(LostCities.MODID, "chests/lostcitychest"));
         LootTableList.register(new ResourceLocation(LostCities.MODID, "chests/raildungeonchest"));

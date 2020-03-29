@@ -5,6 +5,7 @@ import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityConfiguration;
 import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.cubic.world.CubicHeightmap;
 import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.driver.IPrimerDriver;
@@ -57,6 +58,7 @@ import net.minecraftforge.event.terraingen.TerrainGen;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
+import java.io.InvalidClassException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +92,7 @@ public class LostCityChunkGenerator implements IChunkGenerator, ICommonGenerator
     // making that primer again
     // @todo, make this cache timed so that primers expire if they are not used quickly enough?
     private Map<ChunkCoord, ChunkPrimer> cachedPrimers = new HashMap<>();
-    private Map<ChunkCoord, ICommonHeightmap> cachedHeightmaps = new HashMap<>();
+    private Map<ChunkCoord, ChunkHeightmap> cachedHeightmaps = new HashMap<>();
 
     private MapGenStronghold strongholdGenerator = new MapGenStronghold();
     private StructureOceanMonument oceanMonumentGenerator = new LostStructureOceanMonument();
@@ -209,7 +211,7 @@ public class LostCityChunkGenerator implements IChunkGenerator, ICommonGenerator
     }
 
     // Get a heightmap for a chunk. If needed calculate (and cache) a primer
-    public ICommonHeightmap getHeightmap(int chunkX, int chunkZ) {
+    public ChunkHeightmap getHeightmap(int chunkX, int chunkZ) {
         ChunkCoord key = new ChunkCoord(worldObj.provider.getDimension(), chunkX, chunkZ);
         if (cachedHeightmaps.containsKey(key)) {
             return cachedHeightmaps.get(key);
@@ -219,8 +221,8 @@ public class LostCityChunkGenerator implements IChunkGenerator, ICommonGenerator
             IPrimerDriver driver = LostCityConfiguration.OPTIMIZED_CHUNKGEN ? new OptimizedDriver() : new SafeDriver();
             driver.setPrimer(primer);
             ChunkHeightmap heightmap = new ChunkHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
-            cachedHeightmaps.put(key, (ICommonHeightmap) heightmap);
-            return (ICommonHeightmap) heightmap;
+            cachedHeightmaps.put(key, heightmap);
+            return heightmap;
         } else {
             ChunkPrimer primer = generatePrimer(chunkX, chunkZ);
             cachedPrimers.put(key, primer);
@@ -228,8 +230,8 @@ public class LostCityChunkGenerator implements IChunkGenerator, ICommonGenerator
             IPrimerDriver driver = LostCityConfiguration.OPTIMIZED_CHUNKGEN ? new OptimizedDriver() : new SafeDriver();
             driver.setPrimer(primer);
             ChunkHeightmap heightmap = new ChunkHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
-            cachedHeightmaps.put(key, (ICommonHeightmap) heightmap);
-            return (ICommonHeightmap) heightmap;
+            cachedHeightmaps.put(key, heightmap);
+            return  heightmap;
         }
     }
 
@@ -337,7 +339,7 @@ public class LostCityChunkGenerator implements IChunkGenerator, ICommonGenerator
                 char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
                 IPrimerDriver driver = LostCityConfiguration.OPTIMIZED_CHUNKGEN ? new OptimizedDriver() : new SafeDriver();
                 driver.setPrimer(chunkprimer);
-                cachedHeightmaps.put(key, (ICommonHeightmap) new ChunkHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar));
+                cachedHeightmaps.put(key,  new ChunkHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar));
             }
         }
         return chunkprimer;
@@ -774,6 +776,11 @@ public class LostCityChunkGenerator implements IChunkGenerator, ICommonGenerator
     @Override
     public boolean hasOceanMonument(int chunkX, int chunkZ) {
         return oceanMonumentGenerator instanceof LostStructureOceanMonument && ((LostStructureOceanMonument) oceanMonumentGenerator).hasStructure(worldObj, chunkX, chunkZ);
+    }
+
+    @Override
+    public CubicHeightmap getCubicHeightmap(int chunkX, int chunkZ) {
+        throw new IllegalStateException("Can't use cubic heightmaps on non-cubic worlds.");
     }
 
     @Override

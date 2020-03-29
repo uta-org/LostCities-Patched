@@ -21,6 +21,8 @@ public class CubicHeightmap {
                         y++;
                         driver.incY();
                     }
+
+                    // TODO
                     if (y >= 100) {
                         y = 128;
                     } else {
@@ -36,7 +38,7 @@ public class CubicHeightmap {
             // Here we ignore the glass from the spheres
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    int y = 255;
+                    int y = 15;
                     driver.current(x, y, z);
                     while (y > 0 && driver.getBlock() != baseChar) {
                         y--;
@@ -48,7 +50,7 @@ public class CubicHeightmap {
         } else {
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    int y = 255;
+                    int y = 15;
                     driver.current(x, y, z);
                     while (y > 0 && driver.getBlock() == air) {
                         y--;
