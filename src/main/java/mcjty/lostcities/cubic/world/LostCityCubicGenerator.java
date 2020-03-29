@@ -158,9 +158,11 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             //if(isGenerating)
             //    return;
 
+            /*
             if(isDebug) {
                 System.out.println("Attempting to generate city at chunk ("+x+", "+z+"), y = "+y);
             }
+            */
 
             isGenerating = generateNear(cube, random, x, y, z, chunkX, chunkZ);
             isSpawnedOnce = isGenerating;
@@ -206,25 +208,24 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             if(!validLocation(rand, location))
                 continue;
 
-            if(LostCitiesDebug.debug) System.out.println("["+chunkX+", "+chunkZ+"] Generating a part of the city on this chunk!");
+            // if(LostCitiesDebug.debug) System.out.println("["+chunkX+", "+chunkZ+"] Generating a part of the city on this chunk!");
 
             // Update profile GROUNDLEVEL for this city
-            int groundlevel;
             ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
-            boolean alreadyMapped = false;
 
             if(!groundLevels.containsKey(chunkCoord)) {
                 groundLevels.put(chunkCoord, y);
-                groundlevel = y; // Not used
+                profile.GROUNDLEVEL = y;
             }
             else {
-                groundlevel = groundLevels.get(chunkCoord);
-                alreadyMapped = true;
-            }
+                int groundlevel = groundLevels.get(chunkCoord);
 
-            int groundDiff = y - groundlevel;
-            if(!(alreadyMapped && groundDiff >= -2 && groundDiff <= 3)) {
-                return false; // We are outside of the level bounds (-3 * 6 -- 6 * 6)
+                int groundDiff = y - groundlevel;
+                if(!(groundDiff >= -2 && groundDiff <= 3)) {
+                    return false; // We are outside of the level bounds (-3 * 6 -- 6 * 6)
+                }
+
+                profile.GROUNDLEVEL = groundlevel;
             }
 
             driver.setCube(cube);
@@ -238,7 +239,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             return true;
         }
 
-        if(LostCitiesDebug.debug) System.out.println("Surpassed maximum ("+attempts+") attempts!");
+        // if(LostCitiesDebug.debug) System.out.println("Surpassed maximum ("+attempts+") attempts!");
         return false;
     }
 
@@ -262,13 +263,13 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
         Railway.RailChunkInfo railInfo = info.getRailInfo();
         if (railInfo.getType() != RailChunkType.NONE) {
-            System.out.println("Generating railways");
+            // System.out.println("Generating railways");
             // generateRailways(info, railInfo); // TODO
         }
         // generateRailwayDungeons(info);
 
         if (profile.isSpace()) {
-            System.out.println("Generating monorails");
+            // System.out.println("Generating monorails");
             // generateMonorails(info); // TODO
         }
 
@@ -340,10 +341,10 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         //LostCityEvent.PreGenCityChunkEvent event = new LostCityEvent.PreGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //if (!MinecraftForge.EVENT_BUS.post(event)) {
             if (building) {
-                System.out.println("Generating building at ["+(chunkX*16)+", "+(chunkZ*16)+"]");
+                System.out.println("Generating building at ["+(chunkX*16)+", "+(info.profile.GROUNDLEVEL/16)+", "+(chunkZ*16)+"]");
                 buildingGenerator.generate(info, heightmap);
             } else {
-                System.out.println("Generating street");
+                // System.out.println("Generating street");
                 // generateStreet(info, heightmap, rand); // TODO
             }
         //}
@@ -351,7 +352,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         //MinecraftForge.EVENT_BUS.post(postevent);
 
         if (info.profile.RUINS) {
-            System.out.println("Generating ruins");
+            // System.out.println("Generating ruins");
             // generateRuins(info); // TODO
         }
 
@@ -360,18 +361,18 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         if (!building) {
             Railway.RailChunkInfo railInfo = info.getRailInfo();
             if (levelX < 0 && levelZ < 0 && !railInfo.getType().isSurface()) {
-                System.out.println("Generating street decorations");
+                // System.out.println("Generating street decorations");
                 // generateStreetDecorations(info); // TODO
             }
         }
         if (levelX >= 0 || levelZ >= 0) {
-            System.out.println("Generating highways");
+            // System.out.println("Generating highways");
             // generateHighways(chunkX, chunkZ, info); // TODO
         }
 
         if (info.profile.RUBBLELAYER) {
             if (!info.hasBuilding || info.ruinHeight >= 0) {
-                System.out.println("Generating rubble");
+                // System.out.println("Generating rubble");
                 // generateRubble(chunkX, chunkZ, info); // TODO
             }
         }
