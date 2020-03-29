@@ -14,7 +14,7 @@ buildscript {
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
+        // classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
     }
 }
 
@@ -106,18 +106,20 @@ dependencies {
 
     //compile "li.cil.oc:OpenComputers:MC1.7.10-1.5.+:api"
 
+/*
     compile("org.spongepowered:mixin:0.8.1-SNAPSHOT")
     {
         transitive = false
     }
+*/
 
     deobfCompile("io.github.opencubicchunks:cubicchunks-api:1.12.2-0.0-SNAPSHOT")
     {
         transitive = false
     }
 
-    provided files("lib/CubicChunks.jar")
-    provided files("lib/CubicWorldGen.jar")
+    // provided files("lib/CubicChunks.jar")
+    // provided files("lib/CubicWorldGen.jar")
     provided files("lib/terra121.jar")
 }
 

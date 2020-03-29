@@ -14,19 +14,6 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.1-SNAPSHOT/c7c000c209a33783cf80f7105032b8d89e1f65d2/mixin-0.8.1-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC>
-          <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.1-SNAPSHOT/c87da30140e73e331a83005c5e6bde6459a7fe/mixin-0.8.1-SNAPSHOT-javadoc.jar!/" />
-        </JAVADOC>
-        <SOURCES>
-          <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.1-SNAPSHOT/9c121930165fc7b79095ca90a0df2dab53ed7c1b/mixin-0.8.1-SNAPSHOT-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
           <root url="jar://$USER_HOME$/.gradle/caches/minecraft/deobfedDeps/deobf/mezz/jei/jei_1.12.2/4.8.5.159/jei_1.12.2-4.8.5.159.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -817,24 +804,6 @@
         <SOURCES>
           <root url="jar://$MODULE_DIR$/.gradle/minecraft/forgeSrc-1.12.2-14.23.5.2847-PROJECT(LostCities)-sources.jar!/" />
         </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/CubicChunks.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/CubicWorldGen.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">

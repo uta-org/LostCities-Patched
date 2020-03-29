@@ -5,7 +5,6 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.terra121.EarthBiomeProvider;
 import io.github.terra121.EarthTerrainProcessor;
-import io.github.terra121.EarthWorldType;
 import io.github.terra121.control.EarthGui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
