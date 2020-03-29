@@ -60,6 +60,7 @@ repositories {
     // currently gradle seems to resolve dependencies from repositories in the order they are defined here 
     maven { url = "https://minecraft.curseforge.com/api/maven/" }
     maven { url = "https://repo.elytradev.com" } // jankson snapshot 
+    maven { url = "https://mvnrepository.com/artifact" }
 }
 
 def ENV = System.getenv()
@@ -94,6 +95,10 @@ artifacts {
 
 
 dependencies {
+    // https://mvnrepository.com/artifact/cglib/cglib
+    compile group: 'cglib', name: 'cglib', version: '3.3.0'
+
+
     deobfCompile "mezz.jei:jei_${jei_version}"
     deobfCompile "mcp.mobius.waila:Hwyla:${waila_version}"
     deobfCompile "mcjty.theoneprobe:TheOneProbe-${top_version}"

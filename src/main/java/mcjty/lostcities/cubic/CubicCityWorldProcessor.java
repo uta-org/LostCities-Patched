@@ -5,6 +5,8 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
+import mcjty.lostcities.LostCitiesDebug;
+import mcjty.lostcities.cubic.utils.ClassFactory;
 import mcjty.lostcities.cubic.world.LostCityCubicGenerator;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -26,11 +28,14 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
     {
         super(world);
 
+        if(LostCitiesDebug.debug) System.out.println("Creating processor!");
+
+        if(terrainProcessor != null) return;
+
         Class<?> clazz = Class.forName("io.github.terra121.EarthTerrainProcessor");
         Constructor<?> constructor = clazz.getConstructor(World.class);
         Object instance = constructor.newInstance(world);
-        terrainProcessor = (ICubeGenerator) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new MyHandler(instance));
-                // new EarthTerrainProcessor(world);
+        terrainProcessor = (ICubeGenerator) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new ClassFactory(instance));
     }
 
     // @Override
@@ -66,44 +71,5 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
         return isCubicWorld;
     }
 
-    public static class MyHandler implements InvocationHandler {
-        private final Object o;
-
-        public MyHandler(Object o) {
-            this.o = o;
-        }
-
-        public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
-            Method method = o.getClass().getMethod(m.getName(), m.getParameterTypes());
-            return method.invoke(o, args);
-        }
-    }
-
-    /*
-    @Override
-    public void generate(Random random, int chunkX, int chunkZ, World world, IChunkGenerator chunkGenerator, IChunkProvider chunkProvider) {
-        CubicLostCityGenerator generator = new CubicLostCityGenerator();
-        generator.spawnInChunk(world, random, chunkX, 0, chunkZ);
-    }
-    */
-
-    /*
-    // Use Deprecated CubePopulatorEvent because Terra121 uses it.
-    @SubscribeEvent
-    public void generate(CubePopulatorEvent event) {
-        World world = event.getWorld();
-        CubePos pos = event.getCube().getCoords();
-        this.generate(world, world.rand, pos, event.getCube().getBiome(pos.getCenterBlockPos()), event);
-    }
-
-    @Override
-    public void generate(World world, Random random, CubePos pos, Biome biome) {
-        this.generate(world, random, pos, biome, new CubePopulatorEvent(world, null));
-    }
-
-    private void generate(World world, Random random, CubePos pos, Biome biome, CubePopulatorEvent event) {
-        LostCityCubicGenerator generator = new LostCityCubicGenerator(world, random);
-        generator.spawnInChunk(world, random, pos.chunkPos().x, pos.getY(), pos.chunkPos().z);
-    }
-    */
 }
+

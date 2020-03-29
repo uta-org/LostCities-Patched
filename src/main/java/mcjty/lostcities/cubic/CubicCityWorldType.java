@@ -3,6 +3,8 @@ package mcjty.lostcities.cubic;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
+import mcjty.lostcities.cubic.utils.AbstractFactory;
+import mcjty.lostcities.cubic.utils.ClassFactory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiScreen;
@@ -74,21 +76,22 @@ public class CubicCityWorldType extends WorldType implements ICubicWorldType {
         }
     }
 
+
     private static GuiScreen getEarthGui(GuiCreateWorld guiCreateWorld, Minecraft minecraft)
             throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
     {
-        Class<?> clazz = Class.forName("io.github.terra121.control.EarthGui");
+        Class<?> clazz = AbstractFactory.createDefaultImplementation("io.github.terra121.control.EarthGui");
         Constructor<?> constructor = clazz.getConstructor(GuiCreateWorld.class, Minecraft.class);
         Object instance = constructor.newInstance(guiCreateWorld, minecraft);
-        return (GuiScreen) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new CubicCityWorldProcessor.MyHandler(instance));
+        return (GuiScreen) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new ClassFactory(instance));
     }
 
     private static BiomeProvider getEarthBiomeProvider(Biome biomeIn, World world)
             throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
     {
-        Class<?> clazz = Class.forName("io.github.terra121.EarthBiomeProvider");
+        Class<?> clazz = AbstractFactory.createDefaultImplementation("io.github.terra121.EarthBiomeProvider");
         Constructor<?> constructor = clazz.getConstructor(Biome.class, World.class);
         Object instance = constructor.newInstance(biomeIn, world);
-        return (BiomeProvider) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new CubicCityWorldProcessor.MyHandler(instance));
+        return (BiomeProvider) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new ClassFactory(instance));
     }
 }
