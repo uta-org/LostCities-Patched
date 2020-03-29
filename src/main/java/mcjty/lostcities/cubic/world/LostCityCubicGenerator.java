@@ -2,6 +2,7 @@ package mcjty.lostcities.cubic.world;
 
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
 import javafx.beans.binding.MapExpression;
 import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.api.*;
@@ -81,39 +82,46 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     // Constant value to enable or disable city spawn
     private static final boolean spawn = true;
 
+    private PopulateCubeEvent currentEvent;
+    private CubePrimer currentPrimer;
+
     private LostCityCubicGenerator() {}
 
-    public LostCityCubicGenerator(World _world, Random _random) {
-        if(world != null) return;
-        // if(!spawn) return;
+    public LostCityCubicGenerator(PopulateCubeEvent event) {
+        currentEvent = event;
+        // currentPrimer = event
 
-        driver = new CubeDriver();
-        world = (ICubicWorld) _world;
-        worldObj = _world;
+        if(world == null) {
+            // if(!spawn) return;
 
-        random = _random;
+            driver = new CubeDriver();
+            world = (ICubicWorld) event.getWorld();
+            worldObj = event.getWorld();
 
-        profile = WorldTypeTools.getProfile(_world);
+            random = event.getRand();
 
-        liquidChar = (char) Block.BLOCK_STATE_IDS.get(profile.getLiquidBlock());
-        baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
-        airChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.AIR.getDefaultState());
-        hardAirChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.COMMAND_BLOCK.getDefaultState());
+            profile = WorldTypeTools.getProfile(event.getWorld());
 
-        // Create generator instances
-        buildingGenerator = new BuildingGenerator(driver);
+            liquidChar = (char) Block.BLOCK_STATE_IDS.get(profile.getLiquidBlock());
+            baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
+            airChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.AIR.getDefaultState());
+            hardAirChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.COMMAND_BLOCK.getDefaultState());
 
-        dimensionId = _world.provider.getDimension();
-        seed = _world.provider.getSeed();
+            // Create generator instances
+            buildingGenerator = new BuildingGenerator(driver);
 
-        worldStyle = AssetRegistries.WORLDSTYLES.get(profile.getWorldStyle());
-        if (worldStyle == null) {
-            throw new RuntimeException("Unknown worldstyle '" + profile.getWorldStyle() + "'!");
+            dimensionId = event.getWorld().provider.getDimension();
+            seed = event.getWorld().provider.getSeed();
+
+            worldStyle = AssetRegistries.WORLDSTYLES.get(profile.getWorldStyle());
+            if (worldStyle == null) {
+                throw new RuntimeException("Unknown worldstyle '" + profile.getWorldStyle() + "'!");
+            }
         }
     }
 
     // world, random, chunkX, 0, chunkZ
-    public void spawnInChunk(World world, Random random, int chunkX, int chunkY, int chunkZ) {
+    public void spawnInChunk(CubePrimer primer, int chunkX, int chunkY, int chunkZ) {
         // TODO: Find suitable chunks
 
         // Remove this
@@ -125,8 +133,9 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
         // flag created to test
         boolean canSpawnInDebugMode = isDebug && chunkY >= 25;
-        if(canSpawnInChunk(world, chunkX, chunkZ) && canSpawnInDebugMode)
+        if(canSpawnInChunk(chunkX, chunkZ) && canSpawnInDebugMode)
         {
+            // TODO: This will be wrong
             int x = chunkX * 16 + 4;
             int z = chunkZ * 16 + 4;
 
@@ -139,12 +148,12 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
                 System.out.println("Attempting to generate city at chunk ("+x+", "+z+"), y = "+y);
             }
 
-            isGenerating = generateNear(world, random, x, y, z, chunkX, chunkZ);
+            isGenerating = generateNear(primer, random, x, y, z, chunkX, chunkZ);
             isSpawnedOnce = isGenerating;
         }
     }
 
-    public static boolean canSpawnInChunk(World world, int chunkX, int chunkZ)
+    public static boolean canSpawnInChunk(int chunkX, int chunkZ)
     {
         // if(!RogueConfig.getBoolean(RogueConfig.DONATURALSPAWN)) return false;
 
@@ -169,7 +178,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         return rand.nextFloat() < spawnChance;
     }
 
-    public static boolean isVillageChunk(World world, int chunkX, int chunkZ){
+    public static boolean isVillageChunk(int chunkX, int chunkZ){
         int frequency = 10; // RogueConfig.getInt(RogueConfig.SPAWNFREQUENCY);
         int min = 8 * frequency / 10;
         int max = 32 * frequency / 10;
@@ -183,7 +192,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         int m = tempX / max;
         int n = tempZ / max;
 
-        Random r =  world.setRandomSeed(m, n, 10387312);
+        Random r =  worldObj.setRandomSeed(m, n, 10387312);
                 // editor.getSeededRandom(m, n, 10387312);
 
         m *= max;
@@ -195,7 +204,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         return chunkX == m && chunkZ == n;
     }
 
-    public boolean generateNear(World world, Random rand, int x, int y, int z, int chunkX, int chunkZ){
+    public boolean generateNear(CubePrimer primer, Random rand, int x, int y, int z, int chunkX, int chunkZ){
         int attempts = 50;
 
         for(int i = 0; i < attempts; i++){
@@ -203,7 +212,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             // if(isCubicWorld) // This is always true
                 location.add(Cardinal.UP, y);
 
-            if(!validLocation(world, rand, location))
+            if(!validLocation(rand, location))
                 continue;
 
             if(LostCitiesDebug.debug) System.out.println("["+chunkX+", "+chunkZ+"] Generating a part of the city on this chunk!");
@@ -211,9 +220,6 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
             // Update profile GROUNDLEVEL for this city
             profile.GROUNDLEVEL = y;
-
-            // TODO: new CubePrimer()?
-            CubePrimer primer = new CubePrimer();
 
             driver.setPrimer(primer);
             BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
@@ -395,9 +401,9 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     }
      */
 
-    public boolean validLocation(World world, Random rand, Coord column){
+    public boolean validLocation(Random rand, Coord column){
 
-        Biome biome = world.getBiome(column.getBlockPos());
+        Biome biome = worldObj.getBiome(column.getBlockPos());
                 // editor.getInfo(column).getBiome();
 
         Type[] invalidBiomes = new Type[]{
@@ -426,14 +432,14 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
         Coord cursor = new Coord(column.getX(), upperLimit, column.getZ());
 
-        if(!isAirBlock(world, cursor)){
+        if(!isAirBlock(cursor)){
             return false;
         }
 
-        while(!validGroundBlock(world, cursor)){
+        while(!validGroundBlock(cursor)){
             cursor.add(Cardinal.DOWN);
             if(cursor.getY() < lowerLimit) return false;
-            if(world.getBlockState(cursor.getBlockPos()).getMaterial() == Material.WATER) return false;
+            if(worldObj.getBlockState(cursor.getBlockPos()).getMaterial() == Material.WATER) return false;
         }
 
         return true;
@@ -470,13 +476,13 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         return new Coord(structurebp);
     }
 
-    public boolean isAirBlock(World world, Coord pos){
-        return world.isAirBlock(pos.getBlockPos());
+    public boolean isAirBlock(Coord pos){
+        return worldObj.isAirBlock(pos.getBlockPos());
     }
 
-    public boolean validGroundBlock(World world, Coord pos){
-        if(isAirBlock(world, pos)) return false;
-        IBlockState block = world.getBlockState(pos.getBlockPos());
+    public boolean validGroundBlock(Coord pos){
+        if(isAirBlock(pos)) return false;
+        IBlockState block = worldObj.getBlockState(pos.getBlockPos());
         return !invalid.contains(block.getMaterial());
     }
 

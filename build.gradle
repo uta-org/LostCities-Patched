@@ -115,6 +115,10 @@ dependencies {
     {
         transitive = false
     }
+
+    provided files("lib/CubicChunks.jar")
+    provided files("lib/CubicWorldGen.jar")
+    provided files("lib/terra121.jar")
 }
 
 jar {

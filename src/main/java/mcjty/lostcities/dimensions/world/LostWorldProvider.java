@@ -1,7 +1,7 @@
 package mcjty.lostcities.dimensions.world;
 
 import mcjty.lostcities.LostCitiesDebug;
-import mcjty.lostcities.cubic.CubicWorldPopulator;
+import mcjty.lostcities.cubic.CubicCityWorldProcessor;
 import mcjty.lostcities.config.BiomeSelectionStrategy;
 import mcjty.lostcities.config.LostCityConfiguration;
 import mcjty.lostcities.config.LostCityProfile;
@@ -37,7 +37,7 @@ public class LostWorldProvider extends WorldProvider {
     @Override
     @Nonnull
     public IChunkGenerator createChunkGenerator() {
-        if(CubicWorldPopulator.checkForCubicWorld(world)) {
+        if(CubicCityWorldProcessor.checkForCubicWorld(world)) {
             if(LostCitiesDebug.debug) System.out.println("Creating a default chunk generator for cubic worlds!");
             return super.createChunkGenerator(); // Don't register any chunk generator, use the default
         }

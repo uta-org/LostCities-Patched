@@ -1,12 +1,11 @@
 package mcjty.lostcities.setup;
 
-import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
-import mcjty.lostcities.cubic.CubicWorldPopulator;
 import mcjty.lostcities.ForgeEventHandlers;
 import mcjty.lostcities.LostCities;
 import mcjty.lostcities.TerrainEventHandlers;
 import mcjty.lostcities.config.ConfigSetup;
 import mcjty.lostcities.config.LostCityConfiguration;
+import mcjty.lostcities.cubic.CubicCityWorldType;
 import mcjty.lostcities.dimensions.ModDimensions;
 import mcjty.lostcities.dimensions.world.lost.cityassets.AssetRegistries;
 import mcjty.lostcities.network.PacketHandler;
@@ -36,15 +35,19 @@ public class ModSetup {
     public static File modConfigDir;
 
     public void preInit(FMLPreInitializationEvent e) {
+        /*
         // TODO: Refactor
         CubicWorldPopulator wrapper = new CubicWorldPopulator();
 
         MinecraftForge.EVENT_BUS.register(wrapper);
         MinecraftForge.TERRAIN_GEN_BUS.register(wrapper);
         CubeGeneratorsRegistry.register(wrapper, 0);
+        */
 
         logger = e.getModLog();
         PacketHandler.registerMessages("lostcities");
+
+        CubicCityWorldType.create();
 
         setupModCompat();
 

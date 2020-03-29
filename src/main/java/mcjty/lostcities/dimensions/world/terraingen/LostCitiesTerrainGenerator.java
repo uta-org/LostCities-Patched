@@ -4,10 +4,9 @@ import mcjty.lostcities.api.LostCityEvent;
 import mcjty.lostcities.api.RailChunkType;
 import mcjty.lostcities.config.LostCityConfiguration;
 import mcjty.lostcities.config.LostCityProfile;
-import mcjty.lostcities.cubic.CubicWorldPopulator;
+import mcjty.lostcities.cubic.CubicCityWorldProcessor;
 import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
-import mcjty.lostcities.dimensions.world.ChunkHeightmap;
 import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
 import mcjty.lostcities.dimensions.world.driver.IIndex;
 import mcjty.lostcities.dimensions.world.driver.IPrimerDriver;
@@ -888,7 +887,7 @@ public class LostCitiesTerrainGenerator extends NormalTerrainGenerator {
     private void doCityChunk(int chunkX, int chunkZ, BuildingInfo info) {
         boolean building = info.hasBuilding;
 
-        ICommonHeightmap heightmap = CubicWorldPopulator.isCubicWorld
+        ICommonHeightmap heightmap = CubicCityWorldProcessor.isCubicWorld
                 ? (ICommonHeightmap) provider.getCubicHeightmap(info.chunkX, info.chunkZ)
                 : (ICommonHeightmap) provider.getHeightmap(info.chunkX, info.chunkZ);
 
@@ -1749,7 +1748,7 @@ public class LostCitiesTerrainGenerator extends NormalTerrainGenerator {
                 if (adjacent.isCity) {
                     adjacentY = Math.min(adjacentY, adjacent.getCityGroundLevel());
                 } else {
-                    ICommonHeightmap adjacentHeightmap = CubicWorldPopulator.isCubicWorld
+                    ICommonHeightmap adjacentHeightmap = CubicCityWorldProcessor.isCubicWorld
                             ? (ICommonHeightmap) provider.getCubicHeightmap(info.chunkX, info.chunkZ)
                             : (ICommonHeightmap) provider.getHeightmap(info.chunkX, info.chunkZ);
                     int minimumHeight = adjacentHeightmap.getMinimumHeight();
@@ -1787,7 +1786,7 @@ public class LostCitiesTerrainGenerator extends NormalTerrainGenerator {
      * Generate a column of wall blocks (and stone below that in water)
      */
     private void generateBorderSupport(BuildingInfo info, char wall, int x, int z, int offset) {
-        ICommonHeightmap heightmap = CubicWorldPopulator.isCubicWorld
+        ICommonHeightmap heightmap = CubicCityWorldProcessor.isCubicWorld
                 ? (ICommonHeightmap) provider.getCubicHeightmap(info.chunkX, info.chunkZ)
                 : (ICommonHeightmap) provider.getHeightmap(info.chunkX, info.chunkZ);
         int height = heightmap.getHeight(x, z);
@@ -2234,7 +2233,7 @@ public class LostCitiesTerrainGenerator extends NormalTerrainGenerator {
             }
             if (info.profile.isSpace()) {
                 // Base it on ground level
-                ICommonHeightmap adjacentHeightmap = CubicWorldPopulator.isCubicWorld
+                ICommonHeightmap adjacentHeightmap = CubicCityWorldProcessor.isCubicWorld
                         ? (ICommonHeightmap) provider.getCubicHeightmap(info.chunkX, info.chunkZ)
                         : (ICommonHeightmap) provider.getHeightmap(info.chunkX, info.chunkZ);
                 int adjacentHeight = adjacentHeightmap.getAverageHeight();
