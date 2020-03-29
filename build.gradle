@@ -98,6 +98,8 @@ dependencies {
     // https://mvnrepository.com/artifact/cglib/cglib
     // compile group: 'cglib', name: 'cglib', version: '3.3.0' // not compatible with MC
 
+    compile "com.flowpowered:flow-noise:1.0.1-SNAPSHOT"
+
     deobfCompile "mezz.jei:jei_${jei_version}"
     deobfCompile "mcp.mobius.waila:Hwyla:${waila_version}"
     deobfCompile "mcjty.theoneprobe:TheOneProbe-${top_version}"
