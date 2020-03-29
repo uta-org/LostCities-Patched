@@ -3,19 +3,22 @@ package mcjty.lostcities.cubic;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import io.github.terra121.EarthBiomeProvider;
-import io.github.terra121.EarthTerrainProcessor;
-import io.github.terra121.control.EarthGui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.init.Biomes;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProviderSurface;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 
 public class CubicCityWorldType extends WorldType implements ICubicWorldType {
     public CubicCityWorldType () { super("CityCubic"); }
@@ -23,12 +26,22 @@ public class CubicCityWorldType extends WorldType implements ICubicWorldType {
     public static CubicCityWorldType create() { return new CubicCityWorldType(); }
 
     public ICubeGenerator createCubeGenerator(World world) {
-        return new CubicCityWorldProcessor(world);
+        try {
+            return new CubicCityWorldProcessor(world);
+        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
     public BiomeProvider getBiomeProvider(World world) {
-        return new EarthBiomeProvider(Biomes.FOREST, world);
+        try {
+            return getEarthBiomeProvider(Biomes.FOREST, world);
+        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
@@ -54,6 +67,28 @@ public class CubicCityWorldType extends WorldType implements ICubicWorldType {
 
     @SideOnly(Side.CLIENT)
     public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
-        mc.displayGuiScreen(new EarthGui(guiCreateWorld, mc));
+        try {
+            mc.displayGuiScreen(getEarthGui(guiCreateWorld, mc));
+        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static GuiScreen getEarthGui(GuiCreateWorld guiCreateWorld, Minecraft minecraft)
+            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
+    {
+        Class<?> clazz = Class.forName("io.github.terra121.control.EarthGui");
+        Constructor<?> constructor = clazz.getConstructor(GuiCreateWorld.class, Minecraft.class);
+        Object instance = constructor.newInstance(guiCreateWorld, minecraft);
+        return (GuiScreen) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new CubicCityWorldProcessor.MyHandler(instance));
+    }
+
+    private static BiomeProvider getEarthBiomeProvider(Biome biomeIn, World world)
+            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
+    {
+        Class<?> clazz = Class.forName("io.github.terra121.EarthBiomeProvider");
+        Constructor<?> constructor = clazz.getConstructor(Biome.class, World.class);
+        Object instance = constructor.newInstance(biomeIn, world);
+        return (BiomeProvider) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new CubicCityWorldProcessor.MyHandler(instance));
     }
 }

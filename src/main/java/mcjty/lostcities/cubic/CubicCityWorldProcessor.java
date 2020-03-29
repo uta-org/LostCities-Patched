@@ -1,28 +1,47 @@
 package mcjty.lostcities.cubic;
 
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
-import io.github.terra121.EarthTerrainProcessor;
 import mcjty.lostcities.cubic.world.LostCityCubicGenerator;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-public class CubicCityWorldProcessor extends EarthTerrainProcessor {
+import java.lang.reflect.*;
+
+// import io.github.terra121.EarthTerrainProcessor;
+
+public class CubicCityWorldProcessor extends CubeCityGenerator {
 
     public static boolean isCubicWorld;
     private static boolean checkedCubicWorld;
 
     private static CubePrimer currentPrimer;
+    private static ICubeGenerator terrainProcessor;
 
-    public CubicCityWorldProcessor(World world) {
+    public CubicCityWorldProcessor(World world)
+            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
+    {
         super(world);
+
+        Class<?> clazz = Class.forName("io.github.terra121.EarthTerrainProcessor");
+        Constructor<?> constructor = clazz.getConstructor(World.class);
+        Object instance = constructor.newInstance(world);
+        terrainProcessor = (ICubeGenerator) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new MyHandler(instance));
+                // new EarthTerrainProcessor(world);
     }
 
     // @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-        currentPrimer = super.generateCube(cubeX, cubeY, cubeZ);
+        currentPrimer = terrainProcessor.generateCube(cubeX, cubeY, cubeZ);
         return currentPrimer;
+    }
+
+    @Override
+    public void populate(ICube cube) {
+        terrainProcessor.populate(cube);
     }
 
     @SubscribeEvent
@@ -45,6 +64,19 @@ public class CubicCityWorldProcessor extends EarthTerrainProcessor {
         }
 
         return isCubicWorld;
+    }
+
+    public static class MyHandler implements InvocationHandler {
+        private final Object o;
+
+        public MyHandler(Object o) {
+            this.o = o;
+        }
+
+        public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
+            Method method = o.getClass().getMethod(m.getName(), m.getParameterTypes());
+            return method.invoke(o, args);
+        }
     }
 
     /*
