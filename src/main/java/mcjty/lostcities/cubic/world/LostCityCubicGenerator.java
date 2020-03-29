@@ -1,11 +1,8 @@
 package mcjty.lostcities.cubic.world;
 
-import com.flowpowered.noise.Noise;
-import com.flowpowered.noise.module.source.Perlin;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
-import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
@@ -30,9 +27,9 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.ChunkProviderServer;
-import net.minecraft.world.gen.NoiseGeneratorPerlin;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
+import org.spongepowered.noise.module.source.Perlin;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -53,8 +50,8 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
     // Flags
 
-    public static boolean isSpawnedOnce;
-    private static boolean isGenerating;
+    // public static boolean isSpawnedOnce;
+    // private static boolean isGenerating;
 
     // Generators
 
@@ -78,11 +75,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     private LostCityCubicGenerator() {}
 
     public LostCityCubicGenerator(World _world) {
-        // currentEvent = event;
-
         if(world == null) {
-            // if(!spawn) return;
-
             driver = new CubeDriver();
             driver.useCube();
 
@@ -111,12 +104,13 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
             perlin = new Perlin();
             perlin.setSeed((int)seed);
-            perlin.setOctaveCount(6);
-            perlin.setFrequency(0.02);
+            perlin.setOctaveCount(5);
+            perlin.setFrequency(0.1);
+            perlin.setPersistence(0.8);
+            perlin.setLacunarity(1.25);
         }
     }
 
-    // world, random, chunkX, 0, chunkZ
     public void spawnInChunk(ICube cube) {
         int chunkX = cube.getX();
         int chunkY = cube.getY();
@@ -133,8 +127,10 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
             int y = chunkY * 16;
 
-            isGenerating = generateNear(cube, random, x, y, z, chunkX, chunkZ);
-            isSpawnedOnce = isGenerating;
+            generateNear(cube, random, x, y, z, chunkX, chunkZ);
+
+            // isGenerating =
+            // isSpawnedOnce = isGenerating;
         }
     }
 
@@ -142,14 +138,24 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     {
         if(!isCityChunk(chunkX, chunkZ)) return false;
 
-        double spawnChance = 1.0; // RogueConfig.getDouble(RogueConfig.SPAWNCHANCE); // * 0.05;
+        double spawnChance = 1.0; // RogueConfig.getDouble(RogueConfig.SPAWNCHANCE); // TODO
         Random rand = new Random(Objects.hash(chunkX, chunkZ, 31));
 
         return rand.nextFloat() < spawnChance;
     }
 
     public static boolean isCityChunk(int chunkX, int chunkZ) {
-        return perlin.getValue(chunkX, 0, chunkZ) >= 0.5;
+        // return perlin.getValue(chunkX, 0, chunkZ) >= 0.5;
+
+        double d = interpolate(perlin, perlin.getValue(chunkX, 0, chunkZ));
+        return d >= 0.5;
+    }
+
+    private static double interpolate(Perlin perlin, double d) {
+        double max = perlin.getMaxValue();
+        double min = 0; // TODO: Is 0?
+
+        return (d - min) / (max - min);
     }
 
     public boolean generateNear(ICube cube, Random rand, int x, int y, int z, int chunkX, int chunkZ){

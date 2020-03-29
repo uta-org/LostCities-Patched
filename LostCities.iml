@@ -14,19 +14,6 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://C:/Users/Álvaro/.gradle/caches/modules-2/files-2.1/com.flowpowered/flow-noise/1.0.1-SNAPSHOT/e837af613d75e382041cedc083047bc7c5c6034c/flow-noise-1.0.1-SNAPSHOT.jar!/"/>
-        </CLASSES>
-        <JAVADOC>
-          <root url="jar://C:/Users/Álvaro/.gradle/caches/modules-2/files-2.1/com.flowpowered/flow-noise/1.0.1-SNAPSHOT/1e750d957ff14715d32f53143ee7ecbeee2df37d/flow-noise-1.0.1-SNAPSHOT-javadoc.jar!/"/>
-        </JAVADOC>
-        <SOURCES>
-          <root url="jar://C:/Users/Álvaro/.gradle/caches/modules-2/files-2.1/com.flowpowered/flow-noise/1.0.1-SNAPSHOT/937420ce755faae92d6e97e26c24ee9489432c16/flow-noise-1.0.1-SNAPSHOT-sources.jar!/"/>
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
           <root url="jar://C:/Users/Álvaro/.gradle/caches/minecraft/deobfedDeps/deobf/mezz/jei/jei_1.12.2/4.8.5.159/jei_1.12.2-4.8.5.159.jar!/"/>
         </CLASSES>
         <JAVADOC/>
@@ -817,6 +804,15 @@
         <SOURCES>
           <root url="jar://$MODULE_DIR$/.gradle/minecraft/forgeSrc-1.12.2-14.23.5.2847-PROJECT(LostCities)-sources.jar!/"/>
         </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/noise.jar!/"/>
+        </CLASSES>
+        <JAVADOC/>
+        <SOURCES/>
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="RUNTIME">
