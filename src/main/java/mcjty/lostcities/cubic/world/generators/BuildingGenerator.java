@@ -3,13 +3,15 @@ package mcjty.lostcities.cubic.world.generators;
 import mcjty.lostcities.config.LostCityConfiguration;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.cubic.world.LostCityCubicGenerator;
-import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Orientation;
 import mcjty.lostcities.dimensions.world.lost.Transform;
 import mcjty.lostcities.dimensions.world.lost.cityassets.BuildingPart;
 import mcjty.lostcities.dimensions.world.lost.cityassets.CompiledPalette;
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockPlanks;
+import net.minecraft.block.BlockSapling;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
@@ -21,9 +23,10 @@ import java.util.Set;
 
 import static mcjty.lostcities.cubic.world.generators.PartGenerator.generatePart;
 import static mcjty.lostcities.cubic.world.generators.States.addStates;
-import static mcjty.lostcities.cubic.world.generators.Utils.*;
+import static mcjty.lostcities.cubic.world.generators.Utils.clearRange;
+import static mcjty.lostcities.cubic.world.generators.Utils.isSide;
 
-import static mcjty.lostcities.cubic.world.LostCityCubicGenerator.*;
+import static mcjty.lostcities.cubic.CubicCityWorldProcessor.driver;
 
 public class BuildingGenerator {
     private static Set<Character> rotatableChars = null;

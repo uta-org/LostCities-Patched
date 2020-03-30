@@ -1,14 +1,12 @@
 package mcjty.lostcities.cubic.world;
 
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import mcjty.lostcities.cubic.world.driver.ICubeDriver;
 import mcjty.lostcities.cubic.world.generators.*;
-import mcjty.lostcities.dimensions.world.ChunkHeightmap;
 import mcjty.lostcities.dimensions.world.WorldTypeTools;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Railway;
@@ -31,16 +29,13 @@ import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import org.spongepowered.noise.module.source.Perlin;
 
-import javax.annotation.Nonnull;
 import java.util.*;
 
-import static mcjty.lostcities.dimensions.world.terraingen.LostCitiesTerrainGenerator.bedrockChar;
+import static mcjty.lostcities.cubic.CubicCityWorldProcessor.driver;
+import static mcjty.lostcities.cubic.CubicCityWorldProcessor.worldObj;
 
-public class LostCityCubicGenerator implements ICommonGeneratorProvider {
-    @Nonnull
-    public static CubeDriver driver;
-
-    private static ICubicWorld world;
+public class LostCityCubicGenerator implements ICommonGeneratorProvider
+{
     public static LostCityProfile profile;
 
     public static char liquidChar;
@@ -83,8 +78,6 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     private static int dimensionId;
     private static long seed;
 
-    private static World worldObj;
-
     private static WorldStyle worldStyle;
     private static Map<ChunkCoord, CubePrimer> cachedPrimers = new HashMap<>();
     private static Map<ChunkCoord, CubicHeightmap> cachedHeightmaps = new HashMap<>();
@@ -95,25 +88,17 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
     private static Perlin perlin;
 
+    // Singleton
     public static LostCityCubicGenerator provider;
 
-
-
-    private LostCityCubicGenerator() {}
-
-    public LostCityCubicGenerator(World _world) {
-        if(world == null) {
+    public LostCityCubicGenerator() {
+        // TODO: Refactor this
+        if(provider == null) {
             provider = this;
 
-            driver = new CubeDriver();
-            driver.useCube();
+            random = worldObj.rand;
 
-            world = (ICubicWorld)_world;
-            worldObj = _world;
-
-            random = _world.rand;
-
-            profile = WorldTypeTools.getProfile(_world);
+            profile = WorldTypeTools.getProfile(worldObj);
 
             liquidChar = (char) Block.BLOCK_STATE_IDS.get(profile.getLiquidBlock());
             baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
@@ -150,8 +135,8 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             streetGenerator = new StreetGenerator();
             rubbleGenerator = new RubbleGenerator();
 
-            dimensionId = _world.provider.getDimension();
-            seed = _world.provider.getSeed();
+            dimensionId = worldObj.provider.getDimension();
+            seed = worldObj.provider.getSeed();
 
             worldStyle = AssetRegistries.WORLDSTYLES.get(profile.getWorldStyle());
             if (worldStyle == null) {
@@ -167,14 +152,15 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         }
     }
 
-    public void spawnInChunk(ICube cube) {
+    public void spawnInChunk() {
+        ICube cube = driver.getCube();
+
         int chunkX = cube.getX();
         int chunkY = cube.getY();
         int chunkZ = cube.getZ();
 
         // We need this in order to generate once per column
         ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
-        driver.setCube(cube);
 
         if(canSpawnInChunk(chunkX, chunkY, chunkZ) && !groundLevels.containsKey(chunkCoord))
         {
@@ -364,7 +350,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         // TODO: Create custom heightmap for Cubic Worlds
         ICommonHeightmap heightmap = getHeightmap(info.chunkX, info.chunkZ);
 
-        Random rand = new Random(((World)world).getSeed() * 377 + chunkZ * 341873128712L + chunkX * 132897987541L);
+        Random rand = new Random(worldObj.getSeed() * 377 + chunkZ * 341873128712L + chunkX * 132897987541L);
         rand.nextFloat();
         rand.nextFloat();
 

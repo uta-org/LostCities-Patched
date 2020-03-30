@@ -1,8 +1,6 @@
 package mcjty.lostcities.cubic.world.generators;
 
 import mcjty.lostcities.api.RailChunkType;
-import mcjty.lostcities.cubic.world.LostCityCubicGenerator;
-import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.CitySphere;
 import mcjty.lostcities.dimensions.world.lost.Railway;
@@ -14,11 +12,12 @@ import net.minecraft.init.Blocks;
 import java.util.HashSet;
 import java.util.Set;
 
+import static mcjty.lostcities.cubic.world.LostCityCubicGenerator.*;
 import static mcjty.lostcities.cubic.world.generators.PartGenerator.generatePart;
 import static mcjty.lostcities.cubic.world.generators.States.addStates;
+import static mcjty.lostcities.cubic.world.generators.Utils.fillToGround;
 
-import static mcjty.lostcities.cubic.world.LostCityCubicGenerator.*;
-import static mcjty.lostcities.cubic.world.generators.Utils.*;
+import static mcjty.lostcities.cubic.CubicCityWorldProcessor.driver;
 
 public class RailsGenerator {
     private static Set<Character> railChars = null;

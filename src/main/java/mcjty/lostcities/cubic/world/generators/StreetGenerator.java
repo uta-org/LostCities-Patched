@@ -1,7 +1,6 @@
 package mcjty.lostcities.cubic.world.generators;
 
 import mcjty.lostcities.api.RailChunkType;
-import mcjty.lostcities.cubic.world.CubicHeightmap;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.lost.*;
 import mcjty.lostcities.dimensions.world.lost.cityassets.BuildingPart;
@@ -18,6 +17,8 @@ import java.util.Random;
 import static mcjty.lostcities.cubic.world.LostCityCubicGenerator.*;
 import static mcjty.lostcities.cubic.world.generators.PartGenerator.*;
 import static mcjty.lostcities.cubic.world.generators.Utils.*;
+
+import static mcjty.lostcities.cubic.CubicCityWorldProcessor.driver;
 
 public class StreetGenerator {
 
@@ -359,6 +360,162 @@ public class StreetGenerator {
                 generateHighwayPart(info, levelX, Transform.ROTATE_NONE, info.getZmin(), info.getZmax(), "");
             } else if (levelZ >= 0) {
                 generateHighwayPart(info, levelZ, Transform.ROTATE_90, info.getXmax(), info.getXmax(), "");
+            }
+        }
+    }
+
+    public static void generateBorders(BuildingInfo info, boolean canDoParks) {
+        Character borderBlock = info.getCityStyle().getBorderBlock();
+
+        switch (info.profile.LANDSCAPE_TYPE) {
+            case DEFAULT:
+                fillToBedrockStreetBlock(info);
+                break;
+            case FLOATING:
+                fillMainStreetBlock(info, borderBlock, 3);
+                break;
+            case CAVERN:
+                fillMainStreetBlock(info, borderBlock, 2);
+                break;
+            case SPACE:
+                fillToGroundStreetBlock(info, info.getCityGroundLevel());
+                break;
+        }
+
+        if (doBorder(info, Direction.XMIN)) {
+            int x = 0;
+            for (int z = 0; z < 16; z++) {
+                generateBorder(info, canDoParks, x, z, Direction.XMIN.get(info));
+            }
+        }
+        if (doBorder(info, Direction.XMAX)) {
+            int x = 15;
+            for (int z = 0; z < 16; z++) {
+                generateBorder(info, canDoParks, x, z, Direction.XMAX.get(info));
+            }
+        }
+        if (doBorder(info, Direction.ZMIN)) {
+            int z = 0;
+            for (int x = 0; x < 16; x++) {
+                generateBorder(info, canDoParks, x, z, Direction.ZMIN.get(info));
+            }
+        }
+        if (doBorder(info, Direction.ZMAX)) {
+            int z = 15;
+            for (int x = 0; x < 16; x++) {
+                generateBorder(info, canDoParks, x, z, Direction.ZMAX.get(info));
+            }
+        }
+    }
+
+    /**
+     * Fill base blocks under streets to bedrock
+     */
+    private static void fillToBedrockStreetBlock(BuildingInfo info) {
+        // Base blocks below streets
+        for (int x = 0; x < 16; ++x) {
+            for (int z = 0; z < 16; ++z) {
+                driver.setBlockRange(x, info.profile.BEDROCK_LAYER, z, info.getCityGroundLevel(), baseChar);
+            }
+        }
+    }
+
+    /**
+     * Fill from a certain lowest level with base blocks until non air is hit
+     */
+    private static void fillToGroundStreetBlock(BuildingInfo info, int lowestLevel) {
+        for (int x = 0; x < 16; ++x) {
+            for (int z = 0; z < 16; ++z) {
+                int y = lowestLevel - 1;
+                driver.current(x, y, z);
+                while (y > 1 && driver.getBlock() == airChar) {
+                    driver.block(baseChar).decY();
+                    y--;
+                }
+            }
+        }
+    }
+
+    /**
+     * Fill a main street block with base blocks and border blocks at the bottom
+     */
+    private static void fillMainStreetBlock(BuildingInfo info, Character borderBlock, int offset) {
+        char border = info.getCompiledPalette().get(borderBlock);
+        for (int x = 0; x < 16; ++x) {
+            for (int z = 0; z < 16; ++z) {
+                driver.setBlockRange(x, info.getCityGroundLevel() - (offset - 1), z, info.getCityGroundLevel(), baseChar);
+                driver.current(x, info.getCityGroundLevel() - offset, z).block(border);
+            }
+        }
+    }
+
+    /**
+     * Generate a single border column for one side of a street block
+     */
+    private static void generateBorder(BuildingInfo info, boolean canDoParks, int x, int z, BuildingInfo adjacent) {
+        Character borderBlock = info.getCityStyle().getBorderBlock();
+        Character wallBlock = info.getCityStyle().getWallBlock();
+        char wall = info.getCompiledPalette().get(wallBlock);
+
+        switch (info.profile.LANDSCAPE_TYPE) {
+            case DEFAULT:
+                // We do the ocean border 6 lower then groundlevel
+                setBlocksFromPalette(x, info.groundLevel - 6, z, info.getCityGroundLevel() + 1, info.getCompiledPalette(), borderBlock);
+                break;
+            case SPACE: {
+                int adjacentY = info.getCityGroundLevel() - 8;
+                if (adjacent.isCity) {
+                    adjacentY = Math.min(adjacentY, adjacent.getCityGroundLevel());
+                } else {
+                    ICommonHeightmap adjacentHeightmap = provider.getHeightmap(info.chunkX, info.chunkZ);
+                    int minimumHeight = adjacentHeightmap.getMinimumHeight();
+                    adjacentY = Math.min(adjacentY, minimumHeight-2);
+                }
+
+                if (adjacentY > 5) {
+                    setBlocksFromPalette(x, adjacentY, z, info.getCityGroundLevel() + 1, info.getCompiledPalette(), borderBlock);
+                }
+                break;
+            }
+            case FLOATING:
+                setBlocksFromPalette(x, info.getCityGroundLevel() - 3, z, info.getCityGroundLevel() + 1, info.getCompiledPalette(), borderBlock);
+                if (isCorner(x, z)) {
+                    generateBorderSupport(info, wall, x, z, 3);
+                }
+                break;
+            case CAVERN:
+                setBlocksFromPalette(x, info.getCityGroundLevel() - 2, z, info.getCityGroundLevel() + 1, info.getCompiledPalette(), borderBlock);
+                if (isCorner(x, z)) {
+                    generateBorderSupport(info, wall, x, z, 2);
+                }
+                break;
+        }
+        if (canDoParks) {
+            if (!borderNeedsConnectionToAdjacentChunk(info, x, z)) {
+                driver.current(x, info.getCityGroundLevel() + 1, z).block(wall);
+            } else {
+                driver.current(x, info.getCityGroundLevel() + 1, z).block(airChar);
+            }
+        }
+    }
+
+    /**
+     * Generate a column of wall blocks (and stone below that in water)
+     */
+    private static void generateBorderSupport(BuildingInfo info, char wall, int x, int z, int offset) {
+        ICommonHeightmap heightmap = provider.getHeightmap(info.chunkX, info.chunkZ);
+        int height = heightmap.getHeight(x, z);
+        if (height > 1) {
+            // None void
+            int y = info.getCityGroundLevel() - offset - 1;
+            driver.current(x, y, z);
+            while (y > 1 && driver.getBlock() == airChar) {
+                driver.block(wall).decY();
+                y--;
+            }
+            while (y > 1 && driver.getBlock() == liquidChar) {
+                driver.block(baseChar).decY();
+                y--;
             }
         }
     }

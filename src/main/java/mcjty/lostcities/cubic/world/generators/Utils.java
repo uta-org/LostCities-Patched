@@ -1,6 +1,5 @@
 package mcjty.lostcities.cubic.world.generators;
 
-import mcjty.lostcities.cubic.CubicCityWorldProcessor;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Direction;
@@ -9,6 +8,8 @@ import mcjty.lostcities.dimensions.world.lost.cityassets.BuildingPart;
 import mcjty.lostcities.dimensions.world.lost.cityassets.CompiledPalette;
 
 import static mcjty.lostcities.cubic.world.LostCityCubicGenerator.*;
+
+import static mcjty.lostcities.cubic.CubicCityWorldProcessor.driver;
 
 public class Utils {
 
