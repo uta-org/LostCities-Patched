@@ -140,13 +140,16 @@ public class BuildingGenerator {
                 }
             }
         } else if (info.profile.isSpace()) {
-            fillToGround(info, lowestLevel, borderBlock);
+            // TODO
+            /*fillToGround(info, lowestLevel, borderBlock);
+
             // Also clear the inside of buildings to avoid geometry that doesn't really belong there
             for (int x = 0; x < 16; ++x) {
                 for (int z = 0; z < 16; ++z) {
                     clearRange(info, x, z, lowestLevel, info.getCityGroundLevel() + info.getNumFloors() * 6, false);     // Never water in bubbles?
                 }
             }
+            */
         } else {
             // For normal worldgen (non floating) or cavern we have a thin layer of 'border' blocks because that looks nicer
             for (int x = 0; x < 16; ++x) {
@@ -164,10 +167,12 @@ public class BuildingGenerator {
                     } else if (info.profile.isDefault()) {
                         driver.setBlockRange(x, info.profile.BEDROCK_LAYER, z, lowestLevel, baseChar);
                     }
+                    /* // TODO
                     if (driver.getBlock(x, lowestLevel, z) == airChar) {
                         char filler = palette.get(fillerBlock);
                         driver.current(x, lowestLevel, z).block(filler); // There is nothing below so we fill this with the filler
                     }
+                    */
 
                     if (info.profile.isCavern()) {
                         // Also clear the inside of buildings to avoid geometry that doesn't really belong there

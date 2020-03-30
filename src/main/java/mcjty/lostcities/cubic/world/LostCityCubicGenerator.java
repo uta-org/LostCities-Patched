@@ -89,6 +89,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     private static Map<ChunkCoord, CubePrimer> cachedPrimers = new HashMap<>();
     private static Map<ChunkCoord, CubicHeightmap> cachedHeightmaps = new HashMap<>();
     private static Map<ChunkCoord, Integer> groundLevels = new HashMap<>();
+    private static HashSet<ChunkCoord> roadChunks = new HashSet<>();
 
     private static Random random;
 
@@ -193,7 +194,13 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     {
         if(chunkX >= -20 && chunkX <= 20 || chunkZ >= -20 && chunkZ <= 20) return false; // don't spawn nothing on 20x20 chunks on spawn
         if(!isCityChunk(chunkX, chunkZ)) return false;
-        if(isRoadChunk(chunkX, chunkY, chunkZ)) return false;
+
+        // Add road chunk to hashset, so we will not generate any building at this column
+        ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
+        if(roadChunks.contains(chunkCoord) || isRoadChunk(chunkX, chunkY, chunkZ)) {
+            roadChunks.add(chunkCoord);
+            return false;
+        }
 
         double spawnChance = 1.0; // RogueConfig.getDouble(RogueConfig.SPAWNCHANCE); // TODO
         Random rand = new Random(Objects.hash(chunkX, chunkZ, 31));
