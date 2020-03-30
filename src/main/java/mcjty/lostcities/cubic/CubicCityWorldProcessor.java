@@ -62,6 +62,7 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
 
         CubePos key = new CubePos(cubeX, cubeY, cubeZ);
         cachedPrimers.put(key, primer);
+
         return primer;
     }
 
@@ -70,14 +71,27 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
     public void populate(ICube cube) {
         // driver.setCube(cube);
 
+        terrainProcessor.populate(cube);
+
         CubePos key = new CubePos(cube.getX(), cube.getY(), cube.getZ());
         cachedCubes.put(key, cube);
-
-        terrainProcessor.populate(cube);
     }
 
     @SubscribeEvent
     public static void onCubePopulated(PopulateCubeEvent event) {
+        //System.out.println("["+event.getCubeX()+", "+event.getCubeY()+", "+event.getCubeZ()+"] "+event.getClass().getName());
+        // io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent$Pre
+
+        // Improve this
+        //if(event.getClass().getName().equals("io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent$Pre"))
+        //    return;
+
+        if(event.getClass() == PopulateCubeEvent.Pre.class)
+        {
+            // System.out.println("Cancelling pre");
+            return;
+        }
+
         LostCityCubicGenerator generator = new LostCityCubicGenerator();
         generator.spawnInChunk(event.getCubeX(), event.getCubeY(), event.getCubeZ());
     }

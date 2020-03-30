@@ -1,7 +1,9 @@
 package mcjty.lostcities.cubic.world.driver;
 
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
+import mcjty.lostcities.cubic.CubicCityWorldProcessor;
 import mcjty.lostcities.dimensions.world.driver.IIndex;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -15,6 +17,15 @@ public class CubeDriver implements ICubeDriver {
     private int currentX;
     private int currentY;
     private int currentZ;
+
+    private void checkForCube() {
+        if(cube == null) cube = CubicCityWorldProcessor.cachedCubes.get(CubePos.fromBlockCoords(currentX, currentY, currentZ));
+    }
+
+    private void checkForCube(int x, int y, int z) {
+        if(cube == null) cube = CubicCityWorldProcessor.cachedCubes.get(CubePos.fromBlockCoords(x, y, z));
+    }
+
 
     @Override
     public void setPrimer(CubePrimer primer) {
@@ -101,6 +112,7 @@ public class CubeDriver implements ICubeDriver {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
 
         while (y < y2) {
+            checkForCube(x, y, z);
             cube.setBlockState(new BlockPos(x, y, z), state);
             y++;
         }
@@ -112,6 +124,7 @@ public class CubeDriver implements ICubeDriver {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
 
         while (y < y2) {
+            checkForCube(x, y, z);
             cube.setBlockState(new BlockPos(x, y, z), state);
             y++;
         }
@@ -121,13 +134,14 @@ public class CubeDriver implements ICubeDriver {
     public ICubeDriver block(char c) {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
 
+        checkForCube();
         cube.setBlockState(new BlockPos(currentX, currentY, currentZ), state);
         return this;
     }
 
     @Override
     public ICubeDriver block(IBlockState c) {
-
+        checkForCube();
         cube.setBlockState(new BlockPos(currentX, currentY, currentZ), c);
         return this;
 
@@ -137,56 +151,67 @@ public class CubeDriver implements ICubeDriver {
     public ICubeDriver add(char c) {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
 
+        checkForCube();
         cube.setBlockState(new BlockPos(currentX, currentY, currentZ), state);
         return this;
     }
 
     @Override
     public char getBlock() {
+        checkForCube();
         return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY, currentZ));
     }
 
     public IBlockState getBlockState() {
+        checkForCube();
         return cube.getBlockState(currentX, currentY, currentZ);
     }
 
     public IBlockState getBlockState(int x, int y, int z) {
+        checkForCube(x, y, z);
         return cube.getBlockState(x, y, z);
     }
 
     @Override
     public char getBlockDown() {
+        checkForCube(currentX, currentY - 1, currentZ);
         return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY - 1, currentZ));
     }
 
     @Override
     public char getBlockEast() {
+        checkForCube(currentX, currentY + 1, currentZ);
         return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY + 1, currentZ));
     }
 
     @Override
     public char getBlockWest() {
+        checkForCube(currentX - 1, currentY, currentZ);
         return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX - 1, currentY, currentZ));
     }
 
     @Override
     public char getBlockSouth() {
+        checkForCube(currentX, currentY, currentZ + 1);
         return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY, currentZ + 1));
     }
 
     @Override
     public char getBlockNorth() {
+        checkForCube(currentX, currentY, currentZ - 1);
         return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY, currentZ - 1));
     }
 
 
     @Override
     public char getBlock(int x, int y, int z) {
+        checkForCube(x, y, z);
         return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(x, y, z));
     }
 
     @Override
     public IIndex getIndex(int x, int y, int z) {
+        checkForCube(x, y, z);
         return new CubeDriver.Index(x, y, z);
     }
 
