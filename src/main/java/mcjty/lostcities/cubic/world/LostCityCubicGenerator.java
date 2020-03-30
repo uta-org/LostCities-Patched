@@ -1,5 +1,6 @@
 package mcjty.lostcities.cubic.world;
 
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
@@ -20,7 +21,6 @@ import net.minecraft.block.BlockPlanks;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.BiomeDictionary;
@@ -76,7 +76,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
     private static long seed;
 
     private static WorldStyle worldStyle;
-    private static Map<BlockPos, CubicHeightmap> cachedHeightmaps = new HashMap<>();
+    private static Map<CubePos, CubicHeightmap> cachedHeightmaps = new HashMap<>();
     private static Map<ChunkCoord, Integer> groundLevels = new HashMap<>();
     private static HashSet<ChunkCoord> roadChunks = new HashSet<>();
 
@@ -159,7 +159,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
             int y = chunkY * 16 + 8;
             int z = chunkZ * 16 + 8;
 
-            generateNear(random, x, y, z, chunkX, chunkZ);
+            generateNear(random, x, y, z, chunkX, chunkY, chunkZ);
 
             // isGenerating =
             // isSpawnedOnce = isGenerating;
@@ -217,7 +217,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
         return (d - min) / (max - min);
     }
 
-    private boolean generateNear(Random rand, int x, int y, int z, int chunkX, int chunkZ){
+    private boolean generateNear(Random rand, int x, int y, int z, int chunkX, int chunkY, int chunkZ){
         int attempts = 50;
 
         for(int i = 0; i < attempts; i++){
@@ -259,7 +259,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
 
             BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 
-            generate(chunkX, chunkZ, info);
+            generate(chunkX, chunkY, chunkZ, info);
 
             return true;
         }
@@ -279,7 +279,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
     * */
 
     private void setCube(int chunkX, int chunkY, int chunkZ) {
-        BlockPos key = new BlockPos(chunkX, chunkY, chunkZ);
+        CubePos key = new CubePos(chunkX, chunkY, chunkZ);
         if(!cachedCubes.containsKey(key)) throw new IllegalStateException();
         driver.setCube(cachedCubes.get(key));
     }
@@ -591,7 +591,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
 
     @Override
     public ICommonHeightmap getHeightmap(int chunkX, int chunkZ) {
-        BlockPos key = new BlockPos(chunkX, currentChunkY, chunkZ);
+        CubePos key = new CubePos(chunkX, currentChunkY, chunkZ);
 
         if (cachedHeightmaps.containsKey(key)) {
             return cachedHeightmaps.get(key);
