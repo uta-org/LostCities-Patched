@@ -38,6 +38,8 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
     // TODO: Missing dimension id
     public static Map<BlockPos, CubePrimer> cachedPrimers = new HashMap<>();
 
+    public static Map<BlockPos, ICube> cachedCubes = new HashMap<>();
+
     public CubicCityWorldProcessor(World world)
             throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
     {
@@ -68,14 +70,16 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
     @Override
     @ParametersAreNonnullByDefault
     public void populate(ICube cube) {
-        driver.setCube(cube);
+        // driver.setCube(cube);
+
+        BlockPos key = new BlockPos(cube.getX(), cube.getY(), cube.getZ());
+        cachedCubes.put(key, cube);
+
         terrainProcessor.populate(cube);
     }
 
     @SubscribeEvent
     public static void onCubePopulated(PopulateCubeEvent event) {
-        // TODO: Test performance
-
         LostCityCubicGenerator generator = new LostCityCubicGenerator();
         generator.spawnInChunk();
     }

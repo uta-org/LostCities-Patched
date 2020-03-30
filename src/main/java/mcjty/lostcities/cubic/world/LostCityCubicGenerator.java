@@ -1,12 +1,8 @@
 package mcjty.lostcities.cubic.world;
 
-import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
-import mcjty.lostcities.cubic.CubicCityWorldProcessor;
-import mcjty.lostcities.cubic.world.driver.CubeDriver;
-import mcjty.lostcities.cubic.world.driver.ICubeDriver;
 import mcjty.lostcities.cubic.world.generators.*;
 import mcjty.lostcities.dimensions.world.WorldTypeTools;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
@@ -34,8 +30,6 @@ import org.spongepowered.noise.module.source.Perlin;
 import java.util.*;
 
 import static mcjty.lostcities.cubic.CubicCityWorldProcessor.*;
-import static mcjty.lostcities.cubic.CubicCityWorldProcessor.driver;
-import static mcjty.lostcities.cubic.CubicCityWorldProcessor.worldObj;
 
 public class LostCityCubicGenerator implements ICommonGeneratorProvider
 {
@@ -132,13 +126,6 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
             goldBlockChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.GOLD_BLOCK.getDefaultState());
             diamondBlockChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.DIAMOND_BLOCK.getDefaultState());
 
-            // Create generator instances
-            partGenerator = new PartGenerator();
-            buildingGenerator = new BuildingGenerator();
-            railsGenerator = new RailsGenerator();
-            streetGenerator = new StreetGenerator();
-            rubbleGenerator = new RubbleGenerator();
-
             dimensionId = worldObj.provider.getDimension();
             seed = worldObj.provider.getSeed();
 
@@ -153,16 +140,13 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
             perlin.setFrequency(0.1);
             perlin.setPersistence(0.8);
             perlin.setLacunarity(1.25);
+
+            // TODO: not used, review on refactor
+            partGenerator = new PartGenerator();
         }
     }
 
-    public void spawnInChunk() {
-        ICube cube = driver.getCube();
-
-        int chunkX = cube.getX();
-        int chunkY = cube.getY();
-        int chunkZ = cube.getZ();
-
+    public void spawnInChunk(int chunkX, int chunkY, int chunkZ) {
         currentChunkY = chunkY;
 
         // We need this in order to generate once per column
@@ -284,8 +268,47 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
         return false;
     }
 
+    /*
+    *
+                // Create generator instances
+            partGenerator = new PartGenerator();
+            buildingGenerator = new BuildingGenerator();
+            railsGenerator = new RailsGenerator();
+            streetGenerator = new StreetGenerator();
+            rubbleGenerator = new RubbleGenerator();
+    * */
 
-    public void generate(int chunkX, int chunkZ, BuildingInfo info) {
+    private void setCube(int chunkX, int chunkY, int chunkZ) {
+        BlockPos key = new BlockPos(chunkX, chunkY, chunkZ);
+        if(!cachedCubes.containsKey(key)) throw new IllegalStateException();
+        driver.setCube(cachedCubes.get(key));
+    }
+
+    private BuildingGenerator getBuildingGenerator(int chunkX, int chunkY, int chunkZ) {
+        setCube(chunkX, chunkY, chunkZ);
+        if(buildingGenerator == null) buildingGenerator = new BuildingGenerator();
+        return buildingGenerator;
+    }
+
+    private RailsGenerator getRailsGenerator(int chunkX, int chunkY, int chunkZ) {
+        setCube(chunkX, chunkY, chunkZ);
+        if(railsGenerator == null) railsGenerator = new RailsGenerator();
+        return railsGenerator;
+    }
+
+    private StreetGenerator getStreetGenerator(int chunkX, int chunkY, int chunkZ) {
+        setCube(chunkX, chunkY, chunkZ);
+        if(streetGenerator == null) streetGenerator = new StreetGenerator();
+        return streetGenerator;
+    }
+
+    private RubbleGenerator getRubbleGenerator(int chunkX, int chunkY, int chunkZ) {
+        setCube(chunkX, chunkY, chunkZ);
+        if(rubbleGenerator == null) rubbleGenerator = new RubbleGenerator();
+        return rubbleGenerator;
+    }
+
+    public void generate(int chunkX, int chunkY, int chunkZ, BuildingInfo info) {
         // driver.setPrimer(primer);
         // BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 
@@ -299,18 +322,20 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
         street2 = info.getCompiledPalette().get(cityStyle.getStreetVariantBlock());
         streetBorder = (16 - cityStyle.getStreetWidth()) / 2;
 
-        doCityChunk(chunkX, chunkZ, info);
+        doCityChunk(chunkX, chunkY, chunkZ, info);
+
+        RailsGenerator railGen = getRailsGenerator(chunkX, chunkY, chunkZ);
 
         Railway.RailChunkInfo railInfo = info.getRailInfo();
         if (railInfo.getType() != RailChunkType.NONE) {
             // System.out.println("Generating railways");
-            railsGenerator.generateRailways(info, railInfo);
+            railGen.generateRailways(info, railInfo);
         }
-        railsGenerator.generateRailwayDungeons(info);
+        railGen.generateRailwayDungeons(info);
 
         if (profile.isSpace()) {
             // System.out.println("Generating monorails");
-            railsGenerator.generateMonorails(info);
+            railGen.generateMonorails(info);
         }
 
         // fixTorches(info); // TODO
@@ -350,7 +375,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
     *
     * */
 
-    private void doCityChunk(int chunkX, int chunkZ, BuildingInfo info) {
+    private void doCityChunk(int chunkX, int chunkY, int chunkZ, BuildingInfo info) {
         boolean building = info.hasBuilding;
 
         // TODO: Create custom heightmap for Cubic Worlds
@@ -377,15 +402,19 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
             }
         }
 
+        BuildingGenerator buildingGen = getBuildingGenerator(chunkX, chunkY, chunkZ);
+        StreetGenerator streetGen = getStreetGenerator(chunkX, chunkY, chunkZ);
+        RubbleGenerator rubbleGen = getRubbleGenerator(chunkX, chunkY, chunkZ);
+
         // TODO: Events
         //LostCityEvent.PreGenCityChunkEvent event = new LostCityEvent.PreGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //if (!MinecraftForge.EVENT_BUS.post(event)) {
             if (building) {
                 // System.out.println("Generating building at ["+(chunkX*16)+", "+(info.profile.GROUNDLEVEL/16)+", "+(chunkZ*16)+"]");
-                buildingGenerator.generate(info, heightmap);
+                buildingGen.generate(info, heightmap);
             } else {
                 // System.out.println("Generating street");
-                streetGenerator.generateStreet(info, heightmap, rand); // TODO
+                streetGen.generateStreet(info, heightmap, rand); // TODO
             }
         //}
         //LostCityEvent.PostGenCityChunkEvent postevent = new LostCityEvent.PostGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
@@ -402,18 +431,18 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
             Railway.RailChunkInfo railInfo = info.getRailInfo();
             if (levelX < 0 && levelZ < 0 && !railInfo.getType().isSurface()) {
                 // System.out.println("Generating street decorations");
-                streetGenerator.generateStreetDecorations(info); // TODO
+                streetGen.generateStreetDecorations(info); // TODO
             }
         }
         if (levelX >= 0 || levelZ >= 0) {
             // System.out.println("Generating highways");
-            streetGenerator.generateHighways(chunkX, chunkZ, info); // TODO
+            streetGen.generateHighways(chunkX, chunkZ, info); // TODO
         }
 
         if (info.profile.RUBBLELAYER) {
             if (!info.hasBuilding || info.ruinHeight >= 0) {
                 // System.out.println("Generating rubble");
-                rubbleGenerator.generateRubble(chunkX, chunkZ, info); // TODO
+                rubbleGen.generateRubble(chunkX, chunkZ, info); // TODO
             }
         }
     }
@@ -562,13 +591,13 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
 
     @Override
     public ICommonHeightmap getHeightmap(int chunkX, int chunkZ) {
-        // TODO
-
         BlockPos key = new BlockPos(chunkX, currentChunkY, chunkZ);
-        
+
         if (cachedHeightmaps.containsKey(key)) {
             return cachedHeightmaps.get(key);
-        } else if (cachedPrimers.containsKey(key)) {
+        }
+
+        if (cachedPrimers.containsKey(key)) {
             char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
             CubePrimer primer = cachedPrimers.get(key);
             driver.setPrimer(primer);
@@ -578,26 +607,6 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
             return heightmap;
         }
 
-        /*
-        ChunkCoord key = new ChunkCoord(worldObj.provider.getDimension(), chunkX, chunkZ);
-        if (cachedHeightmaps.containsKey(key)) {
-            return cachedHeightmaps.get(key);
-        } else if (cachedPrimers.containsKey(key)) {
-            char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
-            CubePrimer primer = cachedPrimers.get(key);
-            driver.setPrimer(primer);
-            CubicHeightmap heightmap = new CubicHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
-            cachedHeightmaps.put(key, heightmap);
-            return heightmap;
-        } else {
-            CubePrimer primer = generatePrimer(chunkX, chunkZ);
-            cachedPrimers.put(key, primer);
-            char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
-            driver.setPrimer(primer);
-            CubicHeightmap heightmap = new CubicHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
-            cachedHeightmaps.put(key, heightmap);
-            return heightmap;
-        }
-        */
+        throw new IllegalStateException();
     }
 }

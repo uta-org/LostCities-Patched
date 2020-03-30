@@ -67,7 +67,7 @@ public class CubicHeightmap implements ICommonHeightmap {
 
     public int getHeight(int x, int z) {
         // TODO: Test
-        return chunkY + heightmap[z*16+x] & 0xff;
+        return (chunkY * 16 + 8) + heightmap[z*16+x] & 0xff;
     }
 
     public int getAverageHeight() {
