@@ -10,6 +10,7 @@ import net.minecraft.util.math.BlockPos;
 import java.util.Objects;
 
 public class CubeDriver implements ICubeDriver {
+    private CubePrimer primer;
     private ICube cube;
     private int currentX;
     private int currentY;
@@ -17,12 +18,12 @@ public class CubeDriver implements ICubeDriver {
 
     @Override
     public void setPrimer(CubePrimer primer) {
-        throw new IllegalStateException();
+        this.primer = primer;
     }
 
     @Override
     public CubePrimer getPrimer() {
-        throw new IllegalStateException();
+        return primer;
     }
 
     public ICube getCube() {
@@ -223,6 +224,7 @@ public class CubeDriver implements ICubeDriver {
         driver.currentX = currentX;
         driver.currentY = currentY;
         driver.currentZ = currentZ;
+        driver.primer = primer;
         driver.cube = cube;
         return driver;
     }

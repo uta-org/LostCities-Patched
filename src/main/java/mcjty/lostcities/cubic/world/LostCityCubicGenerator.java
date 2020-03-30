@@ -4,6 +4,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.cubic.CubicCityWorldProcessor;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import mcjty.lostcities.cubic.world.driver.ICubeDriver;
 import mcjty.lostcities.cubic.world.generators.*;
@@ -23,6 +24,7 @@ import net.minecraft.block.BlockPlanks;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.BiomeDictionary;
@@ -31,6 +33,7 @@ import org.spongepowered.noise.module.source.Perlin;
 
 import java.util.*;
 
+import static mcjty.lostcities.cubic.CubicCityWorldProcessor.*;
 import static mcjty.lostcities.cubic.CubicCityWorldProcessor.driver;
 import static mcjty.lostcities.cubic.CubicCityWorldProcessor.worldObj;
 
@@ -79,8 +82,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
     private static long seed;
 
     private static WorldStyle worldStyle;
-    private static Map<ChunkCoord, CubePrimer> cachedPrimers = new HashMap<>();
-    private static Map<ChunkCoord, CubicHeightmap> cachedHeightmaps = new HashMap<>();
+    private static Map<BlockPos, CubicHeightmap> cachedHeightmaps = new HashMap<>();
     private static Map<ChunkCoord, Integer> groundLevels = new HashMap<>();
     private static HashSet<ChunkCoord> roadChunks = new HashSet<>();
 
@@ -90,6 +92,8 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
 
     // Singleton
     public static LostCityCubicGenerator provider;
+
+    private int currentChunkY;
 
     public LostCityCubicGenerator() {
         // TODO: Refactor this
@@ -158,6 +162,8 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
         int chunkX = cube.getX();
         int chunkY = cube.getY();
         int chunkZ = cube.getZ();
+
+        currentChunkY = chunkY;
 
         // We need this in order to generate once per column
         ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
@@ -557,13 +563,28 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
     @Override
     public ICommonHeightmap getHeightmap(int chunkX, int chunkZ) {
         // TODO
+
+        BlockPos key = new BlockPos(chunkX, currentChunkY, chunkZ);
+        
+        if (cachedHeightmaps.containsKey(key)) {
+            return cachedHeightmaps.get(key);
+        } else if (cachedPrimers.containsKey(key)) {
+            char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
+            CubePrimer primer = cachedPrimers.get(key);
+            driver.setPrimer(primer);
+            CubicHeightmap heightmap = new CubicHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
+            heightmap.setChunkY(currentChunkY);
+            cachedHeightmaps.put(key, heightmap);
+            return heightmap;
+        }
+
+        /*
         ChunkCoord key = new ChunkCoord(worldObj.provider.getDimension(), chunkX, chunkZ);
         if (cachedHeightmaps.containsKey(key)) {
             return cachedHeightmaps.get(key);
         } else if (cachedPrimers.containsKey(key)) {
             char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
             CubePrimer primer = cachedPrimers.get(key);
-            ICubeDriver driver = new CubeDriver();
             driver.setPrimer(primer);
             CubicHeightmap heightmap = new CubicHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
             cachedHeightmaps.put(key, heightmap);
@@ -572,28 +593,11 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
             CubePrimer primer = generatePrimer(chunkX, chunkZ);
             cachedPrimers.put(key, primer);
             char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
-            ICubeDriver driver = new CubeDriver();
             driver.setPrimer(primer);
             CubicHeightmap heightmap = new CubicHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
             cachedHeightmaps.put(key, heightmap);
             return heightmap;
         }
-    }
-
-    public CubePrimer generatePrimer(int chunkX, int chunkZ) {
-        random.setSeed(chunkX * 341873128712L + chunkZ * 132897987541L);
-        CubePrimer cubePrimer = new CubePrimer();
-
-        // TODO?
-        /*
-        if (otherGenerator != null) {
-            // For ATG, experimental
-            otherGenerator.fillChunk(chunkX, chunkZ, chunkprimer);
-        } else {
-            terrainGenerator.doCoreChunk(chunkX, chunkZ, chunkprimer);
-        }
         */
-
-        return cubePrimer;
     }
 }

@@ -6,6 +6,7 @@ import mcjty.lostcities.dimensions.world.terraingen.LostCitiesTerrainGenerator;
 
 public class CubicHeightmap implements ICommonHeightmap {
     private int heightmap[] = new int[16*16];
+    private int chunkY;
 
     public CubicHeightmap(ICubeDriver driver, LandscapeType type, int groundLevel, char baseChar) {
         char air = LostCitiesTerrainGenerator.airChar;
@@ -62,8 +63,11 @@ public class CubicHeightmap implements ICommonHeightmap {
         }
     }
 
+    public void setChunkY(int chunkY) { this.chunkY = chunkY; }
+
     public int getHeight(int x, int z) {
-        return heightmap[z*16+x] & 0xff;
+        // TODO: Test
+        return chunkY + heightmap[z*16+x] & 0xff;
     }
 
     public int getAverageHeight() {
