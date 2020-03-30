@@ -152,7 +152,7 @@ public class BuildingGenerator {
             for (int x = 0; x < 16; ++x) {
                 for (int z = 0; z < 16; ++z) {
                     if (isSide(x, z)) {
-                        driver.setBlockRange(x, lowestLevel - 10, z, highestLevel, baseChar);
+                        driver.setBlockRange(x, lowestLevel - 10, z, highestLevel, palette.get(borderBlock));
                         /* // TODO
                         int y = lowestLevel - 10;
                         driver.current(x, y, z);
