@@ -173,26 +173,27 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
         // We need this in order to generate once per column
         ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
+        driver.setCube(cube);
 
-        if(canSpawnInChunk(chunkX, chunkZ) && !groundLevels.containsKey(chunkCoord))
+        if(canSpawnInChunk(chunkX, chunkY, chunkZ) && !groundLevels.containsKey(chunkCoord))
         {
             // TODO: This will be wrong
             int x = chunkX * 16 + 8;
+            int y = chunkY * 16 + 8;
             int z = chunkZ * 16 + 8;
 
-            int y = chunkY * 16;
-
-            generateNear(cube, random, x, y, z, chunkX, chunkZ);
+            generateNear(random, x, y, z, chunkX, chunkZ);
 
             // isGenerating =
             // isSpawnedOnce = isGenerating;
         }
     }
 
-    public static boolean canSpawnInChunk(int chunkX, int chunkZ)
+    public static boolean canSpawnInChunk(int chunkX, int chunkY, int chunkZ)
     {
         if(chunkX >= -20 && chunkX <= 20 || chunkZ >= -20 && chunkZ <= 20) return false; // don't spawn nothing on 20x20 chunks on spawn
         if(!isCityChunk(chunkX, chunkZ)) return false;
+        if(isRoadChunk(chunkX, chunkY, chunkZ)) return false;
 
         double spawnChance = 1.0; // RogueConfig.getDouble(RogueConfig.SPAWNCHANCE); // TODO
         Random rand = new Random(Objects.hash(chunkX, chunkZ, 31));
@@ -200,11 +201,30 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         return rand.nextFloat() < spawnChance;
     }
 
-    public static boolean isCityChunk(int chunkX, int chunkZ) {
+    private static boolean isCityChunk(int chunkX, int chunkZ) {
         // return perlin.getValue(chunkX, 0, chunkZ) >= 0.5;
 
         double d = interpolate(perlin, perlin.getValue(chunkX, 0, chunkZ));
         return d >= 0.5;
+    }
+
+    private static boolean isRoadChunk(int chunkX, int chunkY, int chunkZ) {
+        // Blocks.CONCRETE
+        for (int x = chunkX; x < chunkX + 16; ++x) {
+            for (int y = chunkY; y < chunkY + 16; ++y) {
+                if(driver.getBlockState(x, y, chunkZ + 8) == Blocks.CONCRETE)
+                    return true;
+            }
+        }
+
+        for (int z = chunkZ; z < chunkZ + 16; ++z) {
+            for (int y = chunkY; y < chunkY + 16; ++y) {
+                if(driver.getBlockState(chunkX + 8, y, z) == Blocks.CONCRETE)
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private static double interpolate(Perlin perlin, double d) {
@@ -214,7 +234,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         return (d - min) / (max - min);
     }
 
-    public boolean generateNear(ICube cube, Random rand, int x, int y, int z, int chunkX, int chunkZ){
+    private boolean generateNear(Random rand, int x, int y, int z, int chunkX, int chunkZ){
         int attempts = 50;
 
         for(int i = 0; i < attempts; i++){
@@ -254,10 +274,9 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
                 groundLevels.put(chunkCoord, y);
             }
 
-            driver.setCube(cube);
             BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 
-            generate(chunkX, chunkZ, cube, info);
+            generate(chunkX, chunkZ, info);
 
             return true;
         }
@@ -267,7 +286,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     }
 
 
-    public void generate(int chunkX, int chunkZ, ICube cube, BuildingInfo info) {
+    public void generate(int chunkX, int chunkZ, BuildingInfo info) {
         // driver.setPrimer(primer);
         // BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 

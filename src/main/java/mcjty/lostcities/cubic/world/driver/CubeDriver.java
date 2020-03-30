@@ -175,6 +175,14 @@ public class CubeDriver implements ICubeDriver {
         return (char) Block.BLOCK_STATE_IDS.get(useCube ? cube.getBlockState(currentX, currentY, currentZ) : primer.getBlockState(currentX, wrapY(currentY), currentZ));
     }
 
+    public IBlockState getBlockState() {
+        return cube.getBlockState(currentX, currentY, currentZ);
+    }
+
+    public IBlockState getBlockState(int x, int y, int z) {
+        return cube.getBlockState(x, y, z);
+    }
+
     @Override
     public char getBlockDown() {
         return (char) Block.BLOCK_STATE_IDS.get(useCube ? cube.getBlockState(currentX, currentY-1, currentZ) : primer.getBlockState(currentX, wrapY(currentY-1), currentZ));
