@@ -54,6 +54,7 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
     }
 
     @Override
+    @ParametersAreNonnullByDefault
     public void populate(ICube cube) {
         terrainProcessor.populate(cube);
 
