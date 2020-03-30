@@ -7,26 +7,26 @@ import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import mcjty.lostcities.cubic.world.driver.ICubeDriver;
-import mcjty.lostcities.cubic.world.generators.BuildingGenerator;
+import mcjty.lostcities.cubic.world.generators.*;
 import mcjty.lostcities.dimensions.world.ChunkHeightmap;
 import mcjty.lostcities.dimensions.world.WorldTypeTools;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Railway;
 import mcjty.lostcities.dimensions.world.lost.cityassets.AssetRegistries;
+import mcjty.lostcities.dimensions.world.lost.cityassets.CityStyle;
 import mcjty.lostcities.dimensions.world.lost.cityassets.WorldStyle;
 import mcjty.lostcities.varia.Cardinal;
 import mcjty.lostcities.varia.ChunkCoord;
 import mcjty.lostcities.varia.Coord;
-import mcjty.lostcities.varia.VanillaStructure;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockLeaves;
+import net.minecraft.block.BlockOldLeaf;
+import net.minecraft.block.BlockPlanks;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import org.spongepowered.noise.module.source.Perlin;
@@ -38,15 +38,33 @@ import static mcjty.lostcities.dimensions.world.terraingen.LostCitiesTerrainGene
 
 public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     @Nonnull
-    private static CubeDriver driver;
+    public static CubeDriver driver;
 
     private static ICubicWorld world;
-    private static LostCityProfile profile;
+    public static LostCityProfile profile;
 
     public static char liquidChar;
     public static char baseChar;
     public static char airChar;
     public static char hardAirChar;
+    public static char glowstoneChar;
+    public static char gravelChar;
+    public static char glassChar;       // @todo: for space: depend on city style
+    public static char leavesChar;
+    public static char leaves2Char;
+    public static char leaves3Char;
+    public static char ironbarsChar;
+    public static char grassChar;
+    public static char bedrockChar;
+    public static char endportalChar;
+    public static char endportalFrameChar;
+    public static char goldBlockChar;
+    public static char diamondBlockChar;
+
+    public static char street;
+    public static char street2;
+    public static char streetBase;
+    public static int streetBorder;
 
     // Flags
 
@@ -55,7 +73,11 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
     // Generators
 
-    private static BuildingGenerator buildingGenerator;
+    public static BuildingGenerator buildingGenerator;
+    public static PartGenerator partGenerator;
+    public static RailsGenerator railsGenerator;
+    public static StreetGenerator streetGenerator;
+    public static RubbleGenerator rubbleGenerator;
 
     // Needed fields
     private static int dimensionId;
@@ -72,10 +94,16 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
     private static Perlin perlin;
 
+    public static LostCityCubicGenerator provider;
+
+
+
     private LostCityCubicGenerator() {}
 
     public LostCityCubicGenerator(World _world) {
         if(world == null) {
+            provider = this;
+
             driver = new CubeDriver();
             driver.useCube();
 
@@ -91,8 +119,34 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             airChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.AIR.getDefaultState());
             hardAirChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.COMMAND_BLOCK.getDefaultState());
 
+            glowstoneChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.GLOWSTONE.getDefaultState());
+            gravelChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.GRAVEL.getDefaultState());
+
+            // @todo
+            glassChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.GLASS.getDefaultState());
+
+            leavesChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.LEAVES.getDefaultState()
+                    .withProperty(BlockLeaves.DECAYABLE, false));
+            leaves2Char = (char) Block.BLOCK_STATE_IDS.get(Blocks.LEAVES.getDefaultState()
+                    .withProperty(BlockLeaves.DECAYABLE, false)
+                    .withProperty(BlockOldLeaf.VARIANT, BlockPlanks.EnumType.JUNGLE));
+            leaves3Char = (char) Block.BLOCK_STATE_IDS.get(Blocks.LEAVES.getDefaultState()
+                    .withProperty(BlockLeaves.DECAYABLE, false)
+                    .withProperty(BlockOldLeaf.VARIANT, BlockPlanks.EnumType.SPRUCE));
+
+            ironbarsChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.IRON_BARS.getDefaultState());
+            grassChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.GRASS.getDefaultState());
+            bedrockChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.BEDROCK.getDefaultState());
+            endportalChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.END_PORTAL.getDefaultState());
+            endportalFrameChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.END_PORTAL_FRAME.getDefaultState());
+            goldBlockChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.GOLD_BLOCK.getDefaultState());
+            diamondBlockChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.DIAMOND_BLOCK.getDefaultState());
+
             // Create generator instances
-            buildingGenerator = new BuildingGenerator(driver);
+            partGenerator = new PartGenerator();
+            buildingGenerator = new BuildingGenerator();
+            railsGenerator = new RailsGenerator();
+            streetGenerator = new StreetGenerator();
 
             dimensionId = _world.provider.getDimension();
             seed = _world.provider.getSeed();
@@ -216,28 +270,27 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         // BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 
         // @todo this setup is not very clean
-        // CityStyle cityStyle = info.getCityStyle();
+        CityStyle cityStyle = info.getCityStyle();
 
         // TODO ?? (see usages on original code)
-        /*
-        char street = info.getCompiledPalette().get(cityStyle.getStreetBlock());
-        char streetBase = info.getCompiledPalette().get(cityStyle.getStreetBaseBlock());
-        char street2 = info.getCompiledPalette().get(cityStyle.getStreetVariantBlock());
-        int streetBorder = (16 - cityStyle.getStreetWidth()) / 2;
-        */
+
+        street = info.getCompiledPalette().get(cityStyle.getStreetBlock());
+        streetBase = info.getCompiledPalette().get(cityStyle.getStreetBaseBlock());
+        street2 = info.getCompiledPalette().get(cityStyle.getStreetVariantBlock());
+        streetBorder = (16 - cityStyle.getStreetWidth()) / 2;
 
         doCityChunk(chunkX, chunkZ, info);
 
         Railway.RailChunkInfo railInfo = info.getRailInfo();
         if (railInfo.getType() != RailChunkType.NONE) {
             // System.out.println("Generating railways");
-            // generateRailways(info, railInfo); // TODO
+            railsGenerator.generateRailways(info, railInfo);
         }
-        // generateRailwayDungeons(info);
+        railsGenerator.generateRailwayDungeons(info);
 
         if (profile.isSpace()) {
             // System.out.println("Generating monorails");
-            // generateMonorails(info); // TODO
+            railsGenerator.generateMonorails(info);
         }
 
         // fixTorches(info); // TODO
@@ -308,11 +361,11 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         //LostCityEvent.PreGenCityChunkEvent event = new LostCityEvent.PreGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //if (!MinecraftForge.EVENT_BUS.post(event)) {
             if (building) {
-                System.out.println("Generating building at ["+(chunkX*16)+", "+(info.profile.GROUNDLEVEL/16)+", "+(chunkZ*16)+"]");
+                // System.out.println("Generating building at ["+(chunkX*16)+", "+(info.profile.GROUNDLEVEL/16)+", "+(chunkZ*16)+"]");
                 buildingGenerator.generate(info, heightmap);
             } else {
                 // System.out.println("Generating street");
-                // generateStreet(info, heightmap, rand); // TODO
+                streetGenerator.generateStreet(info, heightmap, rand); // TODO
             }
         //}
         //LostCityEvent.PostGenCityChunkEvent postevent = new LostCityEvent.PostGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
@@ -329,51 +382,21 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             Railway.RailChunkInfo railInfo = info.getRailInfo();
             if (levelX < 0 && levelZ < 0 && !railInfo.getType().isSurface()) {
                 // System.out.println("Generating street decorations");
-                // generateStreetDecorations(info); // TODO
+                streetGenerator.generateStreetDecorations(info); // TODO
             }
         }
         if (levelX >= 0 || levelZ >= 0) {
             // System.out.println("Generating highways");
-            // generateHighways(chunkX, chunkZ, info); // TODO
+            streetGenerator.generateHighways(chunkX, chunkZ, info); // TODO
         }
 
         if (info.profile.RUBBLELAYER) {
             if (!info.hasBuilding || info.ruinHeight >= 0) {
                 // System.out.println("Generating rubble");
-                // generateRubble(chunkX, chunkZ, info); // TODO
+                rubbleGenerator.generateRubble(chunkX, chunkZ, info); // TODO
             }
         }
     }
-
-
-
-
-    // TODO
-    /*
-    private ChunkHeightmap getHeightmap(int chunkX, int chunkZ) {
-        ChunkCoord key = new ChunkCoord(worldObj.provider.getDimension(), chunkX, chunkZ);
-        if (cachedHeightmaps.containsKey(key)) {
-            return cachedHeightmaps.get(key);
-        } else if (cachedPrimers.containsKey(key)) {
-            char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
-            ChunkPrimer primer = cachedPrimers.get(key);
-            IPrimerDriver driver = LostCityConfiguration.OPTIMIZED_CHUNKGEN ? new OptimizedDriver() : new SafeDriver();
-            driver.setPrimer(primer);
-            ChunkHeightmap heightmap = new ChunkHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
-            cachedHeightmaps.put(key, heightmap);
-            return heightmap;
-        } else {
-            ChunkPrimer primer = generatePrimer(chunkX, chunkZ);
-            cachedPrimers.put(key, primer);
-            char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
-            IPrimerDriver driver = LostCityConfiguration.OPTIMIZED_CHUNKGEN ? new OptimizedDriver() : new SafeDriver();
-            driver.setPrimer(primer);
-            ChunkHeightmap heightmap = new ChunkHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
-            cachedHeightmaps.put(key, heightmap);
-            return heightmap;
-        }
-    }
-     */
 
     public boolean validLocation(Random rand, Coord column){
 
@@ -390,15 +413,6 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         for(Type type : invalidBiomes){
             if(BiomeDictionary.hasType(biome, type)) return false;
         }
-
-        // Strongholds doesn't need to be take in care.
-        /*
-        Coord stronghold = findNearestStructure(world, VanillaStructure.STRONGHOLD, column);
-        if(stronghold != null){
-            double strongholdDistance = column.distance(stronghold);
-            if(strongholdDistance < 300) return false;
-        }
-        */
 
         int y = column.getY();
         int upperLimit = y + 16; //isCubicWorld ? y + 16 : RogueConfig.getInt(RogueConfig.UPPERLIMIT);
@@ -430,24 +444,6 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
         Coord nearby = new Coord(x + xOffset, 0, z + zOffset);
         return nearby;
-    }
-
-    public Coord findNearestStructure(World world, VanillaStructure type, Coord pos) {
-
-        ChunkProviderServer chunkProvider = ((WorldServer)world).getChunkProvider();
-        String structureName = VanillaStructure.getName(type);
-
-        BlockPos structurebp = null;
-
-        try{
-            structurebp = chunkProvider.getNearestStructurePos(world, structureName, pos.getBlockPos(), false);
-        } catch(NullPointerException e){
-            // happens for some reason if structure type is disabled in Chunk Generator Settings
-        }
-
-        if(structurebp == null) return null;
-
-        return new Coord(structurebp);
     }
 
     public boolean isAirBlock(Coord pos){
@@ -512,6 +508,10 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     @Override
     public long getSeed() {
         return seed;
+    }
+
+    public Random getRandom() {
+        return random;
     }
 
     @Override

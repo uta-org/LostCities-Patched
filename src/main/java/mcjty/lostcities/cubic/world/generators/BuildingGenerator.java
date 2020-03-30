@@ -4,26 +4,26 @@ import mcjty.lostcities.config.LostCityConfiguration;
 import mcjty.lostcities.cubic.world.CubicHeightmap;
 import mcjty.lostcities.cubic.world.LostCityCubicGenerator;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
-import mcjty.lostcities.dimensions.world.ChunkHeightmap;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Orientation;
 import mcjty.lostcities.dimensions.world.lost.Transform;
 import mcjty.lostcities.dimensions.world.lost.cityassets.BuildingPart;
 import mcjty.lostcities.dimensions.world.lost.cityassets.CompiledPalette;
-import mcjty.lostcities.dimensions.world.lost.cityassets.IBuildingPart;
-import mcjty.lostcities.dimensions.world.lost.cityassets.Palette;
 import net.minecraft.block.*;
-import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+
+import static mcjty.lostcities.cubic.world.generators.PartGenerator.generatePart;
+import static mcjty.lostcities.cubic.world.generators.States.addStates;
+import static mcjty.lostcities.cubic.world.generators.Utils.*;
+
+import static mcjty.lostcities.cubic.world.LostCityCubicGenerator.*;
 
 public class BuildingGenerator {
     private static Set<Character> rotatableChars = null;
@@ -90,28 +90,12 @@ public class BuildingGenerator {
         return rotatableChars;
     }
 
-    private static void addStates(Block block, Set<Character> set) {
-        for (int m = 0; m < 16; m++) {
-            try {
-                IBlockState state = block.getStateFromMeta(m);
-                set.add((char) Block.BLOCK_STATE_IDS.get(state));
-            } catch (Exception e) {
-                // Ignore
-            }
-        }
-    }
-
-    private CubeDriver driver;
-
     private char baseChar;
     private char airChar;
     private char liquidChar;
     private char hardAirChar;
 
-    private BuildingGenerator() {}
-
-    public BuildingGenerator(CubeDriver driver) {
-        this.driver = driver;
+    public BuildingGenerator() {
 
         this.baseChar = LostCityCubicGenerator.baseChar;
         this.airChar = LostCityCubicGenerator.airChar;
@@ -226,146 +210,6 @@ public class BuildingGenerator {
             // We have to potentially connect to corridors
             generateCorridorConnections(info);
         }
-    }
-
-    private void clearRange(BuildingInfo info, int x, int z, int height1, int height2, boolean dowater) {
-        if (dowater) {
-            // Special case for drowned city
-            driver.setBlockRangeSafe(x, height1, z, info.waterLevel, liquidChar);
-            driver.setBlockRangeSafe(x, info.waterLevel+1, z, height2, airChar);
-        } else {
-            driver.setBlockRange(x, height1, z, height2, airChar);
-        }
-    }
-
-    // Used for space type worlds: fill underside the building/street until a block is encountered
-    private void fillToGround(BuildingInfo info, int lowestLevel, Character borderBlock) {
-        for (int x = 0; x < 16; ++x) {
-            for (int z = 0; z < 16; ++z) {
-                int y = lowestLevel - 1;
-                driver.current(x, y, z);
-                if (isSide(x, z)) {
-                    while (y > 1 && driver.getBlock() == airChar) {
-                        driver.block(info.getCompiledPalette().get(borderBlock)).decY();
-                    }
-                } else {
-                    while (y > 1 && driver.getBlock() == airChar) {
-                        driver.block(baseChar).decY();
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Generate a part. If 'airWaterLevel' is true then 'hard air' blocks are replaced with water below the waterLevel.
-     * Otherwise they are replaced with air.
-     */
-    private int generatePart(BuildingInfo info, IBuildingPart part,
-                             Transform transform,
-                             int ox, int oy, int oz, boolean airWaterLevel) {
-        CompiledPalette compiledPalette = info.getCompiledPalette();
-        // Cache the combined palette?
-        Palette localPalette = part.getLocalPalette();
-        if (localPalette != null) {
-            compiledPalette = new CompiledPalette(compiledPalette, localPalette);
-        }
-
-        boolean nowater = part.getMetaBoolean("nowater");
-
-        for (int x = 0; x < part.getXSize(); x++) {
-            for (int z = 0; z < part.getZSize(); z++) {
-                char[] vs = part.getVSlice(x, z);
-                if (vs != null) {
-                    int rx = ox + transform.rotateX(x, z);
-                    int rz = oz + transform.rotateZ(x, z);
-                    driver.current(rx, oy, rz);
-                    int len = vs.length;
-                    for (int y = 0; y < len; y++) {
-                        char c = vs[y];
-                        Character b = compiledPalette.get(c);
-                        if (b == null) {
-                            throw new RuntimeException("Could not find entry '" + c + "' in the palette for part '" + part.getName() + "'!");
-                        }
-
-                        CompiledPalette.Info inf = compiledPalette.getInfo(c);
-
-                        if (transform != Transform.ROTATE_NONE) {
-                            if (getRotatableChars().contains(b)) {
-                                IBlockState bs = Block.BLOCK_STATE_IDS.getByValue(b);
-                                bs = bs.withRotation(transform.getMcRotation());
-                                b = (char) Block.BLOCK_STATE_IDS.get(bs);
-                            } else if (getRailChars().contains(b)) {
-                                IBlockState bs = Block.BLOCK_STATE_IDS.getByValue(b);
-                                PropertyEnum<BlockRailBase.EnumRailDirection> shapeProperty;
-                                if (bs.getBlock() == Blocks.RAIL) {
-                                    shapeProperty = BlockRail.SHAPE;
-                                } else if (bs.getBlock() == Blocks.GOLDEN_RAIL) {
-                                    shapeProperty = BlockRailPowered.SHAPE;
-                                } else {
-                                    throw new RuntimeException("Error with rail!");
-                                }
-                                BlockRailBase.EnumRailDirection shape = bs.getValue(shapeProperty);
-                                bs = bs.withProperty(shapeProperty, transform.transform(shape));
-                                b = (char) Block.BLOCK_STATE_IDS.get(bs);
-                            }
-                        }
-                        // We don't replace the world where the part is empty (air)
-                        if (b != airChar) {
-                            if (b == liquidChar) {
-                                if (info.profile.AVOID_WATER) {
-                                    b = airChar;
-                                }
-                            } else if (b == hardAirChar) {
-                                if (airWaterLevel && !info.profile.AVOID_WATER && !nowater) {
-                                    b = (oy + y) < info.waterLevel ? liquidChar : airChar;
-                                } else {
-                                    b = airChar;
-                                }
-                            } else if (inf != null) {
-                                Map<String, Integer> orientations = inf.getTorchOrientations();
-                                if (orientations != null) {
-                                    if (info.profile.GENERATE_LIGHTING) {
-                                        info.addTorchTodo(driver.getCurrent(), orientations);
-                                    } else {
-                                        b = airChar;        // No torches
-                                    }
-                                } else if (inf.getLoot() != null && !inf.getLoot().isEmpty()) {
-                                    if (!info.noLoot) {
-                                        info.getTodoChunk(rx, rz).addLootTodo(new BlockPos(info.chunkX * 16 + rx, oy + y, info.chunkZ * 16 + rz),
-                                                new BuildingInfo.ConditionTodo(inf.getLoot(), part.getName(), info));
-                                    }
-                                } else if (inf.getMobId() != null && !inf.getMobId().isEmpty()) {
-                                    if (info.profile.GENERATE_SPAWNERS && !info.noLoot) {
-                                        String mobid = inf.getMobId();
-                                        info.getTodoChunk(rx, rz).addSpawnerTodo(new BlockPos(info.chunkX * 16 + rx, oy + y, info.chunkZ * 16 + rz),
-                                                new BuildingInfo.ConditionTodo(mobid, part.getName(), info));
-                                    } else {
-                                        b = airChar;
-                                    }
-                                }
-                            } else if (getCharactersNeedingLightingUpdate().contains(b)) {
-                                info.getTodoChunk(rx, rz).addLightingUpdateTodo(new BlockPos(info.chunkX * 16 + rx, oy + y, info.chunkZ * 16 + rz));
-                            } else if (getCharactersNeedingTodo().contains(b)) {
-                                IBlockState bs = Block.BLOCK_STATE_IDS.getByValue(b);
-                                Block block = bs.getBlock();
-                                if (block instanceof BlockSapling || block instanceof BlockFlower) {
-                                    if (info.profile.AVOID_FOLIAGE) {
-                                        b = airChar;
-                                    } else {
-                                        info.getTodoChunk(rx, rz).addSaplingTodo(new BlockPos(info.chunkX * 16 + rx, oy + y, info.chunkZ * 16 + rz));
-                                    }
-                                }
-                            }
-                            driver.add(b);
-                        } else {
-                            driver.incY();
-                        }
-                    }
-                }
-            }
-        }
-        return oy + part.getSliceCount();
     }
 
     private void generateDoors(BuildingInfo info, int height, int f) {
@@ -500,7 +344,6 @@ public class BuildingGenerator {
         }
     }
 
-
     private boolean hasConnectionWithBuildingMax(int localLevel, BuildingInfo info, BuildingInfo info2, Orientation x) {
         if (info.isValidFloor(localLevel) && info.getFloor(localLevel).getMetaBoolean("dontconnect")) {
             return false;
@@ -528,14 +371,5 @@ public class BuildingGenerator {
         int globalLevel = info.localToGlobal(localLevel);
         int localAdjacent = info2.globalToLocal(globalLevel);
         return info2.hasBuilding && ((localAdjacent >= 0 && localAdjacent < info2.getNumFloors()) || (localAdjacent < 0 && (-localAdjacent) <= info2.floorsBelowGround));
-    }
-
-
-    private boolean isSide(int x, int z) {
-        return x == 0 || x == 15 || z == 0 || z == 15;
-    }
-
-    private boolean isCorner(int x, int z) {
-        return (x == 0 || x == 15) && (z == 0 || z == 15);
     }
 }
