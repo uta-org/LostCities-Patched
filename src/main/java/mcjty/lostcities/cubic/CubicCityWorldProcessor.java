@@ -14,6 +14,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.reflect.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,19 +28,18 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
     private static boolean checkedCubicWorld;
 
     // Not used
-    private static CubePrimer currentPrimer;
     private static ICubeGenerator terrainProcessor;
 
-    private static World world;
+    public static World worldObj;
 
-    private static Map<CubePos, ICube> cubes = new HashMap<>();
+    private static Map<CubePos, LostCityCubicGenerator> cubes = new HashMap<>();
 
-    public CubicCityWorldProcessor(World _world)
+    public CubicCityWorldProcessor(World world)
             throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
     {
-        super(_world);
+        super(world);
 
-        world = _world;
+        worldObj = world;
 
         if(LostCitiesDebug.debug) System.out.println("Creating processor!");
 
@@ -55,28 +55,27 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
 
     // @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-        currentPrimer = terrainProcessor.generateCube(cubeX, cubeY, cubeZ);
-        return currentPrimer;
+        return terrainProcessor.generateCube(cubeX, cubeY, cubeZ);
     }
 
     @Override
+    @ParametersAreNonnullByDefault
     public void populate(ICube cube) {
         terrainProcessor.populate(cube);
 
         CubePos cubePos = cube.getCoords();
-        cubes.put(cubePos, cube);
+        cubes.put(cubePos, new LostCityCubicGenerator(cube));
     }
 
     @SubscribeEvent
     public static void onCubePopulated(PopulateCubeEvent event) {
         // TODO: Test performance
         CubePos cubePos = new CubePos(event.getCubeX(), event.getCubeY(), event.getCubeZ());
-        ICube cube = cubes.get(cubePos);
 
-        LostCityCubicGenerator generator = new LostCityCubicGenerator(world);
-        generator.spawnInChunk(cube);
+        LostCityCubicGenerator generator = cubes.get(cubePos);
+        generator.spawnInChunk();
 
-        cubes.remove(cubePos);
+        // cubes.remove(cubePos);
     }
 
     public static boolean checkForCubicWorld(World world) {

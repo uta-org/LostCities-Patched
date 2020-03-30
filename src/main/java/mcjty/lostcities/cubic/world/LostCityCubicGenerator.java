@@ -5,6 +5,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.cubic.CubicCityWorldProcessor;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import mcjty.lostcities.cubic.world.driver.ICubeDriver;
 import mcjty.lostcities.cubic.world.generators.*;
@@ -34,6 +35,7 @@ import org.spongepowered.noise.module.source.Perlin;
 import javax.annotation.Nonnull;
 import java.util.*;
 
+import static mcjty.lostcities.cubic.CubicCityWorldProcessor.worldObj;
 import static mcjty.lostcities.dimensions.world.terraingen.LostCitiesTerrainGenerator.bedrockChar;
 
 public class LostCityCubicGenerator implements ICommonGeneratorProvider {
@@ -83,8 +85,6 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     private static int dimensionId;
     private static long seed;
 
-    private static World worldObj;
-
     private static WorldStyle worldStyle;
     private static Map<ChunkCoord, CubePrimer> cachedPrimers = new HashMap<>();
     private static Map<ChunkCoord, CubicHeightmap> cachedHeightmaps = new HashMap<>();
@@ -95,25 +95,23 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
     private static Perlin perlin;
 
+    // Singleton
     public static LostCityCubicGenerator provider;
 
-
+    private ICube cube;
 
     private LostCityCubicGenerator() {}
 
-    public LostCityCubicGenerator(World _world) {
-        if(world == null) {
+    public LostCityCubicGenerator(ICube cube) {
+        if(provider == null) {
             provider = this;
 
             driver = new CubeDriver();
             driver.useCube();
 
-            world = (ICubicWorld)_world;
-            worldObj = _world;
+            random = worldObj.rand;
 
-            random = _world.rand;
-
-            profile = WorldTypeTools.getProfile(_world);
+            profile = WorldTypeTools.getProfile(worldObj);
 
             liquidChar = (char) Block.BLOCK_STATE_IDS.get(profile.getLiquidBlock());
             baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
@@ -150,8 +148,8 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             streetGenerator = new StreetGenerator();
             rubbleGenerator = new RubbleGenerator();
 
-            dimensionId = _world.provider.getDimension();
-            seed = _world.provider.getSeed();
+            dimensionId = worldObj.provider.getDimension();
+            seed = worldObj.provider.getSeed();
 
             worldStyle = AssetRegistries.WORLDSTYLES.get(profile.getWorldStyle());
             if (worldStyle == null) {
@@ -165,9 +163,11 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             perlin.setPersistence(0.8);
             perlin.setLacunarity(1.25);
         }
+
+        this.cube = cube;
     }
 
-    public void spawnInChunk(ICube cube) {
+    public void spawnInChunk() {
         int chunkX = cube.getX();
         int chunkY = cube.getY();
         int chunkZ = cube.getZ();
