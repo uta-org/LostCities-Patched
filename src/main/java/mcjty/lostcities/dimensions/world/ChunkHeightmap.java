@@ -1,13 +1,14 @@
 package mcjty.lostcities.dimensions.world;
 
 import mcjty.lostcities.config.LandscapeType;
+import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.driver.IPrimerDriver;
 import mcjty.lostcities.dimensions.world.terraingen.LostCitiesTerrainGenerator;
 
 /**
  * A heightmap for a chunk
  */
-public class ChunkHeightmap {
+public class ChunkHeightmap implements ICommonHeightmap {
     private byte heightmap[] = new byte[16*16];
 
     public ChunkHeightmap(IPrimerDriver driver, LandscapeType type, int groundLevel, char baseChar) {

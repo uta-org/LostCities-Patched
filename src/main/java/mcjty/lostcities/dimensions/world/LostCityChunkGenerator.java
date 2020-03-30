@@ -211,7 +211,7 @@ public class LostCityChunkGenerator implements IChunkGenerator, ICommonGenerator
     }
 
     // Get a heightmap for a chunk. If needed calculate (and cache) a primer
-    public ChunkHeightmap getHeightmap(int chunkX, int chunkZ) {
+    public ICommonHeightmap getHeightmap(int chunkX, int chunkZ) {
         ChunkCoord key = new ChunkCoord(worldObj.provider.getDimension(), chunkX, chunkZ);
         if (cachedHeightmaps.containsKey(key)) {
             return cachedHeightmaps.get(key);
@@ -776,11 +776,6 @@ public class LostCityChunkGenerator implements IChunkGenerator, ICommonGenerator
     @Override
     public boolean hasOceanMonument(int chunkX, int chunkZ) {
         return oceanMonumentGenerator instanceof LostStructureOceanMonument && ((LostStructureOceanMonument) oceanMonumentGenerator).hasStructure(worldObj, chunkX, chunkZ);
-    }
-
-    @Override
-    public CubicHeightmap getCubicHeightmap(int chunkX, int chunkZ) {
-        throw new IllegalStateException("Can't use cubic heightmaps on non-cubic worlds.");
     }
 
     @Override

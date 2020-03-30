@@ -30,8 +30,8 @@ public class CommandResetCubicGen implements ICommand {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        LostCityCubicGenerator.isSpawnedOnce = false;
-        sender.sendMessage(new TextComponentString("Generation was reset!"));
+        //LostCityCubicGenerator.isSpawnedOnce = false;
+        //sender.sendMessage(new TextComponentString("Generation was reset!"));
     }
 
     @Override

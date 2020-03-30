@@ -83,9 +83,7 @@ public class Utils {
             }
             if (info.profile.isSpace()) {
                 // Base it on ground level
-                ICommonHeightmap adjacentHeightmap = CubicCityWorldProcessor.isCubicWorld
-                        ? (ICommonHeightmap) provider.getCubicHeightmap(info.chunkX, info.chunkZ)
-                        : (ICommonHeightmap) provider.getHeightmap(info.chunkX, info.chunkZ);
+                ICommonHeightmap adjacentHeightmap = provider.getHeightmap(info.chunkX, info.chunkZ);
                 int adjacentHeight = adjacentHeightmap.getAverageHeight();
                 if (adjacentHeight > 5) {
                     if ((adjacentHeight-4) < info.getCityGroundLevel()) {

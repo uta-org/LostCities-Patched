@@ -29,7 +29,5 @@ public interface ICommonGeneratorProvider extends ILostChunkGenerator {
 
     boolean hasOceanMonument(int chunkX, int chunkZ);
 
-    CubicHeightmap getCubicHeightmap(int chunkX, int chunkZ);
-
-    ChunkHeightmap getHeightmap(int chunkX, int chunkZ);
+    ICommonHeightmap getHeightmap(int chunkX, int chunkZ);
 }

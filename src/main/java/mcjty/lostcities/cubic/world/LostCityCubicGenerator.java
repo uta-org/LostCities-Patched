@@ -147,6 +147,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
             buildingGenerator = new BuildingGenerator();
             railsGenerator = new RailsGenerator();
             streetGenerator = new StreetGenerator();
+            rubbleGenerator = new RubbleGenerator();
 
             dimensionId = _world.provider.getDimension();
             seed = _world.provider.getSeed();
@@ -190,6 +191,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
 
     public static boolean canSpawnInChunk(int chunkX, int chunkZ)
     {
+        if(chunkX >= -20 && chunkX <= 20 || chunkZ >= -20 && chunkZ <= 20) return false; // don't spawn nothing on 20x20 chunks on spawn
         if(!isCityChunk(chunkX, chunkZ)) return false;
 
         double spawnChance = 1.0; // RogueConfig.getDouble(RogueConfig.SPAWNCHANCE); // TODO
@@ -334,7 +336,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         boolean building = info.hasBuilding;
 
         // TODO: Create custom heightmap for Cubic Worlds
-        CubicHeightmap heightmap = getCubicHeightmap(info.chunkX, info.chunkZ);
+        ICommonHeightmap heightmap = getHeightmap(info.chunkX, info.chunkZ);
 
         Random rand = new Random(((World)world).getSeed() * 377 + chunkZ * 341873128712L + chunkX * 132897987541L);
         rand.nextFloat();
@@ -399,7 +401,6 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     }
 
     public boolean validLocation(Random rand, Coord column){
-
         Biome biome = worldObj.getBiome(column.getBlockPos());
                 // editor.getInfo(column).getBiome();
 
@@ -415,8 +416,10 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
         }
 
         int y = column.getY();
+
+        // Check at least two chunks (so if we have water under it we won't spawn anything)
         int upperLimit = y + 16; //isCubicWorld ? y + 16 : RogueConfig.getInt(RogueConfig.UPPERLIMIT);
-        int lowerLimit = y; //isCubicWorld ? y : RogueConfig.getInt(RogueConfig.LOWERLIMIT);
+        int lowerLimit = y - 16; //isCubicWorld ? y : RogueConfig.getInt(RogueConfig.LOWERLIMIT);
 
         Coord cursor = new Coord(column.getX(), upperLimit, column.getZ());
 
@@ -540,12 +543,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider {
     }
 
     @Override
-    public ChunkHeightmap getHeightmap(int chunkX, int chunkZ) {
-        throw new IllegalStateException("Can't use chunk heightmaps on cubic worlds.");
-    }
-
-    @Override
-    public CubicHeightmap getCubicHeightmap(int chunkX, int chunkZ) {
+    public ICommonHeightmap getHeightmap(int chunkX, int chunkZ) {
         // TODO
         ChunkCoord key = new ChunkCoord(worldObj.provider.getDimension(), chunkX, chunkZ);
         if (cachedHeightmaps.containsKey(key)) {

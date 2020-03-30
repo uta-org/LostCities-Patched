@@ -4,7 +4,7 @@ import mcjty.lostcities.config.LandscapeType;
 import mcjty.lostcities.cubic.world.driver.ICubeDriver;
 import mcjty.lostcities.dimensions.world.terraingen.LostCitiesTerrainGenerator;
 
-public class CubicHeightmap {
+public class CubicHeightmap implements ICommonHeightmap {
     private int heightmap[] = new int[16*16];
 
     public CubicHeightmap(ICubeDriver driver, LandscapeType type, int groundLevel, char baseChar) {

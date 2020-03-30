@@ -232,9 +232,7 @@ public class PartGenerator {
                 if (adjacent.isCity) {
                     adjacentY = Math.min(adjacentY, adjacent.getCityGroundLevel());
                 } else {
-                    ICommonHeightmap adjacentHeightmap = CubicCityWorldProcessor.isCubicWorld
-                            ? (ICommonHeightmap) provider.getCubicHeightmap(info.chunkX, info.chunkZ)
-                            : (ICommonHeightmap) provider.getHeightmap(info.chunkX, info.chunkZ);
+                    ICommonHeightmap adjacentHeightmap = provider.getHeightmap(info.chunkX, info.chunkZ);
                     int minimumHeight = adjacentHeightmap.getMinimumHeight();
                     adjacentY = Math.min(adjacentY, minimumHeight-2);
                 }
@@ -270,9 +268,7 @@ public class PartGenerator {
      * Generate a column of wall blocks (and stone below that in water)
      */
     public static void generateBorderSupport(BuildingInfo info, char wall, int x, int z, int offset) {
-        ICommonHeightmap heightmap = CubicCityWorldProcessor.isCubicWorld
-                ? (ICommonHeightmap) provider.getCubicHeightmap(info.chunkX, info.chunkZ)
-                : (ICommonHeightmap) provider.getHeightmap(info.chunkX, info.chunkZ);
+        ICommonHeightmap heightmap = provider.getHeightmap(info.chunkX, info.chunkZ);
         int height = heightmap.getHeight(x, z);
         if (height > 1) {
             // None void

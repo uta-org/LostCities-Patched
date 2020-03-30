@@ -21,7 +21,7 @@ import static mcjty.lostcities.cubic.world.generators.Utils.*;
 
 public class StreetGenerator {
 
-    public void generateStreet(BuildingInfo info, CubicHeightmap heightmap, Random rand) {
+    public void generateStreet(BuildingInfo info, ICommonHeightmap heightmap, Random rand) {
         boolean xRail = info.hasXCorridor();
         boolean zRail = info.hasZCorridor();
         if (xRail || zRail) {
