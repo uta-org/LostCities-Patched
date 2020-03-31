@@ -58,28 +58,6 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         seed = worldObj.provider.getSeed();
     }
 
-    /*
-    public class ChunkState {
-        private ChunkCoord coord;
-        private boolean isValid;
-        private Integer groundLevel;
-
-        private ChunkState() {}
-
-        public ChunkState(ChunkCoord coord, boolean isValid, Integer groundLevel) {
-            this.coord = coord;
-            this.isValid = isValid;
-            this.groundLevel = groundLevel;
-        }
-    }
-     */
-
-    private void setCube(int chunkX, int chunkY, int chunkZ) {
-        CubePos key = new CubePos(chunkX, chunkY, chunkZ);
-        if(!cachedCubes.containsKey(key)) throw new IllegalStateException();
-        driver.setCube(cachedCubes.get(key));
-    }
-
     @Override
     public void generate(World world, Random random, CubePos pos, Biome biome) {
         spawnInChunk(pos.getX(), pos.getY(), pos.getZ());
@@ -131,8 +109,6 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
     }
 
     private boolean isRoadChunk(int chunkX, int chunkY, int chunkZ) {
-        setCube(chunkX, chunkY, chunkZ);
-
         // Blocks.CONCRETE
         for (int x = chunkX; x < chunkX + 16; ++x) {
             for (int y = chunkY; y < chunkY + 16; ++y) {
@@ -209,40 +185,6 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         return false;
     }
 
-    /*
-    *
-                // Create generator instances
-            partGenerator = new PartGenerator();
-            buildingGenerator = new BuildingGenerator();
-            railsGenerator = new RailsGenerator();
-            streetGenerator = new StreetGenerator();
-            rubbleGenerator = new RubbleGenerator();
-    * */
-
-    private BuildingGenerator getBuildingGenerator(int chunkX, int chunkY, int chunkZ) {
-        setCube(chunkX, chunkY, chunkZ);
-        if(buildingGenerator == null) buildingGenerator = new BuildingGenerator();
-        return buildingGenerator;
-    }
-
-    private RailsGenerator getRailsGenerator(int chunkX, int chunkY, int chunkZ) {
-        setCube(chunkX, chunkY, chunkZ);
-        if(railsGenerator == null) railsGenerator = new RailsGenerator();
-        return railsGenerator;
-    }
-
-    private StreetGenerator getStreetGenerator(int chunkX, int chunkY, int chunkZ) {
-        setCube(chunkX, chunkY, chunkZ);
-        if(streetGenerator == null) streetGenerator = new StreetGenerator();
-        return streetGenerator;
-    }
-
-    private RubbleGenerator getRubbleGenerator(int chunkX, int chunkY, int chunkZ) {
-        setCube(chunkX, chunkY, chunkZ);
-        if(rubbleGenerator == null) rubbleGenerator = new RubbleGenerator();
-        return rubbleGenerator;
-    }
-
     public void generate(int chunkX, int chunkY, int chunkZ, BuildingInfo info) {
         // driver.setPrimer(primer);
         // BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
@@ -259,18 +201,16 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
 
         doCityChunk(chunkX, chunkY, chunkZ, info);
 
-        RailsGenerator railGen = getRailsGenerator(chunkX, chunkY, chunkZ);
-
         Railway.RailChunkInfo railInfo = info.getRailInfo();
         if (railInfo.getType() != RailChunkType.NONE) {
             // System.out.println("Generating railways");
-            railGen.generateRailways(info, railInfo);
+            railsGenerator.generateRailways(info, railInfo);
         }
-        railGen.generateRailwayDungeons(info);
+        railsGenerator.generateRailwayDungeons(info);
 
         if (profile.isSpace()) {
             // System.out.println("Generating monorails");
-            railGen.generateMonorails(info);
+            railsGenerator.generateMonorails(info);
         }
 
         // fixTorches(info); // TODO
@@ -337,19 +277,15 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
             }
         }
 
-        BuildingGenerator buildingGen = getBuildingGenerator(chunkX, chunkY, chunkZ);
-        StreetGenerator streetGen = getStreetGenerator(chunkX, chunkY, chunkZ);
-        RubbleGenerator rubbleGen = getRubbleGenerator(chunkX, chunkY, chunkZ);
-
         // TODO: Events
         //LostCityEvent.PreGenCityChunkEvent event = new LostCityEvent.PreGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //if (!MinecraftForge.EVENT_BUS.post(event)) {
             if (building) {
                 // System.out.println("Generating building at ["+(chunkX*16)+", "+(info.profile.GROUNDLEVEL/16)+", "+(chunkZ*16)+"]");
-                buildingGen.generate(info, heightmap);
+                buildingGenerator.generate(info, heightmap);
             } else {
                 // System.out.println("Generating street");
-                streetGen.generateStreet(info, heightmap, rand); // TODO
+                streetGenerator.generateStreet(info, heightmap, rand); // TODO
             }
         //}
         //LostCityEvent.PostGenCityChunkEvent postevent = new LostCityEvent.PostGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
@@ -366,18 +302,18 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
             Railway.RailChunkInfo railInfo = info.getRailInfo();
             if (levelX < 0 && levelZ < 0 && !railInfo.getType().isSurface()) {
                 // System.out.println("Generating street decorations");
-                streetGen.generateStreetDecorations(info); // TODO
+                streetGenerator.generateStreetDecorations(info); // TODO
             }
         }
         if (levelX >= 0 || levelZ >= 0) {
             // System.out.println("Generating highways");
-            streetGen.generateHighways(chunkX, chunkZ, info); // TODO
+            streetGenerator.generateHighways(chunkX, chunkZ, info); // TODO
         }
 
         if (info.profile.RUBBLELAYER) {
             if (!info.hasBuilding || info.ruinHeight >= 0) {
                 // System.out.println("Generating rubble");
-                rubbleGen.generateRubble(chunkX, chunkZ, info); // TODO
+                rubbleGenerator.generateRubble(chunkX, chunkZ, info); // TODO
             }
         }
     }

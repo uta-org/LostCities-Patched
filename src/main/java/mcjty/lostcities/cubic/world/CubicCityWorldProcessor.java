@@ -50,6 +50,7 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
         super(world);
 
         worldObj = world;
+        driver.setWorld(world);
 
         if(LostCitiesDebug.debug) System.out.println("Creating processor!");
 
@@ -75,14 +76,15 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
     private static ICubeGenerator addCubicPopulator(Object instance)
             throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException
     {
+        // Thanks to: https://stackoverflow.com/questions/40461684/java-reflections-list-nosuchmethodexception
         Class<?> interfaze = Class.forName("io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator");
 
         Field fieldDefinition = instance.getClass().getDeclaredField("surfacePopulators");
         fieldDefinition.setAccessible(true);
         Object fieldValue = fieldDefinition.get(instance);
-        Method myMethod = fieldValue.getClass().getDeclaredMethod("add", ICubicPopulator.class);
+        Method myMethod = fieldValue.getClass().getDeclaredMethod("add", Object.class);
         myMethod.invoke(fieldValue, new CubicCityWorldPopulator());
-        
+
         return (ICubeGenerator)interfaze.cast(instance);
     }
 

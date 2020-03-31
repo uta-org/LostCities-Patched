@@ -97,5 +97,9 @@ public class CubeCityUtils {
 
         // TODO: not used, review on refactor
         partGenerator = new PartGenerator();
+        buildingGenerator = new BuildingGenerator();
+        railsGenerator = new RailsGenerator();
+        streetGenerator = new StreetGenerator();
+        rubbleGenerator = new RubbleGenerator();
     }
 }

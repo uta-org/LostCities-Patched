@@ -6,6 +6,7 @@ import mcjty.lostcities.dimensions.world.driver.IIndex;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 import java.util.Objects;
 
@@ -15,16 +16,8 @@ public class CubeDriver implements ICubeDriver {
     private int currentX;
     private int currentY;
     private int currentZ;
-
-    /*
-    private void checkForCube() {
-        if(cube == null) cube = CubicCityWorldProcessor.cachedCubes.get(CubePos.fromBlockCoords(currentX, currentY, currentZ));
-    }
-
-    private void checkForCube(int x, int y, int z) {
-        if(cube == null) cube = CubicCityWorldProcessor.cachedCubes.get(CubePos.fromBlockCoords(x, y, z));
-    }
-     */
+    private boolean useWorld;
+    private World world;
 
     @Override
     public void setPrimer(CubePrimer primer) {
@@ -43,6 +36,8 @@ public class CubeDriver implements ICubeDriver {
     public void setCube(ICube cube) {
         this.cube = cube;
     }
+
+    public void setWorld(World world) { useWorld = true; this.world = world; }
 
     @Override
     public ICubeDriver current(int x, int y, int z) {
@@ -111,8 +106,10 @@ public class CubeDriver implements ICubeDriver {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
 
         while (y < y2) {
-            // checkForCube(x, y, z);
-            cube.setBlockState(new BlockPos(x, y, z), state);
+            if(useWorld)
+                world.setBlockState(new BlockPos(x, y, z), state);
+            else
+                cube.setBlockState(new BlockPos(x, y, z), state);
             y++;
         }
 
@@ -123,8 +120,10 @@ public class CubeDriver implements ICubeDriver {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
 
         while (y < y2) {
-            // checkForCube(x, y, z);
-            cube.setBlockState(new BlockPos(x, y, z), state);
+            if(useWorld)
+                world.setBlockState(new BlockPos(x, y, z), state);
+            else
+                cube.setBlockState(new BlockPos(x, y, z), state);
             y++;
         }
     }
@@ -133,15 +132,19 @@ public class CubeDriver implements ICubeDriver {
     public ICubeDriver block(char c) {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
 
-        // checkForCube();
-        cube.setBlockState(new BlockPos(currentX, currentY, currentZ), state);
+        if(useWorld)
+            world.setBlockState(new BlockPos(currentX, currentY, currentZ), state);
+        else
+            cube.setBlockState(new BlockPos(currentX, currentY, currentZ), state);
         return this;
     }
 
     @Override
     public ICubeDriver block(IBlockState c) {
-        // checkForCube();
-        cube.setBlockState(new BlockPos(currentX, currentY, currentZ), c);
+        if(useWorld)
+            world.setBlockState(new BlockPos(currentX, currentY, currentZ), c);
+        else
+            cube.setBlockState(new BlockPos(currentX, currentY, currentZ), c);
         return this;
 
     }
@@ -150,61 +153,81 @@ public class CubeDriver implements ICubeDriver {
     public ICubeDriver add(char c) {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
 
-        // checkForCube();
-        cube.setBlockState(new BlockPos(currentX, currentY, currentZ), state);
+        if(useWorld)
+            world.setBlockState(new BlockPos(currentX, currentY, currentZ), state);
+        else
+            cube.setBlockState(new BlockPos(currentX, currentY, currentZ), state);
         return this;
     }
 
     @Override
     public char getBlock() {
-        // checkForCube();
-        return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY, currentZ));
+        if(useWorld)
+            return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(currentX, currentY, currentZ)));
+        else
+            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY, currentZ));
     }
 
     public IBlockState getBlockState() {
-        // checkForCube();
-        return cube.getBlockState(currentX, currentY, currentZ);
+        if(useWorld)
+            return world.getBlockState(new BlockPos(currentX, currentY, currentZ));
+        else
+            return cube.getBlockState(currentX, currentY, currentZ);
     }
 
     public IBlockState getBlockState(int x, int y, int z) {
-        // checkForCube(x, y, z);
-        return cube.getBlockState(x, y, z);
+        if(useWorld)
+            return world.getBlockState(new BlockPos(x, y, z));
+        else
+            return cube.getBlockState(x, y, z);
     }
 
     @Override
     public char getBlockDown() {
-        // checkForCube(currentX, currentY - 1, currentZ);
-        return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY - 1, currentZ));
+        if(useWorld)
+            return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(currentX, currentY - 1, currentZ)));
+        else
+            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY - 1, currentZ));
     }
 
     @Override
     public char getBlockEast() {
-        // checkForCube(currentX, currentY + 1, currentZ);
-        return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY + 1, currentZ));
+        if(useWorld)
+            return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(currentX, currentY + 1, currentZ)));
+        else
+            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY + 1, currentZ));
     }
 
     @Override
     public char getBlockWest() {
-        // checkForCube(currentX - 1, currentY, currentZ);
-        return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX - 1, currentY, currentZ));
+        if(useWorld)
+            return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(currentX - 1, currentY, currentZ)));
+        else
+            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX - 1, currentY, currentZ));
     }
 
     @Override
     public char getBlockSouth() {
-        // checkForCube(currentX, currentY, currentZ + 1);
-        return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY, currentZ + 1));
+        if(useWorld)
+            return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(currentX, currentY, currentZ + 1)));
+        else
+            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY, currentZ + 1));
     }
 
     @Override
     public char getBlockNorth() {
-        // checkForCube(currentX, currentY, currentZ - 1);
-        return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY, currentZ - 1));
+        if(useWorld)
+            return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(currentX, currentY, currentZ - 1)));
+        else
+            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY, currentZ - 1));
     }
 
 
     @Override
     public char getBlock(int x, int y, int z) {
-        // checkForCube(x, y, z);
+        if(useWorld)
+            return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(x, y, z)));
+        else
         return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(x, y, z));
     }
 
