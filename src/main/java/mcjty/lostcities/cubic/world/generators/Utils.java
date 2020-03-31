@@ -7,6 +7,7 @@ import mcjty.lostcities.dimensions.world.lost.Transform;
 import mcjty.lostcities.dimensions.world.lost.cityassets.BuildingPart;
 import mcjty.lostcities.dimensions.world.lost.cityassets.CompiledPalette;
 
+import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
 import static mcjty.lostcities.cubic.world.CubicCityWorldPopulator.*;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;

@@ -20,6 +20,8 @@ import static mcjty.lostcities.cubic.world.generators.Utils.*;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
+import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
+
 public class StreetGenerator {
 
     public void generateStreet(BuildingInfo info, ICommonHeightmap heightmap, Random rand) {

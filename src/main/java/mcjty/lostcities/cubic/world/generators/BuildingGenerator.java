@@ -28,6 +28,8 @@ import static mcjty.lostcities.cubic.world.generators.Utils.isSide;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
+import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
+
 public class BuildingGenerator {
     private static Set<Character> rotatableChars = null;
     private static Set<Character> charactersNeedingTodo = null;
@@ -91,19 +93,6 @@ public class BuildingGenerator {
             addStates(Blocks.LADDER, rotatableChars);
         }
         return rotatableChars;
-    }
-
-    private char baseChar;
-    private char airChar;
-    private char liquidChar;
-    private char hardAirChar;
-
-    public BuildingGenerator() {
-
-        this.baseChar = CubicCityWorldPopulator.baseChar;
-        this.airChar = CubicCityWorldPopulator.airChar;
-        this.liquidChar = CubicCityWorldPopulator.liquidChar;
-        this.hardAirChar = CubicCityWorldPopulator.hardAirChar;
     }
 
     private void setBlocksFromPalette(int x, int y, int z, int y2, CompiledPalette palette, char character) {

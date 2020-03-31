@@ -19,6 +19,8 @@ import static mcjty.lostcities.cubic.world.generators.Utils.fillToGround;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
+import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
+
 public class RailsGenerator {
     private static Set<Character> railChars = null;
 

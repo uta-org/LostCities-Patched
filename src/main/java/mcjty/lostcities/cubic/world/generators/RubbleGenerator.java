@@ -9,6 +9,8 @@ import static mcjty.lostcities.cubic.world.generators.Utils.*;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
+import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
+
 public class RubbleGenerator {
     private double[] rubbleBuffer = new double[256];
     private double[] leavesBuffer = new double[256];

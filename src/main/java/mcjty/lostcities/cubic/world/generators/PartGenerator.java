@@ -15,6 +15,8 @@ import static mcjty.lostcities.cubic.world.generators.Utils.clearRange;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
+import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
+
 public class PartGenerator {
     /**
      * Generate a part. If 'airWaterLevel' is true then 'hard air' blocks are replaced with water below the waterLevel.
