@@ -949,7 +949,7 @@ public class BuildingInfo implements ILostChunkInfo {
      * This function does not use the cache. So safe to use when the cache is building
      */
     public static int getCityLevel(int chunkX, int chunkZ, ICommonGeneratorProvider provider) {
-        // TODO: Test this
+        // This won't work...
         //if(CubicCityWorldProcessor.checkForCubicWorld(provider.getWorld()))
         //    return provider.getProfile().GROUNDLEVEL;
 

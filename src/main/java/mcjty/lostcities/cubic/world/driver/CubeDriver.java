@@ -62,9 +62,14 @@ public class CubeDriver implements ICubeDriver {
         this.localZ = localZ;
     }
 
-    public void setLocal(int chunkX, int chunkZ) {
-        this.localX = chunkX;
-        this.localZ = chunkZ;
+    public void setLocalChunk(int chunkX, int chunkZ) {
+        this.localX = chunkX * 16;
+        this.localZ = chunkZ * 16;
+    }
+
+    public void setLocalBlock(int localX, int localZ) {
+        this.localX = localX;
+        this.localZ = localZ;
     }
 
     @Override

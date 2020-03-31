@@ -3,6 +3,7 @@ package mcjty.lostcities.cubic.world;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
+import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.cubic.world.generators.*;
@@ -29,8 +30,7 @@ import java.util.*;
 import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.*;
 
-public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubicPopulator
-{
+public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubicPopulator {
 
     private static Map<CubePos, CubicHeightmap> cachedHeightmaps = new HashMap<>();
     private static Map<ChunkCoord, Integer> groundLevels = new HashMap<>();
@@ -48,7 +48,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
 
     public CubicCityWorldPopulator() {
         // TODO: Refactor this
-        if(provider == null) {
+        if (provider == null) {
             provider = this;
         }
 
@@ -69,8 +69,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         // We need this in order to generate once per column
         ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
 
-        if(canSpawnInChunk(chunkX, chunkY, chunkZ) && !groundLevels.containsKey(chunkCoord))
-        {
+        if (canSpawnInChunk(chunkX, chunkY, chunkZ) && !groundLevels.containsKey(chunkCoord)) {
             // TODO: This will be wrong
             int x = chunkX * 16 + 8;
             int y = chunkY * 16 + 8;
@@ -83,14 +82,16 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         }
     }
 
-    private boolean canSpawnInChunk(int chunkX, int chunkY, int chunkZ)
-    {
-        if(chunkX >= -20 && chunkX <= 20 || chunkZ >= -20 && chunkZ <= 20) return false; // don't spawn nothing on 20x20 chunks on spawn
-        if(!isCityChunk(chunkX, chunkZ)) return false;
+    private boolean canSpawnInChunk(int chunkX, int chunkY, int chunkZ) {
+        if (chunkX >= -20 && chunkX <= 20 || chunkZ >= -20 && chunkZ <= 20)
+            return false; // don't spawn nothing on 20x20 chunks on spawn
+        if (!isCityChunk(chunkX, chunkZ)) return false;
 
         // Add road chunk to hashset, so we will not generate any building at this column
         ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
-        if(roadChunks.contains(chunkCoord) || isRoadChunk(chunkX, chunkY, chunkZ)) {
+        if (roadChunks.contains(chunkCoord) || isRoadChunk(chunkX, chunkY, chunkZ)) {
+            if(LostCitiesDebug.debug) System.out.println("["+chunkX+", "+chunkZ+"] Detected road chunk!");
+
             roadChunks.add(chunkCoord);
             return false;
         }
@@ -110,16 +111,18 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
 
     private boolean isRoadChunk(int chunkX, int chunkY, int chunkZ) {
         // Blocks.CONCRETE
-        for (int x = chunkX; x < chunkX + 16; ++x) {
-            for (int y = chunkY; y < chunkY + 16; ++y) {
-                if(driver.getBlockState(x, y, chunkZ + 8) == Blocks.CONCRETE)
+
+        // TODO: Performance
+        IBlockState asphalt = Blocks.CONCRETE.getDefaultState();
+
+        for (int y = chunkY; y < chunkY + 16; ++y) {
+            for (int x = chunkX; x < chunkX + 16; ++x) {
+                if (driver.getBlockState(x, y, chunkZ + 8).getBlock().getDefaultState() == asphalt)
                     return true;
             }
-        }
 
-        for (int z = chunkZ; z < chunkZ + 16; ++z) {
-            for (int y = chunkY; y < chunkY + 16; ++y) {
-                if(driver.getBlockState(chunkX + 8, y, z) == Blocks.CONCRETE)
+            for (int z = chunkZ; z < chunkZ + 16; ++z) {
+                if (driver.getBlockState(chunkX + 8, y, z).getBlock().getDefaultState() == asphalt)
                     return true;
             }
         }
@@ -134,15 +137,15 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         return (d - min) / (max - min);
     }
 
-    private boolean generateNear(Random rand, int x, int y, int z, int chunkX, int chunkY, int chunkZ){
+    private boolean generateNear(Random rand, int x, int y, int z, int chunkX, int chunkY, int chunkZ) {
         int attempts = 50;
 
-        for(int i = 0; i < attempts; i++){
+        for (int i = 0; i < attempts; i++) {
             Coord location = getNearbyCoord(rand, x, z, 40, 100);
             // if(isCubicWorld) // This is always true
-                location.add(Cardinal.UP, y);
+            location.add(Cardinal.UP, y);
 
-            if(!validLocation(rand, location))
+            if (!validLocation(rand, location))
                 continue;
 
             // if(LostCitiesDebug.debug) System.out.println("["+chunkX+", "+chunkZ+"] Generating a part of the city on this chunk!");
@@ -170,7 +173,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
             profile.GROUNDLEVEL = y;
 
             // Btm, use this impl, because we check for entire columns above.
-            if(!groundLevels.containsKey(chunkCoord)) {
+            if (!groundLevels.containsKey(chunkCoord)) {
                 groundLevels.put(chunkCoord, y);
             }
 
@@ -224,11 +227,11 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         //LostCityEvent.PreExplosionEvent event = new LostCityEvent.PreExplosionEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //if (!MinecraftForge.EVENT_BUS.post(event)) {
         // TODO
-            if (info.getDamageArea().hasExplosions()) {
-                //breakBlocksForDamage(chunkX, chunkZ, info);
-                //fixAfterExplosionNew(info, provider.rand);
-            }
-            //generateDebris(provider.rand, info);
+        if (info.getDamageArea().hasExplosions()) {
+            //breakBlocksForDamage(chunkX, chunkZ, info);
+            //fixAfterExplosionNew(info, provider.rand);
+        }
+        //generateDebris(provider.rand, info);
         //}
     }
 
@@ -260,7 +263,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         rand.nextFloat();
         rand.nextFloat();
 
-        driver.setLocal(chunkX, chunkZ);
+        driver.setLocalChunk(chunkX, chunkZ);
 
         if (info.profile.isDefault()) {
             for (int x = 0; x < 16; ++x) {
@@ -282,13 +285,13 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         // TODO: Events
         //LostCityEvent.PreGenCityChunkEvent event = new LostCityEvent.PreGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //if (!MinecraftForge.EVENT_BUS.post(event)) {
-            if (building) {
-                // System.out.println("Generating building at ["+(chunkX*16)+", "+(info.profile.GROUNDLEVEL/16)+", "+(chunkZ*16)+"]");
-                buildingGenerator.generate(info, heightmap);
-            } else {
-                // System.out.println("Generating street");
-                streetGenerator.generateStreet(info, heightmap, rand); // TODO
-            }
+        if (building) {
+            // System.out.println("Generating building at ["+(chunkX*16)+", "+(info.profile.GROUNDLEVEL/16)+", "+(chunkZ*16)+"]");
+            buildingGenerator.generate(info, heightmap);
+        } else {
+            // System.out.println("Generating street");
+            streetGenerator.generateStreet(info, heightmap, rand); // TODO
+        }
         //}
         //LostCityEvent.PostGenCityChunkEvent postevent = new LostCityEvent.PostGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //MinecraftForge.EVENT_BUS.post(postevent);
@@ -320,9 +323,9 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         }
     }
 
-    public boolean validLocation(Random rand, Coord column){
+    public boolean validLocation(Random rand, Coord column) {
         Biome biome = worldObj.getBiome(column.getBlockPos());
-                // editor.getInfo(column).getBiome();
+        // editor.getInfo(column).getBiome();
 
         Type[] invalidBiomes = new Type[]{
                 BiomeDictionary.Type.RIVER,
@@ -331,8 +334,8 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
                 BiomeDictionary.Type.OCEAN
         };
 
-        for(Type type : invalidBiomes){
-            if(BiomeDictionary.hasType(biome, type)) return false;
+        for (Type type : invalidBiomes) {
+            if (BiomeDictionary.hasType(biome, type)) return false;
         }
 
         int y = column.getY();
@@ -343,20 +346,20 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
 
         Coord cursor = new Coord(column.getX(), upperLimit, column.getZ());
 
-        if(!isAirBlock(cursor)){
+        if (!isAirBlock(cursor)) {
             return false;
         }
 
-        while(!validGroundBlock(cursor)){
+        while (!validGroundBlock(cursor)) {
             cursor.add(Cardinal.DOWN);
-            if(cursor.getY() < lowerLimit) return false;
-            if(worldObj.getBlockState(cursor.getBlockPos()).getMaterial() == Material.WATER) return false;
+            if (cursor.getY() < lowerLimit) return false;
+            if (worldObj.getBlockState(cursor.getBlockPos()).getMaterial() == Material.WATER) return false;
         }
 
         return true;
     }
 
-    public static Coord getNearbyCoord(Random rand, int x, int z, int min, int max){
+    public static Coord getNearbyCoord(Random rand, int x, int z, int min, int max) {
 
         int distance = min + rand.nextInt(max - min);
 
@@ -369,17 +372,18 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         return nearby;
     }
 
-    public boolean isAirBlock(Coord pos){
+    public boolean isAirBlock(Coord pos) {
         return worldObj.isAirBlock(pos.getBlockPos());
     }
 
-    public boolean validGroundBlock(Coord pos){
-        if(isAirBlock(pos)) return false;
+    public boolean validGroundBlock(Coord pos) {
+        if (isAirBlock(pos)) return false;
         IBlockState block = worldObj.getBlockState(pos.getBlockPos());
         return !invalid.contains(block.getMaterial());
     }
 
     private static List<Material> invalid;
+
     {
         invalid = new ArrayList<Material>();
         invalid.add(Material.WOOD);
@@ -390,7 +394,9 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         invalid.add(Material.GOURD);
         invalid.add(Material.LEAVES);
         invalid.add(Material.PLANTS);
-    };
+    }
+
+    ;
 
     // TODO
     @Override
