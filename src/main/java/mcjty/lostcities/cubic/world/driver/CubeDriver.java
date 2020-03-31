@@ -18,6 +18,9 @@ public class CubeDriver implements ICubeDriver {
     private int currentZ;
     private boolean useWorld;
     private World world;
+    private int localX;
+    private int localZ;
+    private boolean useLocal;
 
     @Override
     public void setPrimer(CubePrimer primer) {
@@ -38,6 +41,31 @@ public class CubeDriver implements ICubeDriver {
     }
 
     public void setWorld(World world) { useWorld = true; this.world = world; }
+
+    public void useLocal() {
+        useLocal = true;
+    }
+
+    public int getLocalX() {
+        return localX;
+    }
+
+    public void setLocalX(int localX) {
+        this.localX = localX;
+    }
+
+    public int getLocalZ() {
+        return localZ;
+    }
+
+    public void setLocalZ(int localZ) {
+        this.localZ = localZ;
+    }
+
+    public void setLocal(int chunkX, int chunkZ) {
+        this.localX = chunkX;
+        this.localZ = chunkZ;
+    }
 
     @Override
     public ICubeDriver current(int x, int y, int z) {
@@ -107,7 +135,7 @@ public class CubeDriver implements ICubeDriver {
 
         while (y < y2) {
             if(useWorld)
-                world.setBlockState(new BlockPos(x, y, z), state);
+                world.setBlockState(useLocal ? new BlockPos(x + localX, y, z + localZ) : new BlockPos(x, y, z), state);
             else
                 cube.setBlockState(new BlockPos(x, y, z), state);
             y++;
@@ -121,7 +149,7 @@ public class CubeDriver implements ICubeDriver {
 
         while (y < y2) {
             if(useWorld)
-                world.setBlockState(new BlockPos(x, y, z), state);
+                world.setBlockState(useLocal ? new BlockPos(x + localX, y, z + localZ) : new BlockPos(x, y, z), state);
             else
                 cube.setBlockState(new BlockPos(x, y, z), state);
             y++;
@@ -177,7 +205,7 @@ public class CubeDriver implements ICubeDriver {
 
     public IBlockState getBlockState(int x, int y, int z) {
         if(useWorld)
-            return world.getBlockState(new BlockPos(x, y, z));
+            return world.getBlockState(useLocal ? new BlockPos(x + localX, y, z + localZ) : new BlockPos(x, y, z));
         else
             return cube.getBlockState(x, y, z);
     }
@@ -226,7 +254,7 @@ public class CubeDriver implements ICubeDriver {
     @Override
     public char getBlock(int x, int y, int z) {
         if(useWorld)
-            return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(x, y, z)));
+            return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(useLocal ? new BlockPos(x + localX, y, z + localZ) : new BlockPos(x, y, z)));
         else
         return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(x, y, z));
     }
@@ -268,11 +296,17 @@ public class CubeDriver implements ICubeDriver {
     @Override
     public ICubeDriver copy() {
         CubeDriver driver = new CubeDriver();
+
         driver.currentX = currentX;
         driver.currentY = currentY;
         driver.currentZ = currentZ;
         driver.primer = primer;
         driver.cube = cube;
+        driver.useWorld = useWorld;
+        driver.world = world;
+        driver.localX = localX;
+        driver.localZ = localZ;
+
         return driver;
     }
 }

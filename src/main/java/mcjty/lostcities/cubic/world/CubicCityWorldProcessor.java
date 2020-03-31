@@ -51,8 +51,9 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
 
         worldObj = world;
         driver.setWorld(world);
+        driver.useLocal();
 
-        if(LostCitiesDebug.debug) System.out.println("Creating processor!");
+        // if(LostCitiesDebug.debug) System.out.println("Creating processor!");
 
         init();
     }
@@ -60,10 +61,10 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
     private static void init()
             throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException
     {
-        if(createdProcessorInstance)
+        /*if(createdProcessorInstance)
             return;
 
-        createdProcessorInstance = true;
+        createdProcessorInstance = true;*/
 
         Class<?> clazz = Class.forName("io.github.terra121.EarthTerrainProcessor");
         Constructor<?> constructor = clazz.getConstructor(World.class);
