@@ -2,7 +2,6 @@ package mcjty.lostcities.dimensions.world.lost;
 
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
-import mcjty.lostcities.cubic.CubicCityWorldProcessor;
 import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.driver.IIndex;

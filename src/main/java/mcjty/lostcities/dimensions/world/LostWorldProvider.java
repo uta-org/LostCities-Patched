@@ -1,7 +1,7 @@
 package mcjty.lostcities.dimensions.world;
 
 import mcjty.lostcities.LostCitiesDebug;
-import mcjty.lostcities.cubic.CubicCityWorldProcessor;
+import mcjty.lostcities.cubic.world.CubicCityWorldProcessor;
 import mcjty.lostcities.config.BiomeSelectionStrategy;
 import mcjty.lostcities.config.LostCityConfiguration;
 import mcjty.lostcities.config.LostCityProfile;

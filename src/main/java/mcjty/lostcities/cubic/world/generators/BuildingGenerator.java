@@ -1,8 +1,8 @@
 package mcjty.lostcities.cubic.world.generators;
 
 import mcjty.lostcities.config.LostCityConfiguration;
+import mcjty.lostcities.cubic.world.CubicCityWorldPopulator;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
-import mcjty.lostcities.cubic.world.LostCityCubicGenerator;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Orientation;
 import mcjty.lostcities.dimensions.world.lost.Transform;
@@ -26,7 +26,7 @@ import static mcjty.lostcities.cubic.world.generators.States.addStates;
 import static mcjty.lostcities.cubic.world.generators.Utils.clearRange;
 import static mcjty.lostcities.cubic.world.generators.Utils.isSide;
 
-import static mcjty.lostcities.cubic.CubicCityWorldProcessor.driver;
+import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
 public class BuildingGenerator {
     private static Set<Character> rotatableChars = null;
@@ -100,10 +100,10 @@ public class BuildingGenerator {
 
     public BuildingGenerator() {
 
-        this.baseChar = LostCityCubicGenerator.baseChar;
-        this.airChar = LostCityCubicGenerator.airChar;
-        this.liquidChar = LostCityCubicGenerator.liquidChar;
-        this.hardAirChar = LostCityCubicGenerator.hardAirChar;
+        this.baseChar = CubicCityWorldPopulator.baseChar;
+        this.airChar = CubicCityWorldPopulator.airChar;
+        this.liquidChar = CubicCityWorldPopulator.liquidChar;
+        this.hardAirChar = CubicCityWorldPopulator.hardAirChar;
     }
 
     private void setBlocksFromPalette(int x, int y, int z, int y2, CompiledPalette palette, char character) {

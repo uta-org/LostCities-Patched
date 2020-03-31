@@ -1,12 +1,10 @@
 package mcjty.lostcities.commands;
 
-import mcjty.lostcities.cubic.world.LostCityCubicGenerator;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
 
 import javax.annotation.Nullable;
 import java.util.Collections;

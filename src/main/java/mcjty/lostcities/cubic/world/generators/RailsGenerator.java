@@ -12,12 +12,12 @@ import net.minecraft.init.Blocks;
 import java.util.HashSet;
 import java.util.Set;
 
-import static mcjty.lostcities.cubic.world.LostCityCubicGenerator.*;
+import static mcjty.lostcities.cubic.world.CubicCityWorldPopulator.*;
 import static mcjty.lostcities.cubic.world.generators.PartGenerator.generatePart;
 import static mcjty.lostcities.cubic.world.generators.States.addStates;
 import static mcjty.lostcities.cubic.world.generators.Utils.fillToGround;
 
-import static mcjty.lostcities.cubic.CubicCityWorldProcessor.driver;
+import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
 public class RailsGenerator {
     private static Set<Character> railChars = null;

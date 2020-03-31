@@ -1,4 +1,4 @@
-package mcjty.lostcities.cubic;
+package mcjty.lostcities.cubic.world;
 
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
@@ -28,7 +28,7 @@ public class CubicCityWorldType extends WorldType implements ICubicWorldType {
     public ICubeGenerator createCubeGenerator(World world) {
         try {
             return new CubicCityWorldProcessor(world);
-        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchFieldException e) {
             e.printStackTrace();
             return null;
         }

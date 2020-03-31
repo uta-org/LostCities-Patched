@@ -11,10 +11,9 @@ import net.minecraft.util.math.BlockPos;
 
 import java.util.Map;
 
-import static mcjty.lostcities.cubic.world.LostCityCubicGenerator.*;
 import static mcjty.lostcities.cubic.world.generators.Utils.clearRange;
 
-import static mcjty.lostcities.cubic.CubicCityWorldProcessor.driver;
+import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
 public class PartGenerator {
     /**

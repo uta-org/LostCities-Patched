@@ -4,7 +4,6 @@ import mcjty.lostcities.api.LostCityEvent;
 import mcjty.lostcities.api.RailChunkType;
 import mcjty.lostcities.config.LostCityConfiguration;
 import mcjty.lostcities.config.LostCityProfile;
-import mcjty.lostcities.cubic.CubicCityWorldProcessor;
 import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;

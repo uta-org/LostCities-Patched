@@ -3,11 +3,11 @@ package mcjty.lostcities.cubic.world.generators;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import net.minecraft.world.gen.NoiseGeneratorPerlin;
 
-import static mcjty.lostcities.cubic.world.LostCityCubicGenerator.*;
+import static mcjty.lostcities.cubic.world.CubicCityWorldPopulator.*;
 
 import static mcjty.lostcities.cubic.world.generators.Utils.*;
 
-import static mcjty.lostcities.cubic.CubicCityWorldProcessor.driver;
+import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
 public class RubbleGenerator {
     private double[] rubbleBuffer = new double[256];

@@ -5,7 +5,7 @@ import mcjty.lostcities.LostCities;
 import mcjty.lostcities.TerrainEventHandlers;
 import mcjty.lostcities.config.ConfigSetup;
 import mcjty.lostcities.config.LostCityConfiguration;
-import mcjty.lostcities.cubic.CubicCityWorldType;
+import mcjty.lostcities.cubic.world.CubicCityWorldType;
 import mcjty.lostcities.dimensions.ModDimensions;
 import mcjty.lostcities.dimensions.world.lost.cityassets.AssetRegistries;
 import mcjty.lostcities.network.PacketHandler;

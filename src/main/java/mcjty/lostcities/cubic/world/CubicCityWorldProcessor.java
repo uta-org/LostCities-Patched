@@ -1,13 +1,14 @@
-package mcjty.lostcities.cubic;
+package mcjty.lostcities.cubic.world;
 
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
 import mcjty.lostcities.LostCitiesDebug;
-import mcjty.lostcities.cubic.world.LostCityCubicGenerator;
+import mcjty.lostcities.cubic.CubeCityGenerator;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod;
@@ -16,7 +17,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,15 +36,17 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
 
     public static World worldObj;
 
-    // TODO: Missing dimension id
+    // TODO: Missing dimension id && also profile the variable (RAM usage)
     public static Map<CubePos, CubePrimer> cachedPrimers = new HashMap<>();
 
     public static Map<CubePos, ICube> cachedCubes = new HashMap<>();
 
     public CubicCityWorldProcessor(World world)
-            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
+            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException
     {
         super(world);
+
+        CubeCityUtils.init(world.getSeed());
 
         worldObj = world;
 
@@ -53,7 +58,18 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
         Constructor<?> constructor = clazz.getConstructor(World.class);
         Object instance = constructor.newInstance(world);
         Class<?> interfaze = Class.forName("io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator");
-        terrainProcessor = (ICubeGenerator) interfaze.cast(instance);
+        terrainProcessor = addCubicPopulator(interfaze.cast(instance));
+    }
+
+    private ICubeGenerator addCubicPopulator(Object instance)
+            throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException
+    {
+        Field fieldDefinition = instance.getClass().getDeclaredField("surfacePopulators");
+        fieldDefinition.setAccessible(true);
+        Object fieldValue = fieldDefinition.get(instance);
+        Method myMethod = fieldValue.getClass().getDeclaredMethod("add", ICubicPopulator.class);
+        myMethod.invoke(fieldValue, new CubicCityWorldPopulator());
+        return (ICubeGenerator)instance;
     }
 
     // @Override
@@ -69,31 +85,24 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
     @Override
     @ParametersAreNonnullByDefault
     public void populate(ICube cube) {
-        // driver.setCube(cube);
-
         terrainProcessor.populate(cube);
 
         CubePos key = new CubePos(cube.getX(), cube.getY(), cube.getZ());
         cachedCubes.put(key, cube);
+
+        //LostCityCubicGenerator generator = new LostCityCubicGenerator();
+        //generator.spawnInChunk(cube.getX(), cube.getY(), cube.getZ());
     }
 
     @SubscribeEvent
     public static void onCubePopulated(PopulateCubeEvent event) {
-        //System.out.println("["+event.getCubeX()+", "+event.getCubeY()+", "+event.getCubeZ()+"] "+event.getClass().getName());
-        // io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent$Pre
-
-        // Improve this
-        //if(event.getClass().getName().equals("io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent$Pre"))
-        //    return;
-
+        /*
         if(event.getClass() == PopulateCubeEvent.Pre.class)
-        {
-            // System.out.println("Cancelling pre");
             return;
-        }
 
         LostCityCubicGenerator generator = new LostCityCubicGenerator();
         generator.spawnInChunk(event.getCubeX(), event.getCubeY(), event.getCubeZ());
+         */
     }
 
     public static boolean checkForCubicWorld(World world) {

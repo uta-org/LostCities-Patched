@@ -14,11 +14,11 @@ import net.minecraft.util.math.BlockPos;
 
 import java.util.Random;
 
-import static mcjty.lostcities.cubic.world.LostCityCubicGenerator.*;
+import static mcjty.lostcities.cubic.world.CubicCityWorldPopulator.*;
 import static mcjty.lostcities.cubic.world.generators.PartGenerator.*;
 import static mcjty.lostcities.cubic.world.generators.Utils.*;
 
-import static mcjty.lostcities.cubic.CubicCityWorldProcessor.driver;
+import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
 public class StreetGenerator {
 

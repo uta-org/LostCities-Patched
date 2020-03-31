@@ -2,10 +2,10 @@ package mcjty.lostcities.cubic.world;
 
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.cubic.world.generators.*;
-import mcjty.lostcities.dimensions.world.WorldTypeTools;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Railway;
 import mcjty.lostcities.dimensions.world.lost.cityassets.AssetRegistries;
@@ -15,9 +15,6 @@ import mcjty.lostcities.varia.Cardinal;
 import mcjty.lostcities.varia.ChunkCoord;
 import mcjty.lostcities.varia.Coord;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockLeaves;
-import net.minecraft.block.BlockOldLeaf;
-import net.minecraft.block.BlockPlanks;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -29,124 +26,66 @@ import org.spongepowered.noise.module.source.Perlin;
 
 import java.util.*;
 
-import static mcjty.lostcities.cubic.CubicCityWorldProcessor.*;
+import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
+import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.*;
 
-public class LostCityCubicGenerator implements ICommonGeneratorProvider
+public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubicPopulator
 {
-    public static LostCityProfile profile;
 
-    public static char liquidChar;
-    public static char baseChar;
-    public static char airChar;
-    public static char hardAirChar;
-    public static char glowstoneChar;
-    public static char gravelChar;
-    public static char glassChar;       // @todo: for space: depend on city style
-    public static char leavesChar;
-    public static char leaves2Char;
-    public static char leaves3Char;
-    public static char ironbarsChar;
-    public static char grassChar;
-    public static char bedrockChar;
-    public static char endportalChar;
-    public static char endportalFrameChar;
-    public static char goldBlockChar;
-    public static char diamondBlockChar;
-
-    public static char street;
-    public static char street2;
-    public static char streetBase;
-    public static int streetBorder;
-
-    // Flags
-
-    // public static boolean isSpawnedOnce;
-    // private static boolean isGenerating;
-
-    // Generators
-
-    public static BuildingGenerator buildingGenerator;
-    public static PartGenerator partGenerator;
-    public static RailsGenerator railsGenerator;
-    public static StreetGenerator streetGenerator;
-    public static RubbleGenerator rubbleGenerator;
-
-    // Needed fields
-    private static int dimensionId;
-    private static long seed;
-
-    private static WorldStyle worldStyle;
     private static Map<CubePos, CubicHeightmap> cachedHeightmaps = new HashMap<>();
     private static Map<ChunkCoord, Integer> groundLevels = new HashMap<>();
     private static HashSet<ChunkCoord> roadChunks = new HashSet<>();
 
-    private static Random random;
-
-    private static Perlin perlin;
+    // Needed fields
+    private Random random;
+    private int dimensionId;
+    private long seed;
 
     // Singleton
-    public static LostCityCubicGenerator provider;
+    public static CubicCityWorldPopulator provider;
 
     private int currentChunkY;
 
-    public LostCityCubicGenerator() {
+    public CubicCityWorldPopulator() {
         // TODO: Refactor this
         if(provider == null) {
             provider = this;
-
-            random = worldObj.rand;
-
-            profile = WorldTypeTools.getProfile(worldObj);
-
-            liquidChar = (char) Block.BLOCK_STATE_IDS.get(profile.getLiquidBlock());
-            baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
-            airChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.AIR.getDefaultState());
-            hardAirChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.COMMAND_BLOCK.getDefaultState());
-
-            glowstoneChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.GLOWSTONE.getDefaultState());
-            gravelChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.GRAVEL.getDefaultState());
-
-            // @todo
-            glassChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.GLASS.getDefaultState());
-
-            leavesChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.LEAVES.getDefaultState()
-                    .withProperty(BlockLeaves.DECAYABLE, false));
-            leaves2Char = (char) Block.BLOCK_STATE_IDS.get(Blocks.LEAVES.getDefaultState()
-                    .withProperty(BlockLeaves.DECAYABLE, false)
-                    .withProperty(BlockOldLeaf.VARIANT, BlockPlanks.EnumType.JUNGLE));
-            leaves3Char = (char) Block.BLOCK_STATE_IDS.get(Blocks.LEAVES.getDefaultState()
-                    .withProperty(BlockLeaves.DECAYABLE, false)
-                    .withProperty(BlockOldLeaf.VARIANT, BlockPlanks.EnumType.SPRUCE));
-
-            ironbarsChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.IRON_BARS.getDefaultState());
-            grassChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.GRASS.getDefaultState());
-            bedrockChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.BEDROCK.getDefaultState());
-            endportalChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.END_PORTAL.getDefaultState());
-            endportalFrameChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.END_PORTAL_FRAME.getDefaultState());
-            goldBlockChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.GOLD_BLOCK.getDefaultState());
-            diamondBlockChar = (char) Block.BLOCK_STATE_IDS.get(Blocks.DIAMOND_BLOCK.getDefaultState());
-
-            dimensionId = worldObj.provider.getDimension();
-            seed = worldObj.provider.getSeed();
-
-            worldStyle = AssetRegistries.WORLDSTYLES.get(profile.getWorldStyle());
-            if (worldStyle == null) {
-                throw new RuntimeException("Unknown worldstyle '" + profile.getWorldStyle() + "'!");
-            }
-
-            perlin = new Perlin();
-            perlin.setSeed((int)seed);
-            perlin.setOctaveCount(5);
-            perlin.setFrequency(0.1);
-            perlin.setPersistence(0.8);
-            perlin.setLacunarity(1.25);
-
-            // TODO: not used, review on refactor
-            partGenerator = new PartGenerator();
         }
+
+        random = worldObj.rand;
+
+        dimensionId = worldObj.provider.getDimension();
+        seed = worldObj.provider.getSeed();
     }
 
-    public void spawnInChunk(int chunkX, int chunkY, int chunkZ) {
+    /*
+    public class ChunkState {
+        private ChunkCoord coord;
+        private boolean isValid;
+        private Integer groundLevel;
+
+        private ChunkState() {}
+
+        public ChunkState(ChunkCoord coord, boolean isValid, Integer groundLevel) {
+            this.coord = coord;
+            this.isValid = isValid;
+            this.groundLevel = groundLevel;
+        }
+    }
+     */
+
+    private void setCube(int chunkX, int chunkY, int chunkZ) {
+        CubePos key = new CubePos(chunkX, chunkY, chunkZ);
+        if(!cachedCubes.containsKey(key)) throw new IllegalStateException();
+        driver.setCube(cachedCubes.get(key));
+    }
+
+    @Override
+    public void generate(World world, Random random, CubePos pos, Biome biome) {
+        spawnInChunk(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    private void spawnInChunk(int chunkX, int chunkY, int chunkZ) {
         currentChunkY = chunkY;
 
         // We need this in order to generate once per column
@@ -166,7 +105,7 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
         }
     }
 
-    public static boolean canSpawnInChunk(int chunkX, int chunkY, int chunkZ)
+    private boolean canSpawnInChunk(int chunkX, int chunkY, int chunkZ)
     {
         if(chunkX >= -20 && chunkX <= 20 || chunkZ >= -20 && chunkZ <= 20) return false; // don't spawn nothing on 20x20 chunks on spawn
         if(!isCityChunk(chunkX, chunkZ)) return false;
@@ -184,14 +123,16 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
         return rand.nextFloat() < spawnChance;
     }
 
-    private static boolean isCityChunk(int chunkX, int chunkZ) {
+    private boolean isCityChunk(int chunkX, int chunkZ) {
         // return perlin.getValue(chunkX, 0, chunkZ) >= 0.5;
 
         double d = interpolate(perlin, perlin.getValue(chunkX, 0, chunkZ));
         return d >= 0.5;
     }
 
-    private static boolean isRoadChunk(int chunkX, int chunkY, int chunkZ) {
+    private boolean isRoadChunk(int chunkX, int chunkY, int chunkZ) {
+        setCube(chunkX, chunkY, chunkZ);
+
         // Blocks.CONCRETE
         for (int x = chunkX; x < chunkX + 16; ++x) {
             for (int y = chunkY; y < chunkY + 16; ++y) {
@@ -277,12 +218,6 @@ public class LostCityCubicGenerator implements ICommonGeneratorProvider
             streetGenerator = new StreetGenerator();
             rubbleGenerator = new RubbleGenerator();
     * */
-
-    private void setCube(int chunkX, int chunkY, int chunkZ) {
-        CubePos key = new CubePos(chunkX, chunkY, chunkZ);
-        if(!cachedCubes.containsKey(key)) throw new IllegalStateException();
-        driver.setCube(cachedCubes.get(key));
-    }
 
     private BuildingGenerator getBuildingGenerator(int chunkX, int chunkY, int chunkZ) {
         setCube(chunkX, chunkY, chunkZ);
