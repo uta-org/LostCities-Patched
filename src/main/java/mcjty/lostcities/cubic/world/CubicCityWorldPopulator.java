@@ -34,7 +34,6 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
 
     private static Map<CubePos, CubicHeightmap> cachedHeightmaps = new HashMap<>();
     private static Map<ChunkCoord, Integer> groundLevels = new HashMap<>();
-    // private static HashSet<ChunkCoord> roadChunks = new HashSet<>();
 
     // Needed fields
     private Random random;
@@ -109,29 +108,6 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         double d = interpolate(perlin, perlin.getValue(chunkX, 0, chunkZ));
         return d >= 0.5;
     }
-
-    /* // Use HashSet<CubePos>
-    private boolean isRoadChunk(int chunkX, int chunkY, int chunkZ) {
-        // Blocks.CONCRETE
-
-        // TODO: Performance
-        IBlockState asphalt = Blocks.CONCRETE.getDefaultState();
-
-        for (int y = chunkY; y < chunkY + 16; ++y) {
-            for (int x = chunkX; x < chunkX + 16; ++x) {
-                if (driver.getBlockState(x, y, chunkZ + 8).getBlock().getDefaultState() == asphalt)
-                    return true;
-            }
-
-            for (int z = chunkZ; z < chunkZ + 16; ++z) {
-                if (driver.getBlockState(chunkX + 8, y, z).getBlock().getDefaultState() == asphalt)
-                    return true;
-            }
-        }
-
-        return false;
-    }
-     */
 
     private static double interpolate(Perlin perlin, double d) {
         double max = perlin.getMaxValue();
