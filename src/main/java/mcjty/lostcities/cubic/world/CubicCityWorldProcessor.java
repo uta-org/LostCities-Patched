@@ -7,6 +7,11 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
+import io.github.terra121.dataset.Heights;
+import io.github.terra121.dataset.OpenStreetMaps;
+import io.github.terra121.populator.EarthTreePopulator;
+import io.github.terra121.populator.RoadGenerator;
+import io.github.terra121.projection.GeographicProjection;
 import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.cubic.CubeCityGenerator;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
@@ -21,8 +26,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Mod.EventBusSubscriber
 public class CubicCityWorldProcessor extends CubeCityGenerator
@@ -72,21 +76,55 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
         terrainProcessor = addCubicPopulator(instance);
 
         CubeCityUtils.init(worldObj.getSeed());
+
+        // LinkedHashSet<ICubicPopulator> test = new LinkedHashSet<>(new HashSet<ICubicPopulator>());
+        //TreeSet<ICubicPopulator> set = new TreeSet<>(new HashSet<>());
+        //set.add
     }
 
     private static ICubeGenerator addCubicPopulator(Object instance)
-            throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException
+            throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException, InstantiationException
     {
         // Thanks to: https://stackoverflow.com/questions/40461684/java-reflections-list-nosuchmethodexception
         Class<?> interfaze = Class.forName("io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator");
 
         Field fieldDefinition = instance.getClass().getDeclaredField("surfacePopulators");
         fieldDefinition.setAccessible(true);
+
         Object fieldValue = fieldDefinition.get(instance);
+        // Object newSet = getTreeSet(fieldValue);
+        // set.add(new CubicCityWorldPopulator());
+
         Method myMethod = fieldValue.getClass().getDeclaredMethod("add", Object.class);
         myMethod.invoke(fieldValue, new CubicCityWorldPopulator());
 
+        // Set<ICubicPopulator> set =
+
+        // fieldDefinition.set(fieldValue, newSet);
+
         return (ICubeGenerator)interfaze.cast(instance);
+    }
+
+    private static Object getTreeSet(Object oldSet)
+            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
+    {
+        /*
+        Class<?> clazz = Class.forName("java.util.TreeSet").asSubclass(ICubicPopulator.class);
+        Method myMethod = clazz.getDeclaredMethod("add", ICubicPopulator.class);
+        Constructor<?> constructor = clazz.getConstructor();
+        Object newSet = constructor.newInstance();
+        */
+
+        TreeSet<ICubicPopulator> newSet = new TreeSet<>();
+
+        //HashSet<ICubicPopulator> oldCastedSet = (HashSet<ICubicPopulator>) oldSet;
+        //newSet.addAll(oldCastedSet);
+
+        //newSet.add(new SortedRoadGenerator())
+        //newSet.add(new SortedEarthTreePopulator());
+        newSet.add(new CubicCityWorldPopulator());
+
+        return newSet;
     }
 
     @MethodsReturnNonnullByDefault
@@ -137,5 +175,21 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
 
         return isCubicWorld;
     }
+
+    /*
+    public class SortedEarthTreePopulator extends EarthTreePopulator {
+
+        public SortedEarthTreePopulator(GeographicProjection proj) {
+            super(proj);
+        }
+    }
+
+    public class SortedRoadGenerator extends RoadGenerator {
+
+        public SortedRoadGenerator(OpenStreetMaps osm, Heights heights, GeographicProjection proj) {
+            super(osm, heights, proj);
+        }
+    }
+    */
 
 }
