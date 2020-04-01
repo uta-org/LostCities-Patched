@@ -5,14 +5,8 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
-import io.github.terra121.dataset.Heights;
-import io.github.terra121.dataset.OpenStreetMaps;
-import io.github.terra121.populator.EarthTreePopulator;
-import io.github.terra121.populator.RoadGenerator;
-import io.github.terra121.projection.GeographicProjection;
-import mcjty.lostcities.LostCitiesDebug;
+import io.github.terra121.events.RoadPopulateEvent;
 import mcjty.lostcities.cubic.CubeCityGenerator;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import mcp.MethodsReturnNonnullByDefault;
@@ -26,7 +20,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Mod.EventBusSubscriber
 public class CubicCityWorldProcessor extends CubeCityGenerator
@@ -47,6 +44,8 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
     public static Map<CubePos, CubePrimer> cachedPrimers = new HashMap<>();
 
     public static Map<CubePos, ICube> cachedCubes = new HashMap<>();
+
+    public static Set<CubePos> cachedRoads = new HashSet<>();
 
     public CubicCityWorldProcessor(World world)
             throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException
@@ -111,13 +110,12 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
 
     @SubscribeEvent
     public static void onCubePopulated(PopulateCubeEvent event) {
-        /*
-        if(event.getClass() == PopulateCubeEvent.Pre.class)
-            return;
 
-        LostCityCubicGenerator generator = new LostCityCubicGenerator();
-        generator.spawnInChunk(event.getCubeX(), event.getCubeY(), event.getCubeZ());
-         */
+    }
+
+    @SubscribeEvent
+    public static void onRoadPopulated(RoadPopulateEvent event) {
+        cachedRoads.add(event.cubePos);
     }
 
     public static boolean checkForCubicWorld(World world) {

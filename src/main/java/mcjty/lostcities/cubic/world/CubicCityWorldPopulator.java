@@ -30,11 +30,11 @@ import java.util.*;
 import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.*;
 
-public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubicPopulator {
+public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubicPopulator, Comparable<Object> {
 
     private static Map<CubePos, CubicHeightmap> cachedHeightmaps = new HashMap<>();
     private static Map<ChunkCoord, Integer> groundLevels = new HashMap<>();
-    private static HashSet<ChunkCoord> roadChunks = new HashSet<>();
+    // private static HashSet<ChunkCoord> roadChunks = new HashSet<>();
 
     // Needed fields
     private Random random;
@@ -88,11 +88,12 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         if (!isCityChunk(chunkX, chunkZ)) return false;
 
         // Add road chunk to hashset, so we will not generate any building at this column
-        ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
-        if (roadChunks.contains(chunkCoord) || isRoadChunk(chunkX, chunkY, chunkZ)) {
+        // ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
+        CubePos cubePos = new CubePos(chunkX, chunkY, chunkZ);
+        if (cachedRoads.contains(cubePos)) {
             if(LostCitiesDebug.debug) System.out.println("["+chunkX+", "+chunkZ+"] Detected road chunk!");
 
-            roadChunks.add(chunkCoord);
+            // roadChunks.add(chunkCoord);
             return false;
         }
 
@@ -109,6 +110,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         return d >= 0.5;
     }
 
+    /* // Use HashSet<CubePos>
     private boolean isRoadChunk(int chunkX, int chunkY, int chunkZ) {
         // Blocks.CONCRETE
 
@@ -129,6 +131,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
 
         return false;
     }
+     */
 
     private static double interpolate(Perlin perlin, double d) {
         double max = perlin.getMaxValue();
@@ -487,5 +490,10 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         }
 
         throw new IllegalStateException();
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        return 2;
     }
 }
