@@ -65,21 +65,12 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
     private static void init()
             throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException
     {
-        /*if(createdProcessorInstance)
-            return;
-
-        createdProcessorInstance = true;*/
-
         Class<?> clazz = Class.forName("io.github.terra121.EarthTerrainProcessor");
         Constructor<?> constructor = clazz.getConstructor(World.class);
         Object instance = constructor.newInstance(worldObj);
         terrainProcessor = addCubicPopulator(instance);
 
         CubeCityUtils.init(worldObj.getSeed());
-
-        // LinkedHashSet<ICubicPopulator> test = new LinkedHashSet<>(new HashSet<ICubicPopulator>());
-        //TreeSet<ICubicPopulator> set = new TreeSet<>(new HashSet<>());
-        //set.add
     }
 
     private static ICubeGenerator addCubicPopulator(Object instance)
@@ -92,39 +83,11 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
         fieldDefinition.setAccessible(true);
 
         Object fieldValue = fieldDefinition.get(instance);
-        // Object newSet = getTreeSet(fieldValue);
-        // set.add(new CubicCityWorldPopulator());
 
         Method myMethod = fieldValue.getClass().getDeclaredMethod("add", Object.class);
         myMethod.invoke(fieldValue, new CubicCityWorldPopulator());
 
-        // Set<ICubicPopulator> set =
-
-        // fieldDefinition.set(fieldValue, newSet);
-
         return (ICubeGenerator)interfaze.cast(instance);
-    }
-
-    private static Object getTreeSet(Object oldSet)
-            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
-    {
-        /*
-        Class<?> clazz = Class.forName("java.util.TreeSet").asSubclass(ICubicPopulator.class);
-        Method myMethod = clazz.getDeclaredMethod("add", ICubicPopulator.class);
-        Constructor<?> constructor = clazz.getConstructor();
-        Object newSet = constructor.newInstance();
-        */
-
-        TreeSet<ICubicPopulator> newSet = new TreeSet<>();
-
-        //HashSet<ICubicPopulator> oldCastedSet = (HashSet<ICubicPopulator>) oldSet;
-        //newSet.addAll(oldCastedSet);
-
-        //newSet.add(new SortedRoadGenerator())
-        //newSet.add(new SortedEarthTreePopulator());
-        newSet.add(new CubicCityWorldPopulator());
-
-        return newSet;
     }
 
     @MethodsReturnNonnullByDefault
@@ -144,9 +107,6 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
 
         CubePos key = new CubePos(cube.getX(), cube.getY(), cube.getZ());
         cachedCubes.put(key, cube);
-
-        //LostCityCubicGenerator generator = new LostCityCubicGenerator();
-        //generator.spawnInChunk(cube.getX(), cube.getY(), cube.getZ());
     }
 
     @SubscribeEvent
