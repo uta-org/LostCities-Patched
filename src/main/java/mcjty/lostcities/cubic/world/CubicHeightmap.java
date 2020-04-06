@@ -10,18 +10,19 @@ import net.minecraft.util.math.BlockPos;
 import java.util.Objects;
 
 public class CubicHeightmap implements ICommonHeightmap {
-    private int heightmap[] = new int[16*16];
+    private int heightmap[];
     private int chunkY;
 
     private static ICubicWorld world;
 
     public CubicHeightmap(ICubeDriver driver, LandscapeType type, int groundLevel, char baseChar) {
-        // char air = LostCitiesTerrainGenerator.airChar;
-
         world = (ICubicWorld)CubicCityWorldProcessor.worldObj;
 
         // TODO:  Cavern & space
+
         /*
+        heightmap = new int[16*16];
+        char air = LostCitiesTerrainGenerator.airChar;
         if (type == LandscapeType.CAVERN) {
             // Here we try to find the height inside the cavern itself. Ignoring the top layer
             int base = Math.max(groundLevel - 20, 1);
@@ -78,12 +79,14 @@ public class CubicHeightmap implements ICommonHeightmap {
     public void setChunkY(int chunkY) { this.chunkY = chunkY; }
 
     public int getHeight(int x, int z) {
+
         int y = chunkY * 16;
         BlockPos topBlock = world.findTopBlock(new BlockPos(x, y, z), y, y + 16, ICubicWorld.SurfaceType.SOLID);
         if(topBlock == null) return y;
         return topBlock.getY();
+
         // new CubePos(x, chunkY, z), 0, 0, 0, ICubicWorld.SurfaceType.SOLID
-                // (chunkY * 16 + 8) + heightmap[z*16+x] & 0xff;
+        // return (chunkY * 16 + 8) + heightmap[z*16+x] & 0xff;
     }
 
     public int getAverageHeight() {

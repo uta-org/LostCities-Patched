@@ -91,13 +91,8 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
             return false; // don't spawn nothing on 20x20 chunks on spawn
         if (!isCityChunk(chunkX, chunkZ)) return false;
 
-        // Add road chunk to hashset, so we will not generate any building at this column
-        // ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
-        // CubePos cubePos = new CubePos(chunkX, chunkY, chunkZ);
+        // System.out.println("["+chunkX+", "+chunkY+", "+chunkZ+"]");
         if (RoadGenerator.isRoad(chunkX, chunkY, chunkZ)) {
-            if(LostCitiesDebug.debug) System.out.println("["+chunkX+", "+chunkZ+"] Detected road chunk!");
-
-            // roadChunks.add(chunkCoord);
             return false;
         }
 

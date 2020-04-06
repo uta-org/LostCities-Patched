@@ -952,20 +952,29 @@ public class BuildingInfo implements ILostChunkInfo {
         // This won't work...
         //if(CubicCityWorldProcessor.checkForCubicWorld(provider.getWorld()))
         //    return provider.getProfile().GROUNDLEVEL;
+        int level;
+        int type = -1;
 
         if (provider.otherGenerator != null) {
             int height = provider.otherGenerator.getHeight(chunkX, chunkZ, 8, 8);
-            return getLevelBasedOnHeight(height, provider.getProfile());
+            level = getLevelBasedOnHeight(height, provider.getProfile());
+            type = 0;
         } else if (provider.getProfile().isSpace()) {
-            return getCityLevelSpace(chunkX, chunkZ, provider);
+            level = getCityLevelSpace(chunkX, chunkZ, provider);
+            type = 1;
         } else if (provider.getProfile().isFloating()) {
-            return getCityLevelFloating(chunkX, chunkZ, provider);
+            level = getCityLevelFloating(chunkX, chunkZ, provider);
+            type = 2;
         } else if (provider.getProfile().isCavern()) {
-            return getCityLevelCavern(chunkX, chunkZ, provider);
+            level = getCityLevelCavern(chunkX, chunkZ, provider);
+            type = 3;
         } else {
-            return getCityLevelNormal(chunkX, chunkZ, provider, provider.getProfile());
-
+            level = getCityLevelNormal(chunkX, chunkZ, provider, provider.getProfile());
+            type = 4;
         }
+
+        // System.out.println("Level: "+level+"\nType: "+type);
+        return level;
     }
 
     private static int getCityLevelCavern(int chunkX, int chunkZ, ICommonGeneratorProvider provider) {
@@ -1030,6 +1039,8 @@ public class BuildingInfo implements ILostChunkInfo {
         } else {
             height = 100;
         }
+
+        // System.out.println("h: "+h+"\nheight: "+height);
         return getLevelBasedOnHeight(height, profile);
     }
 

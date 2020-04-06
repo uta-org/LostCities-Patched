@@ -159,12 +159,12 @@ public class BuildingGenerator {
                     } else if (info.profile.isDefault()) {
                         driver.setBlockRange(x, info.profile.BEDROCK_LAYER, z, lowestLevel, baseChar);
                     }
-                    /* // TODO
+                    // TODO
                     if (driver.getBlock(x, lowestLevel, z) == airChar) {
                         char filler = palette.get(fillerBlock);
                         driver.current(x, lowestLevel, z).block(filler); // There is nothing below so we fill this with the filler
                     }
-                    */
+
 
                     if (info.profile.isCavern()) {
                         // Also clear the inside of buildings to avoid geometry that doesn't really belong there
@@ -193,7 +193,7 @@ public class BuildingGenerator {
             height += 6;    // We currently only support 6 here
         }
 
-        /*
+
         if (info.floorsBelowGround > 0) {
             // Underground we replace the glass with the filler
             for (int x = 0; x < 16; x++) {
@@ -206,7 +206,7 @@ public class BuildingGenerator {
                 setBlocksFromPalette(15, lowestLevel, z, Math.min(info.getCityGroundLevel(), info.getXmax().getCityGroundLevel()) + 1, palette, fillerBlock);
             }
         }
-        */
+
 
         if (info.floorsBelowGround >= 1) {
             // We have to potentially connect to corridors
