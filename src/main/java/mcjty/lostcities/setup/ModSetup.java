@@ -35,17 +35,10 @@ public class ModSetup {
     public static File modConfigDir;
 
     public void preInit(FMLPreInitializationEvent e) {
-        /*
-        // TODO: Refactor
-        CubicWorldPopulator wrapper = new CubicWorldPopulator();
-
-        MinecraftForge.EVENT_BUS.register(wrapper);
-        MinecraftForge.TERRAIN_GEN_BUS.register(wrapper);
-        CubeGeneratorsRegistry.register(wrapper, 0);
-        */
-
         logger = e.getModLog();
         PacketHandler.registerMessages("lostcities");
+
+        // MinecraftForge.EVENT_BUS.register(CubicCityEventHandlers.class);
 
         CubicCityWorldType.create();
 

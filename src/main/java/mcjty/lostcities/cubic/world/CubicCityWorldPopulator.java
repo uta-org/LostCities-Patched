@@ -3,10 +3,10 @@ package mcjty.lostcities.cubic.world;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
+import io.github.terra121.populator.RoadGenerator;
 import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
-import mcjty.lostcities.cubic.world.generators.*;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Railway;
 import mcjty.lostcities.dimensions.world.lost.cityassets.AssetRegistries;
@@ -18,7 +18,6 @@ import mcjty.lostcities.varia.Coord;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.BiomeDictionary;
@@ -30,7 +29,8 @@ import java.util.*;
 import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.*;
 
-public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubicPopulator, Comparable<Object> {
+public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubicPopulator, Comparable<Object>
+{
 
     private static Map<CubePos, CubicHeightmap> cachedHeightmaps = new HashMap<>();
     private static Map<ChunkCoord, Integer> groundLevels = new HashMap<>();
@@ -62,6 +62,11 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         spawnInChunk(pos.getX(), pos.getY(), pos.getZ());
     }
 
+    @Override
+    public int compareTo(Object o) {
+        return 2;
+    }
+
     private void spawnInChunk(int chunkX, int chunkY, int chunkZ) {
         currentChunkY = chunkY;
 
@@ -88,8 +93,8 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
 
         // Add road chunk to hashset, so we will not generate any building at this column
         // ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
-        CubePos cubePos = new CubePos(chunkX, chunkY, chunkZ);
-        if (cachedRoads.contains(cubePos)) {
+        // CubePos cubePos = new CubePos(chunkX, chunkY, chunkZ);
+        if (RoadGenerator.isRoad(chunkX, chunkY, chunkZ)) {
             if(LostCitiesDebug.debug) System.out.println("["+chunkX+", "+chunkZ+"] Detected road chunk!");
 
             // roadChunks.add(chunkCoord);
@@ -466,10 +471,5 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         }
 
         throw new IllegalStateException();
-    }
-
-    @Override
-    public int compareTo(Object o) {
-        return 2;
     }
 }
