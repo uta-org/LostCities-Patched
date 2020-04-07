@@ -35,9 +35,9 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
     public static World worldObj;
 
     // TODO: Missing dimension id && also profile the variable (RAM usage)
-    public static Map<CubePos, CubePrimer> cachedPrimers = new HashMap<>();
+    // public static Map<CubePos, CubePrimer> cachedPrimers = new HashMap<>();
 
-    public static Map<CubePos, ICube> cachedCubes = new HashMap<>();
+    // public static Map<CubePos, ICube> cachedCubes = new HashMap<>();
 
     public CubicCityWorldProcessor(World world)
             throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException
@@ -49,8 +49,6 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
         driver.useLocal();
 
         populator = new CubicCityWorldPopulator();
-
-        // if(LostCitiesDebug.debug) System.out.println("Creating processor!");
 
         init();
     }
@@ -68,7 +66,6 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
 
     private static ICubeGenerator addCubicPopulator(Object instance)
             throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException, InstantiationException
-            // throws ClassNotFoundException
     {
         // Thanks to: https://stackoverflow.com/questions/40461684/java-reflections-list-nosuchmethodexception
         Class<?> interfaze = Class.forName("io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator");
@@ -88,21 +85,13 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
 
     @MethodsReturnNonnullByDefault
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-        CubePrimer primer = terrainProcessor.generateCube(cubeX, cubeY, cubeZ);
-
-        CubePos key = new CubePos(cubeX, cubeY, cubeZ);
-        cachedPrimers.put(key, primer);
-
-        return primer;
+        return terrainProcessor.generateCube(cubeX, cubeY, cubeZ);
     }
 
     @Override
     @ParametersAreNonnullByDefault
     public void populate(ICube cube) {
         terrainProcessor.populate(cube);
-
-        CubePos key = new CubePos(cube.getX(), cube.getY(), cube.getZ());
-        cachedCubes.put(key, cube);
     }
 
     public static boolean checkForCubicWorld(World world) {

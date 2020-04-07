@@ -1,10 +1,10 @@
 package mcjty.lostcities.cubic.world;
 
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
+import io.github.terra121.EarthTerrainProcessor;
+import io.github.terra121.dataset.HeightmapModel;
 import io.github.terra121.populator.RoadGenerator;
-import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
@@ -12,25 +12,25 @@ import mcjty.lostcities.dimensions.world.lost.Railway;
 import mcjty.lostcities.dimensions.world.lost.cityassets.AssetRegistries;
 import mcjty.lostcities.dimensions.world.lost.cityassets.CityStyle;
 import mcjty.lostcities.dimensions.world.lost.cityassets.WorldStyle;
-import mcjty.lostcities.varia.Cardinal;
 import mcjty.lostcities.varia.ChunkCoord;
 import mcjty.lostcities.varia.Coord;
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import org.spongepowered.noise.module.source.Perlin;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
 
 import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
-import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.*;
+import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
+import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.worldObj;
 
-public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubicPopulator, Comparable<Object>
-{
+public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubicPopulator, Comparable<Object> {
 
     private static Map<CubePos, CubicHeightmap> cachedHeightmaps = new HashMap<>();
     private static Map<ChunkCoord, Integer> groundLevels = new HashMap<>();
@@ -44,6 +44,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
     public static CubicCityWorldPopulator provider;
 
     private int currentChunkY;
+    private HeightmapModel currentModel;
 
     public CubicCityWorldPopulator() {
         // TODO: Refactor this
@@ -73,33 +74,55 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         // We need this in order to generate once per column
         ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
 
-        if (canSpawnInChunk(chunkX, chunkY, chunkZ) && !groundLevels.containsKey(chunkCoord)) {
+        HeightmapModel model = canSpawnInChunk(chunkX, chunkY, chunkZ);
+        if (model != null && !groundLevels.containsKey(chunkCoord)) {
             // TODO: This will be wrong
-            int x = chunkX * 16 + 8;
-            int y = chunkY * 16 + 8;
-            int z = chunkZ * 16 + 8;
+            int x = chunkX * 16; // + 8;
+            int z = chunkZ * 16; // + 8;
 
-            generateNear(random, x, y, z, chunkX, chunkY, chunkZ);
+            currentModel = model;
 
-            // isGenerating =
-            // isSpawnedOnce = isGenerating;
+            BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
+
+            ICommonHeightmap heightmap = getHeightmap(info.chunkX, info.chunkZ);
+
+            int y = heightmap.getMinimumHeight();
+
+            // System.out.println("Height of the chunk ("+chunkX+", "+chunkY+", "+chunkZ+") = "+y);
+
+            generateNear(random, x, y, z, chunkX, chunkY, chunkZ, info, heightmap);
         }
     }
 
-    private boolean canSpawnInChunk(int chunkX, int chunkY, int chunkZ) {
-        if (chunkX >= -20 && chunkX <= 20 || chunkZ >= -20 && chunkZ <= 20)
-            return false; // don't spawn nothing on 20x20 chunks on spawn
-        if (!isCityChunk(chunkX, chunkZ)) return false;
+    private HeightmapModel canSpawnInChunk(int chunkX, int chunkY, int chunkZ) {
+        int spawnSize = EarthTerrainProcessor.spawnSize;
 
-        // System.out.println("["+chunkX+", "+chunkY+", "+chunkZ+"]");
-        if (RoadGenerator.isRoad(chunkX, chunkY, chunkZ)) {
-            return false;
-        }
+        // if (-spawnSize < chunkX && chunkX < spawnSize && -spawnSize < chunkZ && chunkZ < spawnSize)
+        if (chunkX >= -spawnSize && chunkX <= spawnSize || chunkZ >= -spawnSize && chunkZ <= spawnSize)
+            return null; // don't spawn nothing on 5x5 chunks on spawn
+
+        if (!isCityChunk(chunkX, chunkZ))
+            return null;
+
+        HeightmapModel model = HeightmapModel.getModel(chunkX, chunkY, chunkZ);
+        if(model == null)
+            return null;
+
+        if(!model.surface)
+            return null;
+
+        // System.out.println("Surface chunk at ("+chunkX+", "+chunkY+", "+chunkZ+")!");
+
+        if (RoadGenerator.isRoad(chunkX, chunkY, chunkZ))
+            return null;
 
         double spawnChance = 1.0; // RogueConfig.getDouble(RogueConfig.SPAWNCHANCE); // TODO
         Random rand = new Random(Objects.hash(chunkX, chunkZ, 31));
 
-        return rand.nextFloat() < spawnChance;
+        if(rand.nextFloat() < spawnChance)
+            return model;
+
+        return null;
     }
 
     private boolean isCityChunk(int chunkX, int chunkZ) {
@@ -116,39 +139,19 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         return (d - min) / (max - min);
     }
 
-    private boolean generateNear(Random rand, int x, int y, int z, int chunkX, int chunkY, int chunkZ) {
-        int attempts = 50;
-
-        for (int i = 0; i < attempts; i++) {
+    private boolean generateNear(Random rand, int x, int y, int z, int chunkX, int chunkY, int chunkZ, BuildingInfo info, ICommonHeightmap heightmap) {
             Coord location = getNearbyCoord(rand, x, z, 40, 100);
-            // if(isCubicWorld) // This is always true
-            location.add(Cardinal.UP, y);
 
-            if (!validLocation(rand, location))
-                continue;
-
-            // if(LostCitiesDebug.debug) System.out.println("["+chunkX+", "+chunkZ+"] Generating a part of the city on this chunk!");
+            if (!validLocation(location))
+                return false;
 
             // Update profile GROUNDLEVEL for this city
             ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
 
-            /*
-            if(!groundLevels.containsKey(chunkCoord)) {
-                groundLevels.put(chunkCoord, y);
-                profile.GROUNDLEVEL = y;
-            }
-            else {
-                int groundlevel = groundLevels.get(chunkCoord);
+            //int lx = x - chunkX;
+            //int lz = z - chunkZ;
 
-                int groundDiff = y - groundlevel;
-                if(!(groundDiff >= -2 && groundDiff <= 3)) {
-                    return false; // We are outside of the level bounds (-3 * 6 -- 6 * 6)
-                }
-
-                profile.GROUNDLEVEL = groundlevel;
-            }
-             */
-
+            // int y = (int)model.heightmaps[lx][lz];
             profile.GROUNDLEVEL = y;
 
             // Btm, use this impl, because we check for entire columns above.
@@ -156,18 +159,12 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
                 groundLevels.put(chunkCoord, y);
             }
 
-            BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
-
-            generate(chunkX, chunkY, chunkZ, info);
+            generate(chunkX, chunkY, chunkZ, info, heightmap);
 
             return true;
-        }
-
-        // if(LostCitiesDebug.debug) System.out.println("Surpassed maximum ("+attempts+") attempts!");
-        return false;
     }
 
-    public void generate(int chunkX, int chunkY, int chunkZ, BuildingInfo info) {
+    private void generate(int chunkX, int chunkY, int chunkZ, BuildingInfo info, ICommonHeightmap heightmap) {
         // driver.setPrimer(primer);
         // BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 
@@ -181,7 +178,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         street2 = info.getCompiledPalette().get(cityStyle.getStreetVariantBlock());
         streetBorder = (16 - cityStyle.getStreetWidth()) / 2;
 
-        doCityChunk(chunkX, chunkY, chunkZ, info);
+        doCityChunk(chunkX, chunkZ, info, heightmap);
 
         Railway.RailChunkInfo railInfo = info.getRailInfo();
         if (railInfo.getType() != RailChunkType.NONE) {
@@ -232,11 +229,8 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
     *
     * */
 
-    private void doCityChunk(int chunkX, int chunkY, int chunkZ, BuildingInfo info) {
+    private void doCityChunk(int chunkX, int chunkZ, BuildingInfo info, ICommonHeightmap heightmap) {
         boolean building = info.hasBuilding;
-
-        // TODO: Create custom heightmap for Cubic Worlds
-        ICommonHeightmap heightmap = getHeightmap(info.chunkX, info.chunkZ);
 
         Random rand = new Random(worldObj.getSeed() * 377 + chunkZ * 341873128712L + chunkX * 132897987541L);
         rand.nextFloat();
@@ -302,9 +296,8 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         }
     }
 
-    public boolean validLocation(Random rand, Coord column) {
+    public boolean validLocation(Coord column) {
         Biome biome = worldObj.getBiome(column.getBlockPos());
-        // editor.getInfo(column).getBiome();
 
         Type[] invalidBiomes = new Type[]{
                 BiomeDictionary.Type.RIVER,
@@ -314,25 +307,8 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         };
 
         for (Type type : invalidBiomes) {
-            if (BiomeDictionary.hasType(biome, type)) return false;
-        }
-
-        int y = column.getY();
-
-        // Check at least two chunks (so if we have water under it we won't spawn anything)
-        int upperLimit = y + 16; //isCubicWorld ? y + 16 : RogueConfig.getInt(RogueConfig.UPPERLIMIT);
-        int lowerLimit = y - 16; //isCubicWorld ? y : RogueConfig.getInt(RogueConfig.LOWERLIMIT);
-
-        Coord cursor = new Coord(column.getX(), upperLimit, column.getZ());
-
-        if (!isAirBlock(cursor)) {
-            return false;
-        }
-
-        while (!validGroundBlock(cursor)) {
-            cursor.add(Cardinal.DOWN);
-            if (cursor.getY() < lowerLimit) return false;
-            if (worldObj.getBlockState(cursor.getBlockPos()).getMaterial() == Material.WATER) return false;
+            if (BiomeDictionary.hasType(biome, type))
+                return false;
         }
 
         return true;
@@ -347,35 +323,8 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         int xOffset = (int) (Math.cos(angle) * distance);
         int zOffset = (int) (Math.sin(angle) * distance);
 
-        Coord nearby = new Coord(x + xOffset, 0, z + zOffset);
-        return nearby;
+        return new Coord(x + xOffset, 0, z + zOffset);
     }
-
-    public boolean isAirBlock(Coord pos) {
-        return worldObj.isAirBlock(pos.getBlockPos());
-    }
-
-    public boolean validGroundBlock(Coord pos) {
-        if (isAirBlock(pos)) return false;
-        IBlockState block = worldObj.getBlockState(pos.getBlockPos());
-        return !invalid.contains(block.getMaterial());
-    }
-
-    private static List<Material> invalid;
-
-    {
-        invalid = new ArrayList<Material>();
-        invalid.add(Material.WOOD);
-        invalid.add(Material.WATER);
-        invalid.add(Material.CACTUS);
-        invalid.add(Material.SNOW);
-        invalid.add(Material.GRASS);
-        invalid.add(Material.GOURD);
-        invalid.add(Material.LEAVES);
-        invalid.add(Material.PLANTS);
-    }
-
-    ;
 
     // TODO
     @Override
@@ -451,20 +400,16 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
     public ICommonHeightmap getHeightmap(int chunkX, int chunkZ) {
         CubePos key = new CubePos(chunkX, currentChunkY, chunkZ);
 
-        if (cachedHeightmaps.containsKey(key)) {
+        if (cachedHeightmaps.containsKey(key))
             return cachedHeightmaps.get(key);
-        }
 
-        if (cachedPrimers.containsKey(key)) {
-            char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
-            CubePrimer primer = cachedPrimers.get(key);
-            driver.setPrimer(primer);
-            CubicHeightmap heightmap = new CubicHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
-            heightmap.setChunkY(currentChunkY);
-            cachedHeightmaps.put(key, heightmap);
-            return heightmap;
-        }
+        char baseChar = (char) Block.BLOCK_STATE_IDS.get(profile.getBaseBlock());
 
-        throw new IllegalStateException();
+        CubicHeightmap heightmap = new CubicHeightmap(driver, profile.LANDSCAPE_TYPE, profile.GROUNDLEVEL, baseChar);
+        heightmap.setLocalChunk(chunkX, currentChunkY, chunkZ);
+        heightmap.setModel(currentModel);
+
+        cachedHeightmaps.put(key, heightmap);
+        return heightmap;
     }
 }

@@ -414,12 +414,14 @@ public class StreetGenerator {
      * Fill base blocks under streets to bedrock
      */
     private static void fillToBedrockStreetBlock(BuildingInfo info) {
+        /* // TODO
         // Base blocks below streets
         for (int x = 0; x < 16; ++x) {
             for (int z = 0; z < 16; ++z) {
                 driver.setBlockRange(x, info.profile.BEDROCK_LAYER, z, info.getCityGroundLevel(), baseChar);
             }
         }
+        */
     }
 
     /**

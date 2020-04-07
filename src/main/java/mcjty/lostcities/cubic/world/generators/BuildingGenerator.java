@@ -157,7 +157,8 @@ public class BuildingGenerator {
                         }
                         */
                     } else if (info.profile.isDefault()) {
-                        driver.setBlockRange(x, info.profile.BEDROCK_LAYER, z, lowestLevel, baseChar);
+                        // TODO
+                        // driver.setBlockRange(x, lowestLevel - 10, z, highestLevel, baseChar);
                     }
                     // TODO
                     if (driver.getBlock(x, lowestLevel, z) == airChar) {
