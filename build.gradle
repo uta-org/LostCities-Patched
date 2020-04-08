@@ -127,6 +127,7 @@ dependencies {
     // provided files("lib/terra121.jar")
 
     provided files("lib/noise.jar")
+    provided files("lib/terra121-0.1.jar")
 }
 
 jar {
