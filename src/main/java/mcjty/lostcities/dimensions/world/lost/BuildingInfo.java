@@ -322,6 +322,16 @@ public class BuildingInfo implements ILostChunkInfo {
         return floorTypes2[l + floorsBelowGround];
     }
 
+    public String getFloorTypes(boolean alternative) {
+        StringBuilder names = new StringBuilder();
+        BuildingPart[] parts = alternative ? floorTypes2 : floorTypes;
+        for (BuildingPart p : parts) {
+            if(p == null) { names.append("<none>\n"); continue; }
+            names.append(p.getName()).append("\n");
+        }
+        return names.toString();
+    }
+
     public ILostCityBuilding getBuilding() {
         return buildingType;
     }

@@ -124,7 +124,6 @@ public class CubeDriver implements ICubeDriver {
         return (useLocal ? localX : 0) + currentX;
     }
 
-    // (useLocal ? localX : 0) +
     @Override
     public int getY() {
         return currentY;
@@ -132,8 +131,16 @@ public class CubeDriver implements ICubeDriver {
 
     @Override
     public int getZ() {
-        return (useLocal ? localZ : 0) +  currentZ;
+        return (useLocal ? localZ : 0) + currentZ;
     }
+
+    public String toString() {
+        return "("+getX()+", "+getY()+", "+getZ()+")";
+    }
+
+    private boolean isSamePosition(BlockPos pos) { return isSamePosition(pos.getX(), pos.getY(), pos.getZ()); }
+
+    private boolean isSamePosition(int x, int y, int z) { return getX() == x && getY() == y && getZ() == z; }
 
     @Override
     public void setBlockRange(int x, int y, int z, int y2, char c) {
@@ -146,7 +153,6 @@ public class CubeDriver implements ICubeDriver {
                 cube.setBlockState(new BlockPos(x, y, z), state);
             y++;
         }
-
     }
 
     @Override
@@ -170,6 +176,7 @@ public class CubeDriver implements ICubeDriver {
             world.setBlockState(new BlockPos(getX(), currentY, getZ()), state);
         else
             cube.setBlockState(new BlockPos(currentX, currentY, currentZ), state);
+
         return this;
     }
 
@@ -179,18 +186,21 @@ public class CubeDriver implements ICubeDriver {
             world.setBlockState(new BlockPos(getX(), currentY, getZ()), c);
         else
             cube.setBlockState(new BlockPos(currentX, currentY, currentZ), c);
-        return this;
 
+        return this;
     }
 
     @Override
     public ICubeDriver add(char c) {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
 
-        if(useWorld)
-            world.setBlockState(new BlockPos(getX(), currentY, getZ()), state);
+        if(useWorld) {
+            BlockPos pos = new BlockPos(getX(), currentY, getZ());
+            world.setBlockState(pos, state);
+        }
         else
             cube.setBlockState(new BlockPos(currentX, currentY, currentZ), state);
+
         return this;
     }
 

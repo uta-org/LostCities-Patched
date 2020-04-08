@@ -235,8 +235,9 @@ public class LostCitiesTerrainGenerator extends NormalTerrainGenerator {
         g_seed = (214013 * g_seed + 2531011);
         return (g_seed >> 16) & 0x7F;
     }
+
     public void generate(int chunkX, int chunkZ, ChunkPrimer primer) {
-        generate(chunkX, chunkZ, primer);
+        generate(chunkX, chunkZ, primer, false);
     }
 
     // Note that for normal chunks this is called with a pre-filled in landscape primer
@@ -2298,6 +2299,7 @@ public class LostCitiesTerrainGenerator extends NormalTerrainGenerator {
                 for (int z = 0; z < 16; ++z) {
                     if (isSide(x, z)) {
                         driver.setBlockRange(x, info.profile.BEDROCK_LAYER, z, lowestLevel - 10, baseChar);
+
                         int y = lowestLevel - 10;
                         driver.current(x, y, z);
                         while (y < lowestLevel) {
@@ -2305,7 +2307,7 @@ public class LostCitiesTerrainGenerator extends NormalTerrainGenerator {
                             y++;
                         }
                     } else if (info.profile.isDefault()) {
-                        driver.setBlockRange(x, info.profile.BEDROCK_LAYER, z, lowestLevel, baseChar);
+                        // driver.setBlockRange(x, info.profile.BEDROCK_LAYER, z, lowestLevel, baseChar);
                     }
                     if (driver.getBlock(x, lowestLevel, z) == airChar) {
                         char filler = palette.get(fillerBlock);
@@ -2324,9 +2326,18 @@ public class LostCitiesTerrainGenerator extends NormalTerrainGenerator {
         int height = lowestLevel;
         for (int f = -info.floorsBelowGround; f <= info.getNumFloors(); f++) {
             BuildingPart part = info.getFloor(f);
+            // System.out.println("["+f+"] Building part (floor): "+(part.getName()));
+
             generatePart(info, part, Transform.ROTATE_NONE, 0, height, 0, false);
+
             part = info.getFloorPart2(f);
+            //if(false) {
+            //System.out.println("["+f+"] Floor\n=========\n"+info.getFloorTypes(false));
+            //System.out.println("["+f+"] Floor2\n=========\n"+info.getFloorTypes(true));
+            //}
+
             if (part != null) {
+                //System.out.println("Building part (floor2): "+(part.getName()));
                 generatePart(info, part, Transform.ROTATE_NONE, 0, height, 0, false);
             }
 

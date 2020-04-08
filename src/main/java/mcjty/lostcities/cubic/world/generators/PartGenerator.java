@@ -49,6 +49,14 @@ public class PartGenerator {
                             throw new RuntimeException("Could not find entry '" + c + "' in the palette for part '" + part.getName() + "'!");
                         }
 
+                        // System.out.println("["+rx+", "+(y + oy)+", "+rz+"] "+Block.BLOCK_STATE_IDS.getByValue(b).toString());
+
+                        /*
+                        String name = Block.BLOCK_STATE_IDS.getByValue(b).toString();
+                        if(name.contains("glass"))
+                            System.out.println(driver.toString()+" glass added! ["+name+"]");
+                         */
+
                         CompiledPalette.Info inf = compiledPalette.getInfo(c);
 
                         if (transform != Transform.ROTATE_NONE) {
@@ -119,9 +127,10 @@ public class PartGenerator {
                                 }
                             }
                             driver.add(b);
-                        } else {
-                            driver.incY();
                         }
+
+                        // bugfix: For some reason this needs to be outside of the else (why?)
+                        driver.incY();
                     }
                 }
             }

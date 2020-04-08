@@ -122,7 +122,7 @@ public class BuildingGenerator {
             // generated chunks as opposed to blank chunks with non-floating worlds
             for (int x = 0; x < 16; ++x) {
                 for (int z = 0; z < 16; ++z) {
-                    int index = (x << 12) | (z << 8);
+                    // int index = (x << 12) | (z << 8);
                     int height = heightmap.getHeight(x, z);
                     if (height > 1 && height < lowestLevel - 1) {
                         driver.setBlockRange(x, height+1, z, lowestLevel, baseChar);
@@ -179,9 +179,26 @@ public class BuildingGenerator {
         int height = lowestLevel;
         for (int f = -info.floorsBelowGround; f <= info.getNumFloors(); f++) {
             BuildingPart part = info.getFloor(f);
+            //System.out.println("["+f+"] Building part (floor): "+(part.getName()));
+
+            //System.out.println("===============");
+            System.out.println("Floor: "+f+" | Name: "+part.getName());
+            //System.out.println("===============");
             generatePart(info, part, Transform.ROTATE_NONE, 0, height, 0, false);
+            //System.out.println("===============");
+
+            // TODO
+            System.out.println("Floor2");
+
             part = info.getFloorPart2(f);
+
+            //if(false) {
+                //System.out.println("["+f+"] Floor\n=========\n"+info.getFloorTypes(false));
+                //System.out.println("["+f+"] Floor2\n=========\n"+info.getFloorTypes(true));
+            //}
+
             if (part != null) {
+                //System.out.println("Building part (floor2): "+(part.getName()));
                 generatePart(info, part, Transform.ROTATE_NONE, 0, height, 0, false);
             }
 
@@ -207,7 +224,6 @@ public class BuildingGenerator {
                 setBlocksFromPalette(15, lowestLevel, z, Math.min(info.getCityGroundLevel(), info.getXmax().getCityGroundLevel()) + 1, palette, fillerBlock);
             }
         }
-
 
         if (info.floorsBelowGround >= 1) {
             // We have to potentially connect to corridors

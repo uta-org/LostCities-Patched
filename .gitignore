@@ -1,6 +1,7 @@
 *.class
 *.iws
 /out/
+/tests/
 
 /.gradle/
 /.metadata/

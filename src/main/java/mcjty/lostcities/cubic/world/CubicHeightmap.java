@@ -109,19 +109,19 @@ public class CubicHeightmap implements ICommonHeightmap {
     public int getMinimumHeight() {
         int y = Integer.MAX_VALUE;
         int yy;
-        yy = getHeight(2, 2);
+        yy = getHeight(0, 0);
         if (yy < y) {
             y = yy;
         }
-        yy = getHeight(13, 2);
+        yy = getHeight(0, 15);
         if (yy < y) {
             y = yy;
         }
-        yy = getHeight(2, 13);
+        yy = getHeight(15, 15);
         if (yy < y) {
             y = yy;
         }
-        yy = getHeight(13, 13);
+        yy = getHeight(15, 0);
         if (yy < y) {
             y = yy;
         }

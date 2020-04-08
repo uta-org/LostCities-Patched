@@ -5,10 +5,24 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
+import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.cubic.CubeCityGenerator;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
+import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.BlockFalling;
+import net.minecraft.init.Biomes;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldEntitySpawner;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.feature.WorldGenDungeons;
+import net.minecraft.world.gen.feature.WorldGenLakes;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.terraingen.PopulateChunkEvent;
+import net.minecraftforge.event.terraingen.TerrainGen;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -18,6 +32,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 // @Mod.EventBusSubscriber
 public class CubicCityWorldProcessor extends CubeCityGenerator
@@ -34,6 +49,8 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
 
     public static World worldObj;
 
+    private Random rand;
+
     // TODO: Missing dimension id && also profile the variable (RAM usage)
     // public static Map<CubePos, CubePrimer> cachedPrimers = new HashMap<>();
 
@@ -49,6 +66,8 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
         driver.useLocal();
 
         populator = new CubicCityWorldPopulator();
+
+        rand = worldObj.rand;
 
         init();
     }
@@ -70,7 +89,6 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
         // Thanks to: https://stackoverflow.com/questions/40461684/java-reflections-list-nosuchmethodexception
         Class<?> interfaze = Class.forName("io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator");
 
-
         Field fieldDefinition = instance.getClass().getDeclaredField("surfacePopulators");
         fieldDefinition.setAccessible(true);
 
@@ -78,7 +96,6 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
 
         Method myMethod = fieldValue.getClass().getDeclaredMethod("add", Object.class);
         myMethod.invoke(fieldValue, new CubicCityWorldPopulator());
-
 
         return (ICubeGenerator)interfaze.cast(instance);
     }
