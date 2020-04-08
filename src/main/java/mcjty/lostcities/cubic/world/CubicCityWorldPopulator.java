@@ -5,6 +5,7 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopula
 import io.github.terra121.EarthTerrainProcessor;
 import io.github.terra121.dataset.HeightmapModel;
 import io.github.terra121.populator.RoadGenerator;
+import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
@@ -26,9 +27,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 
-import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
-import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
-import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.worldObj;
+import static mcjty.lostcities.cubic.world.CubicCityUtils.*;
+import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.*;
 
 public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubicPopulator, Comparable<Object> {
 
@@ -76,7 +76,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
 
         HeightmapModel model = canSpawnInChunk(chunkX, chunkY, chunkZ);
         if (model != null && !groundLevels.containsKey(chunkCoord)) {
-            // TODO: This will be wrong
+            // TODO + 8?
             int x = chunkX * 16; // + 8;
             int z = chunkZ * 16; // + 8;
 
@@ -84,13 +84,19 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
 
             BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 
-            ICommonHeightmap heightmap = getHeightmap(info.chunkX, info.chunkZ);
+            CubicHeightmap heightmap = (CubicHeightmap) getHeightmap(info.chunkX, info.chunkZ);
 
-            int y = heightmap.getMinimumHeight();
+            int y = heightmap.getFullMinHeight();
 
-            // System.out.println("Height of the chunk ("+chunkX+", "+chunkY+", "+chunkZ+") = "+y);
+            // Update profile GROUNDLEVEL for this city
+            profile.GROUNDLEVEL = y;
 
-            generateNear(random, x, y, z, chunkX, chunkY, chunkZ, info, heightmap);
+            // Btm, use this impl, because we check for entire columns above.
+            if (!groundLevels.containsKey(chunkCoord)) {
+                groundLevels.put(chunkCoord, y);
+            }
+
+            generateNear(random, x, z, chunkX, chunkY, chunkZ, info, heightmap);
         }
     }
 
@@ -111,7 +117,12 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         if(!model.surface)
             return null;
 
-        // System.out.println("Surface chunk at ("+chunkX+", "+chunkY+", "+chunkZ+")!");
+        if(!(LostCitiesDebug.debug
+                ? CubicHeightmap.hasValidSteepness_Debug(model.heightmap, chunkX, chunkY, chunkZ)
+                : CubicHeightmap.hasValidSteepness(model.heightmap))) {
+            if(LostCitiesDebug.debug) System.out.println("("+chunkX+", "+chunkY+", "+chunkZ+")");
+            return null;
+        }
 
         if (RoadGenerator.isRoad(chunkX, chunkY, chunkZ))
             return null;
@@ -139,25 +150,11 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         return (d - min) / (max - min);
     }
 
-    private boolean generateNear(Random rand, int x, int y, int z, int chunkX, int chunkY, int chunkZ, BuildingInfo info, ICommonHeightmap heightmap) {
+    private boolean generateNear(Random rand, int x, int z, int chunkX, int chunkY, int chunkZ, BuildingInfo info, ICommonHeightmap heightmap) {
             Coord location = getNearbyCoord(rand, x, z, 40, 100);
 
             if (!validLocation(location))
                 return false;
-
-            // Update profile GROUNDLEVEL for this city
-            ChunkCoord chunkCoord = new ChunkCoord(dimensionId, chunkX, chunkZ);
-
-            //int lx = x - chunkX;
-            //int lz = z - chunkZ;
-
-            // int y = (int)model.heightmaps[lx][lz];
-            profile.GROUNDLEVEL = y;
-
-            // Btm, use this impl, because we check for entire columns above.
-            if (!groundLevels.containsKey(chunkCoord)) {
-                groundLevels.put(chunkCoord, y);
-            }
 
             generate(chunkX, chunkY, chunkZ, info, heightmap);
 
@@ -178,17 +175,15 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         street2 = info.getCompiledPalette().get(cityStyle.getStreetVariantBlock());
         streetBorder = (16 - cityStyle.getStreetWidth()) / 2;
 
-        doCityChunk(chunkX, chunkZ, info, heightmap);
+        doCityChunk(chunkX, chunkY, chunkZ, info, heightmap);
 
         Railway.RailChunkInfo railInfo = info.getRailInfo();
         if (railInfo.getType() != RailChunkType.NONE) {
-            // System.out.println("Generating railways");
             railsGenerator.generateRailways(info, railInfo);
         }
         railsGenerator.generateRailwayDungeons(info);
 
         if (profile.isSpace()) {
-            // System.out.println("Generating monorails");
             railsGenerator.generateMonorails(info);
         }
 
@@ -229,22 +224,17 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
     *
     * */
 
-    private void doCityChunk(int chunkX, int chunkZ, BuildingInfo info, ICommonHeightmap heightmap) {
+    private void doCityChunk(int chunkX, int chunkY, int chunkZ, BuildingInfo info, ICommonHeightmap heightmap) {
         boolean building = info.hasBuilding;
 
         Random rand = new Random(worldObj.getSeed() * 377 + chunkZ * 341873128712L + chunkX * 132897987541L);
         rand.nextFloat();
         rand.nextFloat();
 
-        driver.setLocalChunk(chunkX, chunkZ);
+        driver.setLocalBlock(chunkX, chunkY, chunkZ);
 
         if (info.profile.isDefault()) {
-            for (int x = 0; x < 16; ++x) {
-                for (int z = 0; z < 16; ++z) {
-                    driver.setBlockRange(x, 0, z, info.profile.BEDROCK_LAYER, bedrockChar);
-                }
-            }
-
+            /* // TODO
             if (info.waterLevel > info.groundLevel) {
                 // Special case for a high water level
                 for (int x = 0; x < 16; ++x) {
@@ -253,17 +243,20 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
                     }
                 }
             }
+             */
         }
 
         // TODO: Events
         //LostCityEvent.PreGenCityChunkEvent event = new LostCityEvent.PreGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //if (!MinecraftForge.EVENT_BUS.post(event)) {
         if (building) {
-            // System.out.println("Generating building at ["+(chunkX*16)+", "+(info.profile.GROUNDLEVEL/16)+", "+(chunkZ*16)+"]");
             buildingGenerator.generate(info, heightmap);
         } else {
-            // System.out.println("Generating street");
-            streetGenerator.generateStreet(info, heightmap, rand); // TODO
+            CubicHeightmap _heightmap = (CubicHeightmap)heightmap;
+            // info.groundLevel+" -- "+getSurfaceBlock(new CubePos(chunkX, chunkY, chunkZ))+
+            // System.out.println("Min: "+_heightmap.getFullMinHeight()+"; Avg: "+_heightmap.getFullAverageHeight()+"; Max: "+_heightmap.getFullMaxHeight());
+            System.out.println(info.groundLevel+" -- "+findTopBlock(new CubePos(chunkX, chunkY, chunkZ)));
+            streetGenerator.generate(info, heightmap, rand);
         }
         //}
         //LostCityEvent.PostGenCityChunkEvent postevent = new LostCityEvent.PostGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
@@ -279,18 +272,15 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         if (!building) {
             Railway.RailChunkInfo railInfo = info.getRailInfo();
             if (levelX < 0 && levelZ < 0 && !railInfo.getType().isSurface()) {
-                // System.out.println("Generating street decorations");
                 streetGenerator.generateStreetDecorations(info); // TODO
             }
         }
         if (levelX >= 0 || levelZ >= 0) {
-            // System.out.println("Generating highways");
             streetGenerator.generateHighways(chunkX, chunkZ, info); // TODO
         }
 
         if (info.profile.RUBBLELAYER) {
             if (!info.hasBuilding || info.ruinHeight >= 0) {
-                // System.out.println("Generating rubble");
                 rubbleGenerator.generateRubble(chunkX, chunkZ, info); // TODO
             }
         }

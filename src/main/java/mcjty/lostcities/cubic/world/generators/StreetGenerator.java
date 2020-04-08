@@ -20,11 +20,11 @@ import static mcjty.lostcities.cubic.world.generators.Utils.*;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
-import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
+import static mcjty.lostcities.cubic.world.CubicCityUtils.*;
 
 public class StreetGenerator {
 
-    public void generateStreet(BuildingInfo info, ICommonHeightmap heightmap, Random rand) {
+    public void generate(BuildingInfo info, ICommonHeightmap heightmap, Random rand) {
         boolean xRail = info.hasXCorridor();
         boolean zRail = info.hasZCorridor();
         if (xRail || zRail) {
@@ -53,6 +53,8 @@ public class StreetGenerator {
                 }
                 height++;
             }
+
+            clean(info);
 
             switch (streetType) {
                 case NORMAL:
@@ -84,7 +86,20 @@ public class StreetGenerator {
             generateFrontPart(info, height, info.getZmax(), Transform.ROTATE_270);
         }
 
+        // Not used... TODO: Check if this affect to other structures
         generateBorders(info, canDoParks);
+    }
+
+    private void clean(BuildingInfo info) {
+        // Clean upper blocks
+        for (int x = 0; x < 16; ++x)
+            for(int z = 0; z < 16; ++z) {
+                int y = info.getCityGroundLevel() + 1;
+                char b = driver.getBlock(x, y, z);
+                driver.current(x, y, z);
+                if(b != airChar)
+                    driver.block(airChar);
+            }
     }
 
     public void generateStreetDecorations(BuildingInfo info) {
@@ -333,6 +348,9 @@ public class StreetGenerator {
                             && (BuildingInfo.hasRoadConnection(info, info.getZmax()) || (info.getZmax().hasZBridge(provider) != null))) {
                         b = street;
                     }
+
+                    // TODO?
+                    continue;
                 } else {
                     b = street;
                 }
@@ -367,6 +385,7 @@ public class StreetGenerator {
     }
 
     public static void generateBorders(BuildingInfo info, boolean canDoParks) {
+        /*
         Character borderBlock = info.getCityStyle().getBorderBlock();
 
         switch (info.profile.LANDSCAPE_TYPE) {
@@ -384,6 +403,7 @@ public class StreetGenerator {
                 break;
         }
 
+        // TODO
         if (doBorder(info, Direction.XMIN)) {
             int x = 0;
             for (int z = 0; z < 16; z++) {
@@ -408,6 +428,7 @@ public class StreetGenerator {
                 generateBorder(info, canDoParks, x, z, Direction.ZMAX.get(info));
             }
         }
+        */
     }
 
     /**

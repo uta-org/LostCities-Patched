@@ -15,7 +15,7 @@ import static mcjty.lostcities.cubic.world.generators.Utils.clearRange;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
-import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
+import static mcjty.lostcities.cubic.world.CubicCityUtils.*;
 
 public class PartGenerator {
     /**

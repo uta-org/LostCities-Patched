@@ -5,24 +5,14 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.cubic.CubeCityGenerator;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
-import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.BlockFalling;
-import net.minecraft.init.Biomes;
-import net.minecraft.init.Blocks;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldEntitySpawner;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.feature.WorldGenDungeons;
-import net.minecraft.world.gen.feature.WorldGenLakes;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.terraingen.PopulateChunkEvent;
-import net.minecraftforge.event.terraingen.TerrainGen;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,31 +20,23 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.function.BiPredicate;
 
-// @Mod.EventBusSubscriber
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
+import static mcjty.lostcities.cubic.world.CubicCityUtils.airChar;
+
 public class CubicCityWorldProcessor extends CubeCityGenerator
 {
     @Nonnull
     public static CubeDriver driver = new CubeDriver();
 
     public static boolean isCubicWorld;
-    private static boolean checkedCubicWorld;
 
     private static ICubeGenerator terrainProcessor;
-
     public static CubicCityWorldPopulator populator;
 
     public static World worldObj;
-
-    private Random rand;
-
-    // TODO: Missing dimension id && also profile the variable (RAM usage)
-    // public static Map<CubePos, CubePrimer> cachedPrimers = new HashMap<>();
-
-    // public static Map<CubePos, ICube> cachedCubes = new HashMap<>();
+    private static ICubicWorld cubicWorld;
 
     public CubicCityWorldProcessor(World world)
             throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException
@@ -67,8 +49,6 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
 
         populator = new CubicCityWorldPopulator();
 
-        rand = worldObj.rand;
-
         init();
     }
 
@@ -80,7 +60,7 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
         Object instance = constructor.newInstance(worldObj);
         terrainProcessor = addCubicPopulator(instance);
 
-        CubeCityUtils.init(worldObj.getSeed());
+        CubicCityUtils.init(worldObj.getSeed());
     }
 
     private static ICubeGenerator addCubicPopulator(Object instance)
@@ -112,18 +92,63 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
     }
 
     public static boolean checkForCubicWorld(World world) {
-        if(checkedCubicWorld)
+        if(cubicWorld != null)
             return isCubicWorld;
 
-        checkedCubicWorld = true;
-
         try {
-            ICubicWorld cubicWorld = (ICubicWorld)world;
+            cubicWorld = (ICubicWorld)world;
             isCubicWorld = cubicWorld != null;
         } catch(Exception ex) {
             isCubicWorld = false;
         }
 
         return isCubicWorld;
+    }
+
+    /*
+    public static BlockPos getSurfaceBlock(CubePos pos) {
+        return cubicWorld.getSurfaceForCube(pos, 0, 0, 0, ICubicWorld.SurfaceType.SOLID);
+    }
+    */
+
+    public static BlockPos findTopBlock(CubePos pos) {
+        BlockPos blockPos = pos.getCenterBlockPos();
+        blockPos = new BlockPos(blockPos.getX(), blockPos.getY() + 8, blockPos.getZ());
+
+        return findTopBlock(blockPos, blockPos.getY() - 16, blockPos.getY());
+    }
+
+    private static BlockPos findTopBlock(BlockPos start, int minTopY, int maxTopY) {
+        BlockPos pos = start;
+        IBlockState startState = worldObj.getBlockState(start);
+        if (canBeTopBlock(start, startState)) {
+            // the top tested block is "top", don't use that one because we don't know what is above
+            if(LostCitiesDebug.debug) System.out.println(start.toString()+" Top block isn't valid!");
+            return null;
+        }
+        ICube cube = cubicWorld.getCubeFromBlockCoords(pos.down());
+        while (pos.getY() >= minTopY) {
+            BlockPos next = pos.down();
+            if (blockToCube(next.getY()) != cube.getY()) {
+                cube = cubicWorld.getCubeFromBlockCoords(next);
+            }
+            if (!cube.isEmpty()) {
+                IBlockState state = cube.getBlockState(next);
+                if (canBeTopBlock(next, state)) {
+                    break;
+                }
+            }
+            pos = next;
+        }
+        if (pos.getY() < minTopY || pos.getY() > maxTopY) {
+            if(LostCitiesDebug.debug) System.out.println("Surpassed limits!");
+            return null;
+        }
+        return pos;
+    }
+
+    private static boolean canBeTopBlock(BlockPos pos, IBlockState state) {
+        char b = (char)Block.BLOCK_STATE_IDS.get(state);
+        return b != airChar;
     }
 }

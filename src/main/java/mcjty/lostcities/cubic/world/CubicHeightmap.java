@@ -4,6 +4,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.terra121.EarthTerrainProcessor;
 import io.github.terra121.dataset.HeightmapModel;
+import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.config.LandscapeType;
 import mcjty.lostcities.cubic.world.driver.ICubeDriver;
 
@@ -43,21 +44,12 @@ public class CubicHeightmap implements ICommonHeightmap {
 
     public void setModel(HeightmapModel model) { this.model = model; }
 
-    private static ICubicWorld world;
-
     public CubicHeightmap(ICubeDriver driver, LandscapeType type, int groundLevel, char baseChar) {
-        world = (ICubicWorld)CubicCityWorldProcessor.worldObj;
+
     }
 
     public int getHeight(int x, int z)
     {
-        /*
-        int y = chunkY * 16;
-        BlockPos topBlock = world.findTopBlock(new BlockPos(chunkX + x, y, chunkZ + z), y, y + 16, ICubicWorld.SurfaceType.SOLID);
-        if(topBlock == null) return y;
-        return topBlock.getY();
-        */
-
         return (int)getInternalHeight(x, z);
     }
 
@@ -66,8 +58,69 @@ public class CubicHeightmap implements ICommonHeightmap {
         return model.heightmap[x][z];
     }
 
-    public boolean hasValidSteepness() {
-        return false;
+    public static boolean hasValidSteepness(double[][] arr) {
+        return getMaxValue(arr) - getMinValue(arr) <= 8;
+    }
+
+    public static boolean hasValidSteepness_Debug(double[][] arr, int chunkX, int chunkY, int chunkZ) {
+        double min = getMinValue(arr);
+        double max = getMaxValue(arr);
+        boolean result = max - min <= 8;
+
+        if(!result) {
+            System.out.println("("+chunkX+", "+chunkY+", "+chunkZ+") Steepness not valid: "+max+" - "+min+" <= 8 ("+(max - min)+")!");
+        }
+
+        return result;
+    }
+
+    private static double getMaxValue(double[][] numbers) {
+        double maxValue = numbers[0][0];
+        for (int j = 0; j < numbers.length; j++) {
+            for (int i = 0; i < numbers[j].length; i++) {
+                if (numbers[j][i] > maxValue) {
+                    maxValue = numbers[j][i];
+                }
+            }
+        }
+        return maxValue;
+    }
+
+    private static double getMinValue(double[][] numbers) {
+        double minValue = numbers[0][0];
+        for (int j = 0; j < numbers.length; j++) {
+            for (int i = 0; i < numbers[j].length; i++) {
+                if (numbers[j][i] < minValue ) {
+                    minValue = numbers[j][i];
+                }
+            }
+        }
+        return minValue;
+    }
+
+    private static double getAverageValue(double[][] array){
+        int counter=0;
+        double sum = 0;
+        for(int i=0;i<array.length;i++){
+            for(int j=0;j<array[i].length;j++){
+                sum = sum+array[i][j];
+                counter++;
+            }
+        }
+
+        return sum / counter;
+    }
+
+    public int getFullMinHeight() {
+        return (int)getMinValue(model.heightmap);
+    }
+
+    public int getFullMaxHeight() {
+        return (int)getMaxValue(model.heightmap);
+    }
+
+    public int getFullAverageHeight() {
+        return (int)getAverageValue(model.heightmap);
     }
 
     public int getAverageHeight() {

@@ -1,5 +1,6 @@
 package mcjty.lostcities.cubic.world.driver;
 
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import mcjty.lostcities.dimensions.world.driver.IIndex;
@@ -19,8 +20,10 @@ public class CubeDriver implements ICubeDriver {
     private boolean useWorld;
     private World world;
     private int localX;
+    private int localY;
     private int localZ;
     private boolean useLocal;
+    private boolean usedBlockPosition;
 
     @Override
     public void setPrimer(CubePrimer primer) {
@@ -62,14 +65,28 @@ public class CubeDriver implements ICubeDriver {
         this.localZ = localZ;
     }
 
-    public void setLocalChunk(int chunkX, int chunkZ) {
+    public void setLocalBlock(int chunkX, int chunkY, int chunkZ) {
         this.localX = chunkX * 16;
         this.localZ = chunkZ * 16;
+
+        usedBlockPosition = true;
     }
 
-    public void setLocalBlock(int localX, int localZ) {
+    public void setLocalChunk(int localX, int localY, int localZ) {
         this.localX = localX;
+        this.localY = localY;
         this.localZ = localZ;
+    }
+
+    public CubePos getCubePos() {
+        int x = localX, y = localY, z = localZ;
+        if(usedBlockPosition)
+        {
+            x /= 16;
+            y /= 16;
+            z /= 16;
+        }
+        return new CubePos(x, y, z);
     }
 
     @Override
@@ -321,7 +338,9 @@ public class CubeDriver implements ICubeDriver {
         driver.useWorld = useWorld;
         driver.world = world;
         driver.localX = localX;
+        driver.localY = localY;
         driver.localZ = localZ;
+        driver.usedBlockPosition = usedBlockPosition;
 
         return driver;
     }

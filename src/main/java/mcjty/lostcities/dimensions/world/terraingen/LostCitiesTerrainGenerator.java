@@ -2326,18 +2326,10 @@ public class LostCitiesTerrainGenerator extends NormalTerrainGenerator {
         int height = lowestLevel;
         for (int f = -info.floorsBelowGround; f <= info.getNumFloors(); f++) {
             BuildingPart part = info.getFloor(f);
-            // System.out.println("["+f+"] Building part (floor): "+(part.getName()));
-
             generatePart(info, part, Transform.ROTATE_NONE, 0, height, 0, false);
 
             part = info.getFloorPart2(f);
-            //if(false) {
-            //System.out.println("["+f+"] Floor\n=========\n"+info.getFloorTypes(false));
-            //System.out.println("["+f+"] Floor2\n=========\n"+info.getFloorTypes(true));
-            //}
-
             if (part != null) {
-                //System.out.println("Building part (floor2): "+(part.getName()));
                 generatePart(info, part, Transform.ROTATE_NONE, 0, height, 0, false);
             }
 

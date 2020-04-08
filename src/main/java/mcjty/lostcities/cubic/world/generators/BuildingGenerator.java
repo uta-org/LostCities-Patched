@@ -1,7 +1,6 @@
 package mcjty.lostcities.cubic.world.generators;
 
 import mcjty.lostcities.config.LostCityConfiguration;
-import mcjty.lostcities.cubic.world.CubicCityWorldPopulator;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Orientation;
@@ -23,12 +22,11 @@ import java.util.Set;
 
 import static mcjty.lostcities.cubic.world.generators.PartGenerator.generatePart;
 import static mcjty.lostcities.cubic.world.generators.States.addStates;
-import static mcjty.lostcities.cubic.world.generators.Utils.clearRange;
-import static mcjty.lostcities.cubic.world.generators.Utils.isSide;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
-import static mcjty.lostcities.cubic.world.CubeCityUtils.*;
+import static mcjty.lostcities.cubic.world.CubicCityUtils.*;
+import static mcjty.lostcities.cubic.world.generators.Utils.*;
 
 public class BuildingGenerator {
     private static Set<Character> rotatableChars = null;
@@ -132,8 +130,7 @@ public class BuildingGenerator {
                 }
             }
         } else if (info.profile.isSpace()) {
-            // TODO
-            /*fillToGround(info, lowestLevel, borderBlock);
+            fillToGround(info, lowestLevel, borderBlock);
 
             // Also clear the inside of buildings to avoid geometry that doesn't really belong there
             for (int x = 0; x < 16; ++x) {
@@ -141,13 +138,13 @@ public class BuildingGenerator {
                     clearRange(info, x, z, lowestLevel, info.getCityGroundLevel() + info.getNumFloors() * 6, false);     // Never water in bubbles?
                 }
             }
-            */
         } else {
             // For normal worldgen (non floating) or cavern we have a thin layer of 'border' blocks because that looks nicer
             for (int x = 0; x < 16; ++x) {
                 for (int z = 0; z < 16; ++z) {
                     if (isSide(x, z)) {
                         driver.setBlockRange(x, lowestLevel - 10, z, highestLevel, palette.get(borderBlock));
+
                         /* // TODO
                         int y = lowestLevel - 10;
                         driver.current(x, y, z);
@@ -179,26 +176,10 @@ public class BuildingGenerator {
         int height = lowestLevel;
         for (int f = -info.floorsBelowGround; f <= info.getNumFloors(); f++) {
             BuildingPart part = info.getFloor(f);
-            //System.out.println("["+f+"] Building part (floor): "+(part.getName()));
-
-            //System.out.println("===============");
-            System.out.println("Floor: "+f+" | Name: "+part.getName());
-            //System.out.println("===============");
             generatePart(info, part, Transform.ROTATE_NONE, 0, height, 0, false);
-            //System.out.println("===============");
-
-            // TODO
-            System.out.println("Floor2");
 
             part = info.getFloorPart2(f);
-
-            //if(false) {
-                //System.out.println("["+f+"] Floor\n=========\n"+info.getFloorTypes(false));
-                //System.out.println("["+f+"] Floor2\n=========\n"+info.getFloorTypes(true));
-            //}
-
             if (part != null) {
-                //System.out.println("Building part (floor2): "+(part.getName()));
                 generatePart(info, part, Transform.ROTATE_NONE, 0, height, 0, false);
             }
 

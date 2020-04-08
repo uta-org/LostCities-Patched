@@ -14,7 +14,7 @@ import org.spongepowered.noise.module.source.Perlin;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.worldObj;
 
-public class CubeCityUtils {
+public class CubicCityUtils {
     public static LostCityProfile profile;
 
     public static char liquidChar;
