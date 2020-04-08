@@ -260,7 +260,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         if (building) {
             buildingGenerator.generate(info, heightmap);
         } else {
-            CubicHeightmap _heightmap = (CubicHeightmap)heightmap;
+            // CubicHeightmap _heightmap = (CubicHeightmap)heightmap;
             // info.groundLevel+" -- "+getSurfaceBlock(new CubePos(chunkX, chunkY, chunkZ))+
             // System.out.println("Min: "+_heightmap.getFullMinHeight()+"; Avg: "+_heightmap.getFullAverageHeight()+"; Max: "+_heightmap.getFullMaxHeight());
             // System.out.println(info.groundLevel+" -- "+findTopBlock(new CubePos(chunkX, chunkY, chunkZ))+"; Is Air?: "+cubicWorld.getCubeFromCubeCoords(new CubePos(chunkX, chunkY, chunkZ)).isEmpty());
