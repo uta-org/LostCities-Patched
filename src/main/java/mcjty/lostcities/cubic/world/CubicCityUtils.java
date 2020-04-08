@@ -47,6 +47,8 @@ public class CubicCityUtils {
     public static RailsGenerator railsGenerator;
     public static StreetGenerator streetGenerator;
     public static RubbleGenerator rubbleGenerator;
+    public static DebrisGenerator debrisGenerator;
+    public static RuinsGenerator ruinsGenerator;
 
     public static WorldStyle worldStyle;
 
@@ -101,5 +103,7 @@ public class CubicCityUtils {
         railsGenerator = new RailsGenerator();
         streetGenerator = new StreetGenerator();
         rubbleGenerator = new RubbleGenerator();
+        debrisGenerator = new DebrisGenerator();
+        ruinsGenerator = new RuinsGenerator();
     }
 }

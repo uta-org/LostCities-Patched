@@ -38,7 +38,7 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
     public static CubicCityWorldPopulator populator;
 
     public static World worldObj;
-    private static ICubicWorld cubicWorld;
+    public static ICubicWorld cubicWorld;
 
     private static SpawnersGenerator spawnersGenerator;
 
@@ -122,10 +122,14 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
     */
 
     public static BlockPos findTopBlock(CubePos pos) {
+        /*
         BlockPos blockPos = pos.getCenterBlockPos();
         blockPos = new BlockPos(blockPos.getX(), blockPos.getY() + 8, blockPos.getZ());
 
         return findTopBlock(blockPos, blockPos.getY() - 16, blockPos.getY());
+         */
+
+        return cubicWorld.getSurfaceForCube(pos, 0, 0, 0, CubicCityWorldProcessor::canBeTopBlock);
     }
 
     private static BlockPos findTopBlock(BlockPos start, int minTopY, int maxTopY) {

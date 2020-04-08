@@ -1,11 +1,18 @@
 package mcjty.lostcities.cubic.world.generators;
 
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
+import mcjty.lostcities.dimensions.world.driver.IIndex;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Direction;
 import mcjty.lostcities.dimensions.world.lost.Transform;
 import mcjty.lostcities.dimensions.world.lost.cityassets.BuildingPart;
 import mcjty.lostcities.dimensions.world.lost.cityassets.CompiledPalette;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.List;
+import java.util.Map;
 
 import static mcjty.lostcities.cubic.world.CubicCityUtils.*;
 import static mcjty.lostcities.cubic.world.CubicCityWorldPopulator.*;
@@ -15,8 +22,7 @@ import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 public class Utils {
 
     private static int g_seed = 123456789;
-
-    private static char randomLeafs[] = null;
+    private static char[] randomLeafs = null;
 
     public static void clearRange(BuildingInfo info, int x, int z, int height1, int height2, boolean dowater) {
         if (dowater) {
@@ -185,6 +191,39 @@ public class Utils {
         float h1 = h01 + (h11 - h01) * factor;
         float h = h0 + (h1 - h0) * (15.0f - dz) / 15.0f;
         return (int) h;
+    }
+
+
+    public static void fixTorches(BuildingInfo info) {
+        List<Pair<IIndex, Map<String, Integer>>> torches = info.getTorchTodo();
+        if (torches.isEmpty()) {
+            return;
+        }
+
+        for (Pair<IIndex, Map<String, Integer>> pair : torches) {
+            IIndex idx = pair.getLeft();
+            driver.current(idx);
+            Map<String, Integer> map = pair.getRight();
+
+            char torch = driver.getBlock();
+            IBlockState torchState = Block.BLOCK_STATE_IDS.getByValue(torch);
+            if (map != null) {
+                int x = driver.getX();
+                int z = driver.getZ();
+                if (driver.getY() != 0 && driver.getBlockDown() != airChar) {
+                    driver.block(torchState.getBlock().getStateFromMeta(map.get("up")));
+                } else if (x > 0 && driver.getBlockWest() != airChar) {
+                    driver.block(torchState.getBlock().getStateFromMeta(map.get("east")));
+                } else if (x < 15 && driver.getBlockEast() != airChar) {
+                    driver.block(torchState.getBlock().getStateFromMeta(map.get("west")));
+                } else if (z > 0 && driver.getBlockNorth() != airChar) {
+                    driver.block(torchState.getBlock().getStateFromMeta(map.get("south")));
+                } else if (z < 15 && driver.getBlockSouth() != airChar) {
+                    driver.block(torchState.getBlock().getStateFromMeta(map.get("north")));
+                }
+            }
+        }
+        info.clearTorchTodo();
     }
 
     public static boolean isSide(int x, int z) {

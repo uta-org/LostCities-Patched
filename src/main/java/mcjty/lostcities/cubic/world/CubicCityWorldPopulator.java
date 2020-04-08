@@ -18,6 +18,7 @@ import mcjty.lostcities.varia.Coord;
 import net.minecraft.block.Block;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import org.spongepowered.noise.module.source.Perlin;
@@ -29,6 +30,7 @@ import java.util.Random;
 
 import static mcjty.lostcities.cubic.world.CubicCityUtils.*;
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.*;
+import static mcjty.lostcities.cubic.world.generators.Utils.fixTorches;
 
 public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubicPopulator, Comparable<Object> {
 
@@ -187,7 +189,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
             railsGenerator.generateMonorails(info);
         }
 
-        // fixTorches(info); // TODO
+        fixTorches(info);
 
         // We make a new random here because the primer for a normal chunk may have
         // been cached and we want to be able to do the same when returning from a cached
@@ -197,12 +199,13 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
 
         //LostCityEvent.PreExplosionEvent event = new LostCityEvent.PreExplosionEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //if (!MinecraftForge.EVENT_BUS.post(event)) {
-        // TODO
+
         if (info.getDamageArea().hasExplosions()) {
-            //breakBlocksForDamage(chunkX, chunkZ, info);
-            //fixAfterExplosionNew(info, provider.rand);
+            debrisGenerator.breakBlocksForDamage(chunkX, chunkZ, info);
+            debrisGenerator.fixAfterExplosionNew(info, worldObj.rand);
         }
-        //generateDebris(provider.rand, info);
+
+        debrisGenerator.generateDebris(worldObj.rand, info);
         //}
     }
 
@@ -255,7 +258,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
             CubicHeightmap _heightmap = (CubicHeightmap)heightmap;
             // info.groundLevel+" -- "+getSurfaceBlock(new CubePos(chunkX, chunkY, chunkZ))+
             // System.out.println("Min: "+_heightmap.getFullMinHeight()+"; Avg: "+_heightmap.getFullAverageHeight()+"; Max: "+_heightmap.getFullMaxHeight());
-            System.out.println(info.groundLevel+" -- "+findTopBlock(new CubePos(chunkX, chunkY, chunkZ)));
+            // System.out.println(info.groundLevel+" -- "+findTopBlock(new CubePos(chunkX, chunkY, chunkZ))+"; Is Air?: "+cubicWorld.getCubeFromCubeCoords(new CubePos(chunkX, chunkY, chunkZ)).isEmpty());
             streetGenerator.generate(info, heightmap, rand);
         }
         //}
@@ -264,7 +267,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
 
         if (info.profile.RUINS) {
             // System.out.println("Generating ruins");
-            // generateRuins(info); // TODO
+            ruinsGenerator.generate(info);
         }
 
         int levelX = info.getHighwayXLevel();
@@ -272,16 +275,16 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         if (!building) {
             Railway.RailChunkInfo railInfo = info.getRailInfo();
             if (levelX < 0 && levelZ < 0 && !railInfo.getType().isSurface()) {
-                streetGenerator.generateStreetDecorations(info); // TODO
+                streetGenerator.generateStreetDecorations(info);
             }
         }
         if (levelX >= 0 || levelZ >= 0) {
-            streetGenerator.generateHighways(chunkX, chunkZ, info); // TODO
+            streetGenerator.generateHighways(chunkX, chunkZ, info);
         }
 
         if (info.profile.RUBBLELAYER) {
             if (!info.hasBuilding || info.ruinHeight >= 0) {
-                rubbleGenerator.generateRubble(chunkX, chunkZ, info); // TODO
+                rubbleGenerator.generateRubble(chunkX, chunkZ, info);
             }
         }
     }
