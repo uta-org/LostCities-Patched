@@ -2,6 +2,7 @@ package mcjty.lostcities.dimensions.world.lost;
 
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.cubic.world.CubicCityWorldProcessor;
 import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.driver.IIndex;
@@ -1434,7 +1435,7 @@ public class BuildingInfo implements ILostChunkInfo {
 
     // Return true if the road from a neighbouring chunk can extend into this chunk
     public boolean doesRoadExtendTo() {
-        boolean b = isCity && !hasBuilding;
+        boolean b = isCity && !hasBuilding || CubicCityWorldProcessor.isCubicWorld;
         if (b) {
             return !isElevatedParkSection();
         }
@@ -1449,10 +1450,16 @@ public class BuildingInfo implements ILostChunkInfo {
         if (!i2.doesRoadExtendTo()) {
             return false;
         }
-        if (Math.abs(i1.cityLevel - i2.cityLevel) <= 0 /* @todo temporary, should be <= 1 */) {
+
+        if(CubicCityWorldProcessor.isCubicWorld)
+            return true;
+
+        /* @todo temporary, should be <= 1 */
+        if (Math.abs(i1.cityLevel - i2.cityLevel) <= 0) {
             // We allow a road difference of 1 maximum
             return true;
         }
+
         return false;
     }
 

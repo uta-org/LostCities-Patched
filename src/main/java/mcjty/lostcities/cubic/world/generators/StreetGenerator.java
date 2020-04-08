@@ -1,5 +1,6 @@
 package mcjty.lostcities.cubic.world.generators;
 
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import mcjty.lostcities.api.RailChunkType;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.lost.*;
@@ -11,10 +12,12 @@ import net.minecraft.block.BlockRailBase;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.MinecraftForge;
 
 import java.util.Random;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldPopulator.*;
+import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.worldObj;
 import static mcjty.lostcities.cubic.world.generators.PartGenerator.*;
 import static mcjty.lostcities.cubic.world.generators.Utils.*;
 
@@ -23,6 +26,16 @@ import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 import static mcjty.lostcities.cubic.world.CubicCityUtils.*;
 
 public class StreetGenerator {
+
+    private static final boolean generateBorders = false;
+
+    // private static char slabChar;
+
+    /*
+    public StreetGenerator() {
+        slabChar = (char)Block.BLOCK_STATE_IDS.get(Blocks.DOUBLE_STONE_SLAB.getDefaultState());
+    }
+    */
 
     public void generate(BuildingInfo info, ICommonHeightmap heightmap, Random rand) {
         boolean xRail = info.hasXCorridor();
@@ -334,6 +347,8 @@ public class StreetGenerator {
         for (int x = 0; x < 16; ++x) {
             for (int z = 0; z < 16; ++z) {
                 b = defaultStreet;
+
+                // boolean set = true;
                 if (isStreetBorder(x, z)) {
                     if (x <= streetBorder && z > streetBorder && z < (15 - streetBorder)
                             && (BuildingInfo.hasRoadConnection(info, info.getXmin()) || (info.getXmin().hasXBridge(provider) != null))) {
@@ -350,11 +365,23 @@ public class StreetGenerator {
                     }
 
                     // TODO?
-                    continue;
+                    //if(b == defaultStreet)
+                    //    set = false;
                 } else {
                     b = street;
                 }
-                driver.current(x, height, z).block(b);
+
+                driver.current(x, height, z);
+
+                CubePos pos = driver.getCubePos();
+                if(b == defaultStreet) {
+                    IBlockState filler = worldObj.getBiome(pos.getCenterBlockPos()).fillerBlock;
+                    if(filler.getBlock().getUnlocalizedName().contains("dirt")) filler = Blocks.GRASS.getDefaultState();
+                    b = (char)Block.BLOCK_STATE_IDS.get(filler);
+                }
+
+                // if(set)
+                driver.block(b);
             }
         }
     }
@@ -385,7 +412,9 @@ public class StreetGenerator {
     }
 
     public static void generateBorders(BuildingInfo info, boolean canDoParks) {
-        /*
+        if(!generateBorders)
+            return;
+
         Character borderBlock = info.getCityStyle().getBorderBlock();
 
         switch (info.profile.LANDSCAPE_TYPE) {
@@ -428,7 +457,6 @@ public class StreetGenerator {
                 generateBorder(info, canDoParks, x, z, Direction.ZMAX.get(info));
             }
         }
-        */
     }
 
     /**
