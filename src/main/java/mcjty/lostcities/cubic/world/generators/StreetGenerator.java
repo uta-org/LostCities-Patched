@@ -363,10 +363,6 @@ public class StreetGenerator {
                             && (BuildingInfo.hasRoadConnection(info, info.getZmax()) || (info.getZmax().hasZBridge(provider) != null))) {
                         b = street;
                     }
-
-                    // TODO?
-                    //if(b == defaultStreet)
-                    //    set = false;
                 } else {
                     b = street;
                 }
@@ -380,7 +376,6 @@ public class StreetGenerator {
                     b = (char)Block.BLOCK_STATE_IDS.get(filler);
                 }
 
-                // if(set)
                 driver.block(b);
             }
         }
