@@ -1,19 +1,11 @@
 package mcjty.lostcities.cubic.world.generators;
 
-import mcjty.lostcities.config.LostCityConfiguration;
-import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
-import mcjty.lostcities.dimensions.world.driver.IPrimerDriver;
-import mcjty.lostcities.dimensions.world.driver.OptimizedDriver;
-import mcjty.lostcities.dimensions.world.driver.SafeDriver;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
-import mcjty.lostcities.dimensions.world.terraingen.CavernTerrainGenerator;
-import mcjty.lostcities.dimensions.world.terraingen.IslandTerrainGenerator;
-import mcjty.lostcities.dimensions.world.terraingen.SpaceTerrainGenerator;
 import net.minecraft.world.gen.NoiseGeneratorPerlin;
 
 import static mcjty.lostcities.cubic.world.CubicCityUtils.*;
-import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.*;
-import static mcjty.lostcities.cubic.world.CubicCityWorldPopulator.*;
+import static mcjty.lostcities.cubic.world.CubicCityWorldPopulator.provider;
+import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 import static mcjty.lostcities.cubic.world.generators.Utils.getRandomLeaf;
 
 public class RuinsGenerator {
@@ -22,15 +14,7 @@ public class RuinsGenerator {
     private NoiseGeneratorPerlin leavesNoise;
     private NoiseGeneratorPerlin ruinNoise;
 
-
-    private double[] rubbleBuffer = new double[256];
     private double[] leavesBuffer = new double[256];
-
-    private IPrimerDriver driver;
-    private IslandTerrainGenerator islandTerrainGenerator = new IslandTerrainGenerator(IslandTerrainGenerator.ISLANDS);
-    private CavernTerrainGenerator cavernTerrainGenerator = new CavernTerrainGenerator();
-    private SpaceTerrainGenerator spaceTerrainGenerator = new SpaceTerrainGenerator();
-
 
     public RuinsGenerator() {
         this.leavesNoise = new NoiseGeneratorPerlin(provider.getRandom(), 4);

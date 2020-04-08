@@ -48,6 +48,8 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
     private int currentChunkY;
     private HeightmapModel currentModel;
 
+    private static final boolean generateRuins = false;
+
     public CubicCityWorldPopulator() {
         // TODO: Refactor this
         if (provider == null) {
@@ -200,12 +202,15 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         //LostCityEvent.PreExplosionEvent event = new LostCityEvent.PreExplosionEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //if (!MinecraftForge.EVENT_BUS.post(event)) {
 
-        if (info.getDamageArea().hasExplosions()) {
-            debrisGenerator.breakBlocksForDamage(chunkX, chunkZ, info);
-            debrisGenerator.fixAfterExplosionNew(info, worldObj.rand);
+        if(generateRuins) {
+            if (info.getDamageArea().hasExplosions()) {
+                debrisGenerator.breakBlocksForDamage(chunkX, chunkZ, info);
+                debrisGenerator.fixAfterExplosionNew(info, worldObj.rand);
+            }
+
+            debrisGenerator.generateDebris(worldObj.rand, info);
         }
 
-        debrisGenerator.generateDebris(worldObj.rand, info);
         //}
     }
 
@@ -265,7 +270,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         //LostCityEvent.PostGenCityChunkEvent postevent = new LostCityEvent.PostGenCityChunkEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //MinecraftForge.EVENT_BUS.post(postevent);
 
-        if (info.profile.RUINS) {
+        if (info.profile.RUINS && generateRuins) {
             // System.out.println("Generating ruins");
             ruinsGenerator.generate(info);
         }
