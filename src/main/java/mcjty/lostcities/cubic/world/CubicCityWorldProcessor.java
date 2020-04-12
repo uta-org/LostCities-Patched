@@ -1,17 +1,22 @@
 package mcjty.lostcities.cubic.world;
 
-import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.cubic.CubeCityGenerator;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import mcjty.lostcities.cubic.world.generators.SpawnersGenerator;
+import mcjty.lostcities.dimensions.world.LostCityChunkGenerator;
+import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockSapling;
+import net.minecraft.block.BlockVine;
+import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -21,11 +26,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.function.BiPredicate;
-
-import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
-import static mcjty.lostcities.cubic.world.CubicCityUtils.airChar;
-import static mcjty.lostcities.cubic.world.CubicCityUtils.profile;
+import java.util.Random;
 
 public class CubicCityWorldProcessor extends CubeCityGenerator
 {
@@ -101,6 +102,109 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
         spawnersGenerator.populate(worldObj.rand, cube.getX(), cube.getZ(), world);
     }
 
+    public static void doTodoPopulate(int chunkX, int chunkZ, ICommonGeneratorProvider provider, BuildingInfo info) {
+        generateTrees(worldObj.rand, chunkX, chunkZ, worldObj, provider);
+        generateVines(worldObj.rand, chunkX, chunkZ, worldObj, provider);
+
+        generateLadders(info);
+    }
+
+    private static void generateLadders(BuildingInfo info) {
+        IBlockState ladder = Blocks.LADDER.getDefaultState();
+        char ladderChar = (char)Block.BLOCK_STATE_IDS.get(ladder);
+
+        // TODO: Rotation?
+                // .withRotation(Blocks.LADDER.getDefaultState(), Rotation.NONE);
+
+         for(BlockPos bp : info.getLadderTodo()) {
+             driver.current(bp.getX(), bp.getY(), bp.getZ());
+             driver.add(ladderChar);
+         }
+
+         info.clearLadderTodo();
+    }
+
+    private static void generateTrees(Random random, int chunkX, int chunkZ, World world, ICommonGeneratorProvider provider) {
+        BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, provider);
+        for (BlockPos pos : info.getSaplingTodo()) {
+            IBlockState state = world.getBlockState(pos);
+            if (state.getBlock() == Blocks.SAPLING) {
+                ((BlockSapling)Blocks.SAPLING).generateTree(world, pos, state, random);
+            }
+        }
+        info.clearSaplingTodo();
+    }
+
+    private static void generateVines(Random random, int chunkX, int chunkZ, World world, ICommonGeneratorProvider provider) {
+        int cx = chunkX * 16;
+        int cz = chunkZ * 16;
+        BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, provider);
+
+        if (info.hasBuilding) {
+            BuildingInfo adjacent = info.getXmax();
+            int bottom = Math.max(adjacent.getCityGroundLevel() + 3, adjacent.hasBuilding ? adjacent.getMaxHeight() : (adjacent.getCityGroundLevel() + 3));
+            for (int z = 0; z < 15; z++) {
+                for (int y = bottom; y < (info.getMaxHeight()); y++) {
+                    if (random.nextFloat() < provider.getProfile().VINE_CHANCE) {
+                        createVineStrip(random, world, bottom, BlockVine.WEST, new BlockPos(cx + 16, y, cz + z), new BlockPos(cx + 15, y, cz + z));
+                    }
+                }
+            }
+        }
+        if (info.getXmax().hasBuilding) {
+            BuildingInfo adjacent = info.getXmax();
+            int bottom = Math.max(info.getCityGroundLevel() + 3, info.hasBuilding ? info.getMaxHeight() : (info.getCityGroundLevel() + 3));
+            for (int z = 0; z < 15; z++) {
+                for (int y = bottom; y < (adjacent.getMaxHeight()); y++) {
+                    if (random.nextFloat() < provider.getProfile().VINE_CHANCE) {
+                        createVineStrip(random, world, bottom, BlockVine.EAST, new BlockPos(cx + 15, y, cz + z), new BlockPos(cx + 16, y, cz + z));
+                    }
+                }
+            }
+        }
+
+        if (info.hasBuilding) {
+            BuildingInfo adjacent = info.getZmax();
+            int bottom = Math.max(adjacent.getCityGroundLevel() + 3, adjacent.hasBuilding ? adjacent.getMaxHeight() : (adjacent.getCityGroundLevel() + 3));
+            for (int x = 0; x < 15; x++) {
+                for (int y = bottom; y < (info.getMaxHeight()); y++) {
+                    if (random.nextFloat() < provider.getProfile().VINE_CHANCE) {
+                        createVineStrip(random, world, bottom, BlockVine.NORTH, new BlockPos(cx + x, y, cz + 16), new BlockPos(cx + x, y, cz + 15));
+                    }
+                }
+            }
+        }
+        if (info.getZmax().hasBuilding) {
+            BuildingInfo adjacent = info.getZmax();
+            int bottom = Math.max(info.getCityGroundLevel() + 3, info.hasBuilding ? info.getMaxHeight() : (info.getCityGroundLevel() + 3));
+            for (int x = 0; x < 15; x++) {
+                for (int y = bottom; y < (adjacent.getMaxHeight()); y++) {
+                    if (random.nextFloat() < provider.getProfile().VINE_CHANCE) {
+                        createVineStrip(random, world, bottom, BlockVine.SOUTH, new BlockPos(cx + x, y, cz + 15), new BlockPos(cx + x, y, cz + 16));
+                    }
+                }
+            }
+        }
+    }
+
+    private static void createVineStrip(Random random, World world, int bottom, PropertyBool direction, BlockPos pos, BlockPos vineHolderPos) {
+        if (world.isAirBlock(vineHolderPos)) {
+            return;
+        }
+        if (!world.isAirBlock(pos)) {
+            return;
+        }
+        world.setBlockState(pos, Blocks.VINE.getDefaultState().withProperty(direction, true));
+        pos = pos.down();
+        while (pos.getY() >= bottom && random.nextFloat() < .8f) {
+            if (!world.isAirBlock(pos)) {
+                return;
+            }
+            world.setBlockState(pos, Blocks.VINE.getDefaultState().withProperty(direction, true));
+            pos = pos.down();
+        }
+    }
+
     public static boolean checkForCubicWorld(World world) {
         if(cubicWorld != null)
             return isCubicWorld;
@@ -113,56 +217,5 @@ public class CubicCityWorldProcessor extends CubeCityGenerator
         }
 
         return isCubicWorld;
-    }
-
-    /*
-    public static BlockPos getSurfaceBlock(CubePos pos) {
-        return cubicWorld.getSurfaceForCube(pos, 0, 0, 0, ICubicWorld.SurfaceType.SOLID);
-    }
-    */
-
-    public static BlockPos findTopBlock(CubePos pos) {
-        /*
-        BlockPos blockPos = pos.getCenterBlockPos();
-        blockPos = new BlockPos(blockPos.getX(), blockPos.getY() + 8, blockPos.getZ());
-
-        return findTopBlock(blockPos, blockPos.getY() - 16, blockPos.getY());
-         */
-
-        return cubicWorld.getSurfaceForCube(pos, 0, 0, 0, CubicCityWorldProcessor::canBeTopBlock);
-    }
-
-    private static BlockPos findTopBlock(BlockPos start, int minTopY, int maxTopY) {
-        BlockPos pos = start;
-        IBlockState startState = worldObj.getBlockState(start);
-        if (canBeTopBlock(start, startState)) {
-            // the top tested block is "top", don't use that one because we don't know what is above
-            if(LostCitiesDebug.debug) System.out.println(start.toString()+" Top block isn't valid!");
-            return null;
-        }
-        ICube cube = cubicWorld.getCubeFromBlockCoords(pos.down());
-        while (pos.getY() >= minTopY) {
-            BlockPos next = pos.down();
-            if (blockToCube(next.getY()) != cube.getY()) {
-                cube = cubicWorld.getCubeFromBlockCoords(next);
-            }
-            if (!cube.isEmpty()) {
-                IBlockState state = cube.getBlockState(next);
-                if (canBeTopBlock(next, state)) {
-                    break;
-                }
-            }
-            pos = next;
-        }
-        if (pos.getY() < minTopY || pos.getY() > maxTopY) {
-            if(LostCitiesDebug.debug) System.out.println("Surpassed limits!");
-            return null;
-        }
-        return pos;
-    }
-
-    private static boolean canBeTopBlock(BlockPos pos, IBlockState state) {
-        char b = (char)Block.BLOCK_STATE_IDS.get(state);
-        return b != airChar;
     }
 }

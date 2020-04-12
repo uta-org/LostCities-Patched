@@ -16,6 +16,7 @@ import static mcjty.lostcities.cubic.world.generators.Utils.clearRange;
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
 import static mcjty.lostcities.cubic.world.CubicCityUtils.*;
+import static mcjty.lostcities.cubic.world.generators.Utils.isSide;
 
 public class PartGenerator {
     /**
@@ -38,6 +39,7 @@ public class PartGenerator {
             for (int z = 0; z < part.getZSize(); z++) {
                 char[] vs = part.getVSlice(x, z);
                 if (vs != null) {
+                    if(isSide(x, z) && info.isFloor() && info.getCurrentFloor() < 0) continue;
                     int rx = ox + transform.rotateX(x, z);
                     int rz = oz + transform.rotateZ(x, z);
                     driver.current(rx, oy, rz);
@@ -49,23 +51,19 @@ public class PartGenerator {
                             throw new RuntimeException("Could not find entry '" + c + "' in the palette for part '" + part.getName() + "'!");
                         }
 
-                        // System.out.println("["+rx+", "+(y + oy)+", "+rz+"] "+Block.BLOCK_STATE_IDS.getByValue(b).toString());
-
-                        /*
-                        String name = Block.BLOCK_STATE_IDS.getByValue(b).toString();
-                        if(name.contains("glass"))
-                            System.out.println(driver.toString()+" glass added! ["+name+"]");
-                         */
+                        IBlockState bs = Block.BLOCK_STATE_IDS.getByValue(b);
+                        if (bs == null) {
+                            System.out.println("Null block state!");
+                            continue;
+                        }
 
                         CompiledPalette.Info inf = compiledPalette.getInfo(c);
 
                         if (transform != Transform.ROTATE_NONE) {
                             if (BuildingGenerator.getRotatableChars().contains(b)) {
-                                IBlockState bs = Block.BLOCK_STATE_IDS.getByValue(b);
                                 bs = bs.withRotation(transform.getMcRotation());
                                 b = (char) Block.BLOCK_STATE_IDS.get(bs);
                             } else if (BuildingGenerator.getRailChars().contains(b)) {
-                                IBlockState bs = Block.BLOCK_STATE_IDS.getByValue(b);
                                 PropertyEnum<BlockRailBase.EnumRailDirection> shapeProperty;
                                 if (bs.getBlock() == Blocks.RAIL) {
                                     shapeProperty = BlockRail.SHAPE;
@@ -116,7 +114,6 @@ public class PartGenerator {
                             } else if (BuildingGenerator.getCharactersNeedingLightingUpdate().contains(b)) {
                                 info.getTodoChunk(rx, rz).addLightingUpdateTodo(new BlockPos(info.chunkX * 16 + rx, oy + y, info.chunkZ * 16 + rz));
                             } else if (BuildingGenerator.getCharactersNeedingTodo().contains(b)) {
-                                IBlockState bs = Block.BLOCK_STATE_IDS.getByValue(b);
                                 Block block = bs.getBlock();
                                 if (block instanceof BlockSapling || block instanceof BlockFlower) {
                                     if (info.profile.AVOID_FOLIAGE) {
@@ -126,7 +123,16 @@ public class PartGenerator {
                                     }
                                 }
                             }
-                            driver.add(b);
+
+                            String bName = bs.getBlock().getUnlocalizedName();
+                            if(bName.contains("ladder")) {
+                                info.addLadderTodo(driver.current());
+                            }
+                            else
+                                driver.add(b);
+                        } else {
+                            // Set air blocks also (to avoid grass inside buildings)
+                            driver.add(airChar);
                         }
 
                         // bugfix: For some reason this needs to be outside of the else (why?)
@@ -185,7 +191,7 @@ public class PartGenerator {
             char sup = info.getCompiledPalette().get(support);
             int x1 = transform.rotateX(0, 15);
             int z1 = transform.rotateZ(0, 15);
-            driver.current(x1, highwayGroundLevel-1, z1);
+            driver.current(x1, highwayGroundLevel - 1, z1);
             for (int y = 0; y < 40; y++) {
                 if (driver.getBlock() == airChar || driver.getBlock() == liquidChar) {
                     driver.block(sup);
@@ -197,7 +203,7 @@ public class PartGenerator {
 
             int x2 = transform.rotateX(0, 0);
             int z2 = transform.rotateZ(0, 0);
-            driver.current(x2, highwayGroundLevel-1, z2);
+            driver.current(x2, highwayGroundLevel - 1, z2);
             for (int y = 0; y < 40; y++) {
                 if (driver.getBlock() == airChar || driver.getBlock() == liquidChar) {
                     driver.block(sup);

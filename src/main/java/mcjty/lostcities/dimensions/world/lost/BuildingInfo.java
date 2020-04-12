@@ -2,6 +2,7 @@ package mcjty.lostcities.dimensions.world.lost;
 
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.cubic.HeightPerChunkCache;
 import mcjty.lostcities.cubic.world.CubicCityWorldProcessor;
 import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
@@ -100,6 +101,11 @@ public class BuildingInfo implements ILostChunkInfo {
     private final List<Pair<IIndex, Map<String, Integer>>> torchTodo = new ArrayList<>();
     private final List<BlockPos> saplingTodo = new ArrayList<>();
 
+    private final List<BlockPos> ladderTodo = new ArrayList<>();
+
+    private Integer currentFloor;
+    private char currentFiller;
+
     public static class ConditionTodo {
         private final String condition;
         private final String part;
@@ -142,6 +148,18 @@ public class BuildingInfo implements ILostChunkInfo {
 
     public void clearSaplingTodo() {
         saplingTodo.clear();
+    }
+
+    public void addLadderTodo(BlockPos pos) {
+        ladderTodo.add(pos);
+    }
+
+    public List<BlockPos> getLadderTodo() {
+        return ladderTodo;
+    }
+
+    public void clearLadderTodo() {
+        ladderTodo.clear();
     }
 
     public void addTorchTodo(IIndex index, Map<String, Integer> orientations) {
@@ -297,7 +315,20 @@ public class BuildingInfo implements ILostChunkInfo {
     }
 
     public int getCityGroundLevel() {
-        return groundLevel + cityLevel * 6;
+        return getCityGroundLevel(true);
+    }
+
+    public int getCityGroundLevel(boolean useCityLevel) {
+        if(!useCityLevel) {
+            Integer subLevel = HeightPerChunkCache.getCityLevel(this);
+            if(subLevel != null) {
+                return subLevel;
+            }
+        }
+
+        int level = groundLevel;
+        if(useCityLevel) level += cityLevel * 6;
+        return level;
     }
 
     /**
@@ -321,6 +352,30 @@ public class BuildingInfo implements ILostChunkInfo {
 
     public BuildingPart getFloorPart2(int l) {
         return floorTypes2[l + floorsBelowGround];
+    }
+
+    public void setCurrentFloor(int l) {
+        currentFloor = l;
+    }
+
+    public int getCurrentFloor() {
+        return currentFloor;
+    }
+
+    public void disableCurrentFloor() {
+        currentFloor = null;
+    }
+
+    public boolean isFloor() {
+        return currentFloor != null;
+    }
+
+    public char getCurrentFiller() {
+        return currentFiller;
+    }
+
+    public void setCurrentFiller(char f) {
+        currentFiller = f;
     }
 
     public String getFloorTypes(boolean alternative) {
@@ -1452,7 +1507,7 @@ public class BuildingInfo implements ILostChunkInfo {
         }
 
         if(CubicCityWorldProcessor.isCubicWorld)
-            return true;
+            return false;
 
         /* @todo temporary, should be <= 1 */
         if (Math.abs(i1.cityLevel - i2.cityLevel) <= 0) {

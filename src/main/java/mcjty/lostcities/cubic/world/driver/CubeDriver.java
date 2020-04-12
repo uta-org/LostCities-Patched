@@ -106,6 +106,10 @@ public class CubeDriver implements ICubeDriver {
         return this;
     }
 
+    public BlockPos current() {
+        return new BlockPos(currentX, currentY, currentZ);
+    }
+
     @Override
     public IIndex getCurrent() {
         return new CubeDriver.Index(getX(), currentY, getZ());
@@ -251,12 +255,26 @@ public class CubeDriver implements ICubeDriver {
             return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY - 1, currentZ));
     }
 
-    @Override
-    public char getBlockEast() {
+    public char getBlockUp() {
         if(useWorld)
             return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(getX(), currentY + 1, getZ())));
         else
             return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY + 1, currentZ));
+    }
+
+    public IBlockState getBlockStateUp() {
+        if(useWorld)
+            return world.getBlockState(new BlockPos(getX(), currentY + 1, getZ()));
+        else
+            return cube.getBlockState(currentX, currentY + 1, currentZ);
+    }
+
+    @Override
+    public char getBlockEast() {
+        if(useWorld)
+            return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(getX() + 1, currentY, getZ())));
+        else
+            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX + 1, currentY, currentZ));
     }
 
     @Override

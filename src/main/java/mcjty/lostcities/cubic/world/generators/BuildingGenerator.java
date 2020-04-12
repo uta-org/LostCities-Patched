@@ -173,8 +173,13 @@ public class BuildingGenerator {
             }
         }
 
+        info.setCurrentFiller(fillerBlock);
+
         int height = lowestLevel;
-        for (int f = -info.floorsBelowGround; f <= info.getNumFloors(); f++) {
+        for (int f = -info.floorsBelowGround; f <= info.getNumFloors(); f++)
+        {
+            info.setCurrentFloor(f);
+
             BuildingPart part = info.getFloor(f);
             generatePart(info, part, Transform.ROTATE_NONE, 0, height, 0, false);
 
@@ -192,19 +197,7 @@ public class BuildingGenerator {
             height += 6;    // We currently only support 6 here
         }
 
-
-        if (info.floorsBelowGround > 0) {
-            // Underground we replace the glass with the filler
-            for (int x = 0; x < 16; x++) {
-                // Use safe version because this may end up being lower
-                setBlocksFromPalette(x, lowestLevel, 0, Math.min(info.getCityGroundLevel(), info.getZmin().getCityGroundLevel()) + 1, palette, fillerBlock);
-                setBlocksFromPalette(x, lowestLevel, 15, Math.min(info.getCityGroundLevel(), info.getZmax().getCityGroundLevel()) + 1, palette, fillerBlock);
-            }
-            for (int z = 1; z < 15; z++) {
-                setBlocksFromPalette(0, lowestLevel, z, Math.min(info.getCityGroundLevel(), info.getXmin().getCityGroundLevel()) + 1, palette, fillerBlock);
-                setBlocksFromPalette(15, lowestLevel, z, Math.min(info.getCityGroundLevel(), info.getXmax().getCityGroundLevel()) + 1, palette, fillerBlock);
-            }
-        }
+        info.disableCurrentFloor();
 
         if (info.floorsBelowGround >= 1) {
             // We have to potentially connect to corridors

@@ -3,17 +3,21 @@ package mcjty.lostcities.cubic.world.generators;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import mcjty.lostcities.api.RailChunkType;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
+import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import mcjty.lostcities.dimensions.world.lost.*;
 import mcjty.lostcities.dimensions.world.lost.cityassets.BuildingPart;
 import mcjty.lostcities.dimensions.world.lost.cityassets.CompiledPalette;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRail;
 import net.minecraft.block.BlockRailBase;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldPopulator.*;
@@ -29,6 +33,8 @@ public class StreetGenerator {
 
     private static final boolean generateBorders = false;
 
+    private static final boolean USE_HEIGHT_CACHE = true;
+
     // private static char slabChar;
 
     /*
@@ -40,17 +46,20 @@ public class StreetGenerator {
     public void generate(BuildingInfo info, ICommonHeightmap heightmap, Random rand) {
         boolean xRail = info.hasXCorridor();
         boolean zRail = info.hasZCorridor();
+
+        int groundLevel = info.getCityGroundLevel(!USE_HEIGHT_CACHE);
+
         if (xRail || zRail) {
-            generateCorridors(info, xRail, zRail);
+            generateCorridors(info, xRail, zRail, groundLevel);
         }
 
         Railway.RailChunkInfo railInfo = info.getRailInfo();
-        boolean canDoParks = info.getHighwayXLevel() != info.cityLevel && info.getHighwayZLevel() != info.cityLevel
+        boolean canDoParks = info.getHighwayXLevel() != groundLevel && info.getHighwayZLevel() != groundLevel
                 && railInfo.getType() != RailChunkType.STATION_SURFACE
-                && (railInfo.getType() != RailChunkType.STATION_EXTENSION_SURFACE || railInfo.getLevel() < info.cityLevel);
+                && (railInfo.getType() != RailChunkType.STATION_EXTENSION_SURFACE || railInfo.getLevel() < groundLevel);
 
         if (canDoParks) {
-            int height = info.getCityGroundLevel();
+            int height = groundLevel;
 
             BuildingInfo.StreetType streetType = info.streetType;
             boolean elevated = info.isElevatedParkSection();
@@ -66,8 +75,6 @@ public class StreetGenerator {
                 }
                 height++;
             }
-
-            clean(info);
 
             switch (streetType) {
                 case NORMAL:
@@ -100,27 +107,15 @@ public class StreetGenerator {
         }
 
         // Not used... TODO: Check if this affect to other structures
-        generateBorders(info, canDoParks);
+        generateBorders(info, canDoParks, groundLevel);
     }
 
-    private void clean(BuildingInfo info) {
-        // Clean upper blocks
-        for (int x = 0; x < 16; ++x)
-            for(int z = 0; z < 16; ++z) {
-                int y = info.getCityGroundLevel() + 1;
-                char b = driver.getBlock(x, y, z);
-                driver.current(x, y, z);
-                if(b != airChar)
-                    driver.block(airChar);
-            }
-    }
-
-    public void generateStreetDecorations(BuildingInfo info) {
+    public void generateStreetDecorations(BuildingInfo info, int oy) {
         Direction stairDirection = info.getActualStairDirection();
         if (stairDirection != null) {
             BuildingPart stairs = info.stairType;
             Transform transform;
-            int oy = info.getCityGroundLevel() + 1;
+            // int oy = info.getCityGroundLevel(!USE_HEIGHT_CACHE) + 1;
             switch (stairDirection) {
                 case XMIN:
                     transform = Transform.ROTATE_NONE;
@@ -142,7 +137,7 @@ public class StreetGenerator {
         }
     }
 
-    private void generateCorridors(BuildingInfo info, boolean xRail, boolean zRail) {
+    private void generateCorridors(BuildingInfo info, boolean xRail, boolean zRail, int y) {
         IBlockState railx = Blocks.RAIL.getDefaultState().withProperty(BlockRail.SHAPE, BlockRailBase.EnumRailDirection.EAST_WEST);
         char railxC = (char) Block.BLOCK_STATE_IDS.get(railx);
         IBlockState railz = Blocks.RAIL.getDefaultState();
@@ -175,7 +170,7 @@ public class StreetGenerator {
                         driver.add(roof).add(roof);
                     }
                 } else {
-                    driver.setBlockRange(x, info.groundLevel - 5, z, info.getCityGroundLevel(), baseChar);
+                    driver.setBlockRange(x, info.groundLevel - 5, z, y, baseChar);
                 }
             }
         }
@@ -342,25 +337,54 @@ public class StreetGenerator {
 
     private void generateNormalStreetSection(BuildingInfo info, int height) {
 //        char defaultStreet = info.profile.isFloating() ? street2 : streetBase;
+
         char defaultStreet = streetBase;
         char b;
+
+        // TODO
+        Random rand = new Random();
+        boolean put0 = rand.nextBoolean();
+        boolean put1 = rand.nextBoolean();
+        boolean put2 = rand.nextBoolean();
+        boolean put3 = rand.nextBoolean();
+
+        if(!(put0 && put1 && put2 && put3)) {
+            int v = (int)getRandom(0, 4);
+            switch (v) {
+                case 0:
+                    put0 = true;
+                    break;
+
+                case 1:
+                    put1 = true;
+                    break;
+
+                case 2:
+                    put2 = true;
+                    break;
+
+                case 3:
+                    put3 = true;
+                    break;
+            }
+        }
+
         for (int x = 0; x < 16; ++x) {
             for (int z = 0; z < 16; ++z) {
                 b = defaultStreet;
 
-                // boolean set = true;
                 if (isStreetBorder(x, z)) {
                     if (x <= streetBorder && z > streetBorder && z < (15 - streetBorder)
-                            && (BuildingInfo.hasRoadConnection(info, info.getXmin()) || (info.getXmin().hasXBridge(provider) != null))) {
+                            && (hasRoadConnection(info, info.getXmin(), put0) || (info.getXmin().hasXBridge(provider) != null))) {
                         b = street;
                     } else if (x >= (15 - streetBorder) && z > streetBorder && z < (15 - streetBorder)
-                            && (BuildingInfo.hasRoadConnection(info, info.getXmax()) || (info.getXmax().hasXBridge(provider) != null))) {
+                            && (hasRoadConnection(info, info.getXmax(), put1) || (info.getXmax().hasXBridge(provider) != null))) {
                         b = street;
                     } else if (z <= streetBorder && x > streetBorder && x < (15 - streetBorder)
-                            && (BuildingInfo.hasRoadConnection(info, info.getZmin()) || (info.getZmin().hasZBridge(provider) != null))) {
+                            && (hasRoadConnection(info, info.getZmin(), put2) || (info.getZmin().hasZBridge(provider) != null))) {
                         b = street;
                     } else if (z >= (15 - streetBorder) && x > streetBorder && x < (15 - streetBorder)
-                            && (BuildingInfo.hasRoadConnection(info, info.getZmax()) || (info.getZmax().hasZBridge(provider) != null))) {
+                            && (hasRoadConnection(info, info.getZmax(), put3) || (info.getZmax().hasZBridge(provider) != null))) {
                         b = street;
                     }
                 } else {
@@ -371,14 +395,86 @@ public class StreetGenerator {
 
                 CubePos pos = driver.getCubePos();
                 if(b == defaultStreet) {
+                    if(driver.getBlock() == airChar || invalid.contains(driver.getBlockState().getMaterial()))
+                        continue;
+
                     IBlockState filler = worldObj.getBiome(pos.getCenterBlockPos()).fillerBlock;
                     if(filler.getBlock().getUnlocalizedName().contains("dirt")) filler = Blocks.GRASS.getDefaultState();
                     b = (char)Block.BLOCK_STATE_IDS.get(filler);
+                }
+                else {
+                    fixDriver();
                 }
 
                 driver.block(b);
             }
         }
+    }
+
+    // TODO; Inplement on more places? (highways, parks...)
+    private void fixDriver() {
+        // Fix Y values, we need to adapt to the terrain
+        char cur = driver.getBlock();
+
+        char up = driver.getBlockUp();
+        IBlockState upState = driver.getBlockStateUp();
+
+        if(cur == airChar) {
+            goDownOnDriver();
+        }
+        else if(!invalid.contains(upState.getMaterial())) {
+            goDownOnDriver();
+        }
+        else if(up != airChar) {
+            // Restore in case we are on a invalid material
+            int counter = 0;
+            while(counter < 16) {
+                driver.incY();
+                if(driver.getBlock() == airChar)
+                    break;
+
+                ++counter;
+            }
+        }
+    }
+
+    private void goDownOnDriver() {
+        int counter = 0;
+        while(counter < 16) {
+            driver.decY();
+            if(driver.getBlock() != airChar && !invalid.contains(driver.getBlockState().getMaterial()))
+                break;
+
+            ++counter;
+        }
+    }
+
+    private static List<Material> invalid;
+    {
+        invalid = new ArrayList<>();
+        invalid.add(Material.WOOD);
+        invalid.add(Material.WATER);
+        invalid.add(Material.CACTUS);
+        // invalid.add(Material.SNOW);
+        // invalid.add(Material.GRASS);
+        invalid.add(Material.GOURD);
+        invalid.add(Material.LEAVES);
+        invalid.add(Material.PLANTS);
+    };
+
+    private static double getRandom(double min, double max) {
+        return (Math.random() * (max + 1 - min)) + min;
+    }
+
+    private boolean hasRoadConnection(BuildingInfo i1, BuildingInfo i2, boolean put) {
+        if (!i1.doesRoadExtendTo()) {
+            return false;
+        }
+        if (!i2.doesRoadExtendTo()) {
+            return false;
+        }
+
+        return put;
     }
 
     public void generateHighways(int chunkX, int chunkZ, BuildingInfo info) {
@@ -406,7 +502,7 @@ public class StreetGenerator {
         }
     }
 
-    public static void generateBorders(BuildingInfo info, boolean canDoParks) {
+    public static void generateBorders(BuildingInfo info, boolean canDoParks, int y) {
         if(!generateBorders)
             return;
 
@@ -417,13 +513,13 @@ public class StreetGenerator {
                 fillToBedrockStreetBlock(info);
                 break;
             case FLOATING:
-                fillMainStreetBlock(info, borderBlock, 3);
+                fillMainStreetBlock(info, borderBlock, 3, y);
                 break;
             case CAVERN:
-                fillMainStreetBlock(info, borderBlock, 2);
+                fillMainStreetBlock(info, borderBlock, 2, y);
                 break;
             case SPACE:
-                fillToGroundStreetBlock(info, info.getCityGroundLevel());
+                fillToGroundStreetBlock(info, y);
                 break;
         }
 
@@ -431,25 +527,25 @@ public class StreetGenerator {
         if (doBorder(info, Direction.XMIN)) {
             int x = 0;
             for (int z = 0; z < 16; z++) {
-                generateBorder(info, canDoParks, x, z, Direction.XMIN.get(info));
+                generateBorder(info, canDoParks, x, y, z, Direction.XMIN.get(info));
             }
         }
         if (doBorder(info, Direction.XMAX)) {
             int x = 15;
             for (int z = 0; z < 16; z++) {
-                generateBorder(info, canDoParks, x, z, Direction.XMAX.get(info));
+                generateBorder(info, canDoParks, x, y, z, Direction.XMAX.get(info));
             }
         }
         if (doBorder(info, Direction.ZMIN)) {
             int z = 0;
             for (int x = 0; x < 16; x++) {
-                generateBorder(info, canDoParks, x, z, Direction.ZMIN.get(info));
+                generateBorder(info, canDoParks, x, y, z, Direction.ZMIN.get(info));
             }
         }
         if (doBorder(info, Direction.ZMAX)) {
             int z = 15;
             for (int x = 0; x < 16; x++) {
-                generateBorder(info, canDoParks, x, z, Direction.ZMAX.get(info));
+                generateBorder(info, canDoParks, x, y, z, Direction.ZMAX.get(info));
             }
         }
     }
@@ -487,12 +583,12 @@ public class StreetGenerator {
     /**
      * Fill a main street block with base blocks and border blocks at the bottom
      */
-    private static void fillMainStreetBlock(BuildingInfo info, Character borderBlock, int offset) {
+    private static void fillMainStreetBlock(BuildingInfo info, Character borderBlock, int offset, int y) {
         char border = info.getCompiledPalette().get(borderBlock);
         for (int x = 0; x < 16; ++x) {
             for (int z = 0; z < 16; ++z) {
-                driver.setBlockRange(x, info.getCityGroundLevel() - (offset - 1), z, info.getCityGroundLevel(), baseChar);
-                driver.current(x, info.getCityGroundLevel() - offset, z).block(border);
+                driver.setBlockRange(x, y - (offset - 1), z, y, baseChar);
+                driver.current(x, y - offset, z).block(border);
             }
         }
     }
@@ -500,7 +596,7 @@ public class StreetGenerator {
     /**
      * Generate a single border column for one side of a street block
      */
-    private static void generateBorder(BuildingInfo info, boolean canDoParks, int x, int z, BuildingInfo adjacent) {
+    private static void generateBorder(BuildingInfo info, boolean canDoParks, int x, int y, int z, BuildingInfo adjacent) {
         Character borderBlock = info.getCityStyle().getBorderBlock();
         Character wallBlock = info.getCityStyle().getWallBlock();
         char wall = info.getCompiledPalette().get(wallBlock);
@@ -508,12 +604,12 @@ public class StreetGenerator {
         switch (info.profile.LANDSCAPE_TYPE) {
             case DEFAULT:
                 // We do the ocean border 6 lower then groundlevel
-                setBlocksFromPalette(x, info.groundLevel - 6, z, info.getCityGroundLevel() + 1, info.getCompiledPalette(), borderBlock);
+                setBlocksFromPalette(x, info.groundLevel - 6, z, y + 1, info.getCompiledPalette(), borderBlock);
                 break;
             case SPACE: {
-                int adjacentY = info.getCityGroundLevel() - 8;
+                int adjacentY = y - 8;
                 if (adjacent.isCity) {
-                    adjacentY = Math.min(adjacentY, adjacent.getCityGroundLevel());
+                    adjacentY = Math.min(adjacentY, adjacent.getCityGroundLevel(!USE_HEIGHT_CACHE));
                 } else {
                     ICommonHeightmap adjacentHeightmap = provider.getHeightmap(info.chunkX, info.chunkZ);
                     int minimumHeight = adjacentHeightmap.getMinimumHeight();
@@ -521,28 +617,28 @@ public class StreetGenerator {
                 }
 
                 if (adjacentY > 5) {
-                    setBlocksFromPalette(x, adjacentY, z, info.getCityGroundLevel() + 1, info.getCompiledPalette(), borderBlock);
+                    setBlocksFromPalette(x, adjacentY, z, y + 1, info.getCompiledPalette(), borderBlock);
                 }
                 break;
             }
             case FLOATING:
-                setBlocksFromPalette(x, info.getCityGroundLevel() - 3, z, info.getCityGroundLevel() + 1, info.getCompiledPalette(), borderBlock);
+                setBlocksFromPalette(x, y - 3, z, y + 1, info.getCompiledPalette(), borderBlock);
                 if (isCorner(x, z)) {
-                    generateBorderSupport(info, wall, x, z, 3);
+                    generateBorderSupport(info, wall, x, y, z, 3);
                 }
                 break;
             case CAVERN:
-                setBlocksFromPalette(x, info.getCityGroundLevel() - 2, z, info.getCityGroundLevel() + 1, info.getCompiledPalette(), borderBlock);
+                setBlocksFromPalette(x, y - 2, z, y + 1, info.getCompiledPalette(), borderBlock);
                 if (isCorner(x, z)) {
-                    generateBorderSupport(info, wall, x, z, 2);
+                    generateBorderSupport(info, wall, x, y, z, 2);
                 }
                 break;
         }
         if (canDoParks) {
             if (!borderNeedsConnectionToAdjacentChunk(info, x, z)) {
-                driver.current(x, info.getCityGroundLevel() + 1, z).block(wall);
+                driver.current(x, y + 1, z).block(wall);
             } else {
-                driver.current(x, info.getCityGroundLevel() + 1, z).block(airChar);
+                driver.current(x, y + 1, z).block(airChar);
             }
         }
     }
@@ -550,12 +646,12 @@ public class StreetGenerator {
     /**
      * Generate a column of wall blocks (and stone below that in water)
      */
-    private static void generateBorderSupport(BuildingInfo info, char wall, int x, int z, int offset) {
+    private static void generateBorderSupport(BuildingInfo info, char wall, int x, int oy, int z, int offset) {
         ICommonHeightmap heightmap = provider.getHeightmap(info.chunkX, info.chunkZ);
         int height = heightmap.getHeight(x, z);
         if (height > 1) {
             // None void
-            int y = info.getCityGroundLevel() - offset - 1;
+            int y = oy - offset - 1;
             driver.current(x, y, z);
             while (y > 1 && driver.getBlock() == airChar) {
                 driver.block(wall).decY();

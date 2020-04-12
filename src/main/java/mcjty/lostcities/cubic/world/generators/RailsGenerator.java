@@ -39,13 +39,13 @@ public class RailsGenerator {
         }
         if (info.getZmin().getRailInfo().getType() == RailChunkType.HORIZONTAL ||
                 info.getZmax().getRailInfo().getType() == RailChunkType.HORIZONTAL) {
-            int height = info.groundLevel + Railway.RAILWAY_LEVEL_OFFSET * 6;
+            int height = info.getCityGroundLevel(false) + Railway.RAILWAY_LEVEL_OFFSET * 6;
             generatePart(info, info.railDungeon, Transform.ROTATE_NONE, 0, height, 0, false);
         }
     }
 
     public void generateRailways(BuildingInfo info, Railway.RailChunkInfo railInfo) {
-        int height = info.groundLevel + railInfo.getLevel() * 6;
+        int height = info.getCityGroundLevel(false) + railInfo.getLevel() * 6;
         RailChunkType type = railInfo.getType();
         BuildingPart part;
         Transform transform = Transform.ROTATE_NONE;
@@ -245,11 +245,12 @@ public class RailsGenerator {
 
         if (needsStaircase) {
             part = AssetRegistries.PARTS.get("station_staircase");
+            int baseLevel = info.getCityGroundLevel(false);
             for (int i = railInfo.getLevel() + 1; i < info.cityLevel; i++) {
-                height = info.groundLevel + i * 6;
+                height = baseLevel + i * 6;
                 generatePart(info, part, transform, 0, height, 0, false);
             }
-            height = info.groundLevel + info.cityLevel * 6;
+            height = baseLevel + info.cityLevel * 6;
             part = AssetRegistries.PARTS.get("station_staircase_surface");
             generatePart(info, part, transform, 0, height, 0, false);
         }
@@ -311,6 +312,7 @@ public class RailsGenerator {
     }
     
     private static int getMainGroundLevel() {
+        // TODO: Check
         return profile.GROUNDLEVEL;
     }
 }

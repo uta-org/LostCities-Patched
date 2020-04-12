@@ -8,6 +8,7 @@ import io.github.terra121.populator.RoadGenerator;
 import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
+import mcjty.lostcities.cubic.HeightPerChunkCache;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Railway;
 import mcjty.lostcities.dimensions.world.lost.cityassets.AssetRegistries;
@@ -86,13 +87,14 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
             currentModel = model;
 
             BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
-
             CubicHeightmap heightmap = (CubicHeightmap) getHeightmap(info.chunkX, info.chunkZ);
 
             int y = heightmap.getFullMinHeight();
 
             // Update profile GROUNDLEVEL for this city
+            // TODO: Check if this is really working
             profile.GROUNDLEVEL = y;
+            HeightPerChunkCache.add(new ChunkCoord(0, chunkX, chunkZ), y);
 
             // Btm, use this impl, because we check for entire columns above.
             if (!groundLevels.containsKey(chunkCoord)) {
@@ -100,13 +102,13 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
             }
 
             generateNear(random, x, z, chunkX, chunkY, chunkZ, info, heightmap);
+            doTodoPopulate(chunkX, chunkZ, provider, info);
         }
     }
 
     private HeightmapModel canSpawnInChunk(int chunkX, int chunkY, int chunkZ) {
         int spawnSize = EarthTerrainProcessor.spawnSize;
 
-        // if (-spawnSize < chunkX && chunkX < spawnSize && -spawnSize < chunkZ && chunkZ < spawnSize)
         if (chunkX >= -spawnSize && chunkX <= spawnSize || chunkZ >= -spawnSize && chunkZ <= spawnSize)
             return null; // don't spawn nothing on 5x5 chunks on spawn
 
@@ -123,7 +125,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         if(!(LostCitiesDebug.debug
                 ? CubicHeightmap.hasValidSteepness_Debug(model.heightmap, chunkX, chunkY, chunkZ)
                 : CubicHeightmap.hasValidSteepness(model.heightmap))) {
-            if(LostCitiesDebug.debug) System.out.println("("+chunkX+", "+chunkY+", "+chunkZ+")");
+            if(LostCitiesDebug.debug) System.out.println("On Chunk: "+chunkX+", "+chunkY+", "+chunkZ);
             return null;
         }
 
@@ -259,10 +261,6 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         if (building) {
             buildingGenerator.generate(info, heightmap);
         } else {
-            // CubicHeightmap _heightmap = (CubicHeightmap)heightmap;
-            // info.groundLevel+" -- "+getSurfaceBlock(new CubePos(chunkX, chunkY, chunkZ))+
-            // System.out.println("Min: "+_heightmap.getFullMinHeight()+"; Avg: "+_heightmap.getFullAverageHeight()+"; Max: "+_heightmap.getFullMaxHeight());
-            // System.out.println(info.groundLevel+" -- "+findTopBlock(new CubePos(chunkX, chunkY, chunkZ))+"; Is Air?: "+cubicWorld.getCubeFromCubeCoords(new CubePos(chunkX, chunkY, chunkZ)).isEmpty());
             streetGenerator.generate(info, heightmap, rand);
         }
         //}
@@ -279,7 +277,8 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         if (!building) {
             Railway.RailChunkInfo railInfo = info.getRailInfo();
             if (levelX < 0 && levelZ < 0 && !railInfo.getType().isSurface()) {
-                streetGenerator.generateStreetDecorations(info);
+                // TODO
+                streetGenerator.generateStreetDecorations(info, info.getCityGroundLevel(false));
             }
         }
         if (levelX >= 0 || levelZ >= 0) {
