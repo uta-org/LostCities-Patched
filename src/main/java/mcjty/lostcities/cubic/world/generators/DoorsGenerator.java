@@ -26,6 +26,7 @@ public class DoorsGenerator
         private EnumFacing currentFacing;
         private BuildingInfo info;
         private BuildingGenerator.DoorModel door;
+        private ICommonGeneratorProvider provider;
         private char filler;
 
         private List<EnumFacing> facings;
@@ -39,9 +40,18 @@ public class DoorsGenerator
 
         private FacingModel() {}
 
-        public FacingModel(BuildingInfo info, char filler) {
+        public FacingModel(BuildingInfo info, BuildingGenerator.DoorModel door,  ICommonGeneratorProvider provider, char filler)
+        {
+            this(info, door, provider, filler, true);
+        }
+
+        public FacingModel(BuildingInfo info, BuildingGenerator.DoorModel door, ICommonGeneratorProvider provider, char filler, boolean init) {
             this.info = info;
+            this.provider = provider;
             this.filler = filler;
+
+            if(init)
+                init();
         }
 
         public void add(EnumFacing facing) {
@@ -64,15 +74,11 @@ public class DoorsGenerator
             return door;
         }
 
-        public void setDoor(BuildingGenerator.DoorModel door) {
-            this.door = door;
-        }
-
         public char getFiller() {
             return filler;
         }
 
-        public void init(ICommonGeneratorProvider provider) {
+        private void init() {
             EnumFacing facing = null;
             List<EnumFacing> valid = new ArrayList<>();
 
@@ -157,15 +163,12 @@ public class DoorsGenerator
 
     public void generateDoors(BuildingInfo info, ICommonGeneratorProvider provider) {
         char filler = info.getCompiledPalette().get(info.getBuilding().getFillerBlock());
-        FacingModel facingModel = new FacingModel(info, filler);
-        facingModel.init(provider);
 
         for (BuildingGenerator.DoorModel door : info.getDoorTodo()) {
             driver.setLocalBlock(door.getCoord().getChunkX(), 0, door.getCoord().getChunkZ());
             driver.current(0, door.getHeight(), 0);
 
-            facingModel.setDoor(door);
-            facingModel.generateDoors();
+            new FacingModel(info, door, provider, filler).generateDoors();
         }
 
         info.clearDoorTodo();
