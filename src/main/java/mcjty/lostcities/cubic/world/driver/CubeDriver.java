@@ -159,6 +159,10 @@ public class CubeDriver implements ICubeDriver {
         return "("+getX()+", "+getY()+", "+getZ()+")";
     }
 
+    public String getTp() {
+        return "/tp "+getX()+" "+getY()+" "+getZ();
+    }
+
     private boolean isSamePosition(BlockPos pos) { return isSamePosition(pos.getX(), pos.getY(), pos.getZ()); }
 
     private boolean isSamePosition(int x, int y, int z) { return getX() == x && getY() == y && getZ() == z; }
@@ -216,11 +220,11 @@ public class CubeDriver implements ICubeDriver {
         IBlockState state = Block.BLOCK_STATE_IDS.getByValue(c);
 
         if(useWorld) {
-            BlockPos pos = new BlockPos(getX(), currentY, getZ());
+            BlockPos pos = new BlockPos(getX(), currentY++, getZ());
             world.setBlockState(pos, state);
         }
         else
-            cube.setBlockState(new BlockPos(currentX, currentY, currentZ), state);
+            cube.setBlockState(new BlockPos(currentX, currentY++, currentZ), state);
 
         return this;
     }

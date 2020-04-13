@@ -134,9 +134,6 @@ public class PartGenerator {
                             // Set air blocks also (to avoid grass inside buildings)
                             driver.add(airChar);
                         }
-
-                        // bugfix: For some reason this needs to be outside of the else (why?)
-                        driver.incY();
                     }
                 }
             }

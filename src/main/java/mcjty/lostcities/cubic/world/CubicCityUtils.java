@@ -106,4 +106,8 @@ public class CubicCityUtils {
         debrisGenerator = new DebrisGenerator();
         ruinsGenerator = new RuinsGenerator();
     }
+
+    public static double getRandom(double min, double max) {
+        return (Math.random() * (max + 1 - min)) + min;
+    }
 }

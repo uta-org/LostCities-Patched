@@ -6,6 +6,7 @@ import mcjty.lostcities.cubic.HeightPerChunkCache;
 import mcjty.lostcities.cubic.world.CubicCityWorldProcessor;
 import mcjty.lostcities.cubic.world.ICommonGeneratorProvider;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
+import mcjty.lostcities.cubic.world.generators.BuildingGenerator;
 import mcjty.lostcities.dimensions.world.driver.IIndex;
 import mcjty.lostcities.dimensions.world.lost.cityassets.*;
 import mcjty.lostcities.dimensions.world.terraingen.LostCitiesTerrainGenerator;
@@ -102,6 +103,7 @@ public class BuildingInfo implements ILostChunkInfo {
     private final List<BlockPos> saplingTodo = new ArrayList<>();
 
     private final List<BlockPos> ladderTodo = new ArrayList<>();
+    private final List<BuildingGenerator.DoorModel> doorTodo = new ArrayList<>();
 
     private Integer currentFloor;
     private char currentFiller;
@@ -160,6 +162,18 @@ public class BuildingInfo implements ILostChunkInfo {
 
     public void clearLadderTodo() {
         ladderTodo.clear();
+    }
+
+    public void addDoorTodo(BuildingGenerator.DoorModel door) {
+        doorTodo.add(door);
+    }
+
+    public List<BuildingGenerator.DoorModel> getDoorTodo() {
+        return doorTodo;
+    }
+
+    public void clearDoorTodo() {
+        doorTodo.clear();
     }
 
     public void addTorchTodo(IIndex index, Map<String, Integer> orientations) {

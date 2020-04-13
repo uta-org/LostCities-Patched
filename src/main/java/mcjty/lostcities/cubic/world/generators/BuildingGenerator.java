@@ -7,6 +7,7 @@ import mcjty.lostcities.dimensions.world.lost.Orientation;
 import mcjty.lostcities.dimensions.world.lost.Transform;
 import mcjty.lostcities.dimensions.world.lost.cityassets.BuildingPart;
 import mcjty.lostcities.dimensions.world.lost.cityassets.CompiledPalette;
+import mcjty.lostcities.varia.ChunkCoord;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockPlanks;
@@ -189,23 +190,56 @@ public class BuildingGenerator {
             }
 
             // Check for doors
+            /*
             boolean isTop = f == info.getNumFloors();   // The top does not need generated doors
             if (!isTop) {
-                generateDoors(info, height + 1, f);
+                // generateDoors(info, height + 1, f);
+                info.addDoorTodo(new DoorModel(new ChunkCoord(0, driver.getLocalX() / 16, driver.getLocalZ() / 16), height, f));
             }
+            */
+
+            if(f == 0)
+                info.addDoorTodo(new DoorModel(new ChunkCoord(0, driver.getLocalX() / 16, driver.getLocalZ() / 16), height, f));
 
             height += 6;    // We currently only support 6 here
         }
 
         info.disableCurrentFloor();
 
+        // TODO: Remove this
         if (info.floorsBelowGround >= 1) {
             // We have to potentially connect to corridors
             generateCorridorConnections(info);
         }
     }
 
-    private void generateDoors(BuildingInfo info, int height, int f) {
+    public class DoorModel {
+        private ChunkCoord coord;
+        private int height;
+        private int floor;
+
+        private DoorModel() {}
+
+        public DoorModel(ChunkCoord coord, int height, int floor) {
+            this.coord = coord;
+            this.height = height;
+            this.floor = floor;
+        }
+
+        public ChunkCoord getCoord() {
+            return coord;
+        }
+
+        public int getHeight() {
+            return height;
+        }
+
+        public int getFloor() {
+            return floor;
+        }
+    }
+
+    public void generateDoors(BuildingInfo info, int height, int f) {
 
         char filler = info.getCompiledPalette().get(info.getBuilding().getFillerBlock());
 

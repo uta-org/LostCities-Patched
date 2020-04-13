@@ -455,16 +455,10 @@ public class StreetGenerator {
         invalid.add(Material.WOOD);
         invalid.add(Material.WATER);
         invalid.add(Material.CACTUS);
-        // invalid.add(Material.SNOW);
-        // invalid.add(Material.GRASS);
         invalid.add(Material.GOURD);
         invalid.add(Material.LEAVES);
         invalid.add(Material.PLANTS);
     };
-
-    private static double getRandom(double min, double max) {
-        return (Math.random() * (max + 1 - min)) + min;
-    }
 
     private boolean hasRoadConnection(BuildingInfo i1, BuildingInfo i2, boolean put) {
         if (!i1.doesRoadExtendTo()) {
