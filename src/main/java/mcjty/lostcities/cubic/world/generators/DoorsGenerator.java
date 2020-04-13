@@ -8,6 +8,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.*;
 
@@ -116,9 +117,12 @@ public class DoorsGenerator
         }
 
         public void generateDoors() {
-            for (EnumFacing facing : facings) {
-                currentFacing = facing;
-                DoorsGenerator.generateDoors(this);
+            for (EnumFacing f : facings) {
+                currentFacing = f;
+                if(DoorsGenerator.generateDoors(this)) {
+                    // Clean path TODO (stairs)
+
+                }
             }
         }
 
@@ -136,9 +140,9 @@ public class DoorsGenerator
             } else if(currentFacing == EnumFacing.SOUTH) {
                 return 7;
             } else if(currentFacing == EnumFacing.WEST) {
-                return 0;
-            } else if(currentFacing == EnumFacing.EAST) {
                 return 15;
+            } else if(currentFacing == EnumFacing.EAST) {
+                return 0;
             }
 
             return -1;
@@ -176,7 +180,7 @@ public class DoorsGenerator
         info.clearDoorTodo();
     }
 
-    private static void generateDoors(FacingModel facingModel) {
+    private static boolean generateDoors(FacingModel facingModel) {
         BuildingInfo info = facingModel.getInfo();
         BuildingGenerator.DoorModel door = facingModel.getDoor();
 
@@ -201,25 +205,27 @@ public class DoorsGenerator
             int sz = z + (!isX ? (i == 0 ? -1 : 2) : 0);
 
             if (facingModel.isBuildingFacing()) {
+                /* // TODO: Not working properly
                 // Create connection between buildings
-                System.out.println("Adjacent building at ["+driver.getTp(sx, sz)+"]: "+facing.toString());
-
                 driver.setBlockRange(sx, height, sz, height + 4, filler);
 
                 // 7, 8
                 sx = x + (isX ? i : 0);
                 sz = z + (!isX ? i : 0);
 
+                System.out.println("Adjacent building at ["+driver.getTp(sx, sz)+"]: "+facing.toString());
+
                 driver.current(sx, height, sz)
                         .add(filler)
                         .add(airChar)
                         .add(airChar)
                         .add(filler);
-                return;
+                return false;
+                */
             }
 
             if (floor != 0 || !facingModel.isValidFacing())
-                return;
+                return false;
 
             driver.setBlockRange(sx, height, sz, height + 4, filler);
 
@@ -229,15 +235,12 @@ public class DoorsGenerator
 
             driver.current(sx, height, sz)
                     .add(filler)
-                    .add(getDoor(info.doorBlock, false, false, facing))
-                    .add(getDoor(info.doorBlock, true, false, facing))
-                    .add(filler);
-            driver.current(sx, height, sz)
-                    .add(filler)
-                    .add(getDoor(info.doorBlock, false, true, facing))
-                    .add(getDoor(info.doorBlock, true, true, facing))
+                    .add(getDoor(info.doorBlock, false, i != 0, facing))
+                    .add(getDoor(info.doorBlock, true, i != 0, facing))
                     .add(filler);
         }
+
+        return true;
     }
 
     private static char getDoor(Block door, boolean upper, boolean left, EnumFacing facing) {
@@ -275,5 +278,41 @@ public class DoorsGenerator
         }
 
         return new ChunkCoord(provider.getDimensionId(), x, z);
+    }
+
+    private IBlockState getBlockState(EnumFacing facing) {
+        BlockPos bp = getPos(facing);
+        return driver.getBlockState(bp.getX(), bp.getY(), bp.getZ());
+    }
+
+    private static BlockPos getPos(EnumFacing facing) {
+        return getPos(facing, true);
+    }
+
+    private static BlockPos getPos(EnumFacing facing, boolean update) {
+        int x = driver.getX();
+        int y = driver.current().getY();
+        int z = driver.getZ();
+
+        if (facing == EnumFacing.NORTH) {
+            z -= 1;
+        } else if (facing == EnumFacing.SOUTH) {
+            z += 1;
+        } else if (facing == EnumFacing.WEST) {
+            x -= 1;
+        } else if (facing == EnumFacing.EAST) {
+            x += 1;
+        } else if(facing == EnumFacing.UP) {
+            y += 1;
+        } else if(facing == EnumFacing.DOWN) {
+            y -= 1;
+        }
+
+        BlockPos bp = new BlockPos(x, y, z);
+
+        if(update)
+            driver.current(bp.getX(), bp.getY(), bp.getZ());
+
+        return bp;
     }
 }
