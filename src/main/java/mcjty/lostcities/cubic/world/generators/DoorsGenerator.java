@@ -9,10 +9,7 @@ import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static mcjty.lostcities.cubic.world.CubicCityUtils.airChar;
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
@@ -21,7 +18,7 @@ import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.worldObj;
 public class DoorsGenerator
 {
     public class FacingModel {
-        private Set<EnumFacing> buildings = new HashSet<>();
+        private final Set<EnumFacing> buildings = new HashSet<>();
         private EnumFacing facing;
         private EnumFacing currentFacing;
         private BuildingInfo info;
@@ -29,7 +26,7 @@ public class DoorsGenerator
         private ICommonGeneratorProvider provider;
         private char filler;
 
-        private List<EnumFacing> facings;
+        private final List<EnumFacing> facings;
         {
             facings = new ArrayList<>();
             facings.add(EnumFacing.EAST);
@@ -38,7 +35,7 @@ public class DoorsGenerator
             facings.add(EnumFacing.SOUTH);
         };
 
-        private FacingModel() {}
+        private FacingModel() { }
 
         public FacingModel(BuildingInfo info, BuildingGenerator.DoorModel door,  ICommonGeneratorProvider provider, char filler)
         {
@@ -47,6 +44,7 @@ public class DoorsGenerator
 
         public FacingModel(BuildingInfo info, BuildingGenerator.DoorModel door, ICommonGeneratorProvider provider, char filler, boolean init) {
             this.info = info;
+            this.door = door;
             this.provider = provider;
             this.filler = filler;
 
@@ -107,10 +105,14 @@ public class DoorsGenerator
                 else {
                     valid.add(facing);
                 }
-
-                EnumFacing validFacing = valid.get(worldObj.rand.nextInt(valid.size()));
-                setFacing(validFacing);
             }
+
+            // size == 0 means that there is not any valid position...
+            int size = valid.size();
+            EnumFacing validFacing = size == 0
+                    ? null // facings.get(worldObj.rand.nextInt(4))
+                    : valid.get(worldObj.rand.nextInt(size));
+            setFacing(validFacing);
         }
 
         public void generateDoors() {
