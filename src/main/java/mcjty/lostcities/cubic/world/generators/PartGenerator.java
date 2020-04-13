@@ -127,6 +127,7 @@ public class PartGenerator {
                             String bName = bs.getBlock().getUnlocalizedName();
                             if(bName.contains("ladder")) {
                                 info.addLadderTodo(driver.current());
+                                driver.incY();
                             }
                             else
                                 driver.add(b);

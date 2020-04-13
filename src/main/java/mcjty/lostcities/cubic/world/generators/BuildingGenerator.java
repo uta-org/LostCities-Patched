@@ -198,7 +198,8 @@ public class BuildingGenerator {
             }
             */
 
-            if(f == 0)
+            boolean isTop = f == info.getNumFloors();
+            if(!isTop)
                 info.addDoorTodo(new DoorModel(new ChunkCoord(0, driver.getLocalX() / 16, driver.getLocalZ() / 16), height, f));
 
             height += 6;    // We currently only support 6 here
@@ -206,11 +207,13 @@ public class BuildingGenerator {
 
         info.disableCurrentFloor();
 
+        /*
         // TODO: Remove this
         if (info.floorsBelowGround >= 1) {
             // We have to potentially connect to corridors
             generateCorridorConnections(info);
         }
+         */
     }
 
     public class DoorModel {
@@ -237,166 +240,5 @@ public class BuildingGenerator {
         public int getFloor() {
             return floor;
         }
-    }
-
-    public void generateDoors(BuildingInfo info, int height, int f) {
-
-        char filler = info.getCompiledPalette().get(info.getBuilding().getFillerBlock());
-
-        height--;       // Start generating doors one below for the filler
-
-        if (info.hasConnectionAtX(f + info.floorsBelowGround)) {
-            int x = 0;
-            if (hasConnectionWithBuilding(f, info, info.getXmin())) {
-                driver.setBlockRange(x, height, 6, height + 4, filler);
-                driver.setBlockRange(x, height, 9, height + 4, filler);
-
-                driver.current(x, height, 7).add(filler).add(airChar).add(airChar).add(filler);
-                driver.current(x, height, 8).add(filler).add(airChar).add(airChar).add(filler);
-
-            } else if (hasConnectionToTopOrOutside(f, info, info.getXmin())) {
-                driver.setBlockRange(x, height, 6, height + 4, filler);
-                driver.setBlockRange(x, height, 9, height + 4, filler);
-
-                driver.current(x, height, 7)
-                        .add(filler)
-                        .add(getDoor(info.doorBlock, false, true, EnumFacing.EAST))
-                        .add(getDoor(info.doorBlock, true, true, EnumFacing.EAST))
-                        .add(filler);
-                driver.current(x, height, 8)
-                        .add(filler)
-                        .add(getDoor(info.doorBlock, false, false, EnumFacing.EAST))
-                        .add(getDoor(info.doorBlock, true, false, EnumFacing.EAST))
-                        .add(filler);
-            }
-        }
-        if (hasConnectionWithBuildingMax(f, info, info.getXmax(), Orientation.X)) {
-            int x = 15;
-            driver.setBlockRange(x, height, 6, height + 4, filler);
-            driver.setBlockRange(x, height, 9, height + 4, filler);
-            driver.current(x, height, 7).add(filler).add(airChar).add(airChar).add(filler);
-            driver.current(x, height, 8).add(filler).add(airChar).add(airChar).add(filler);
-        } else if (hasConnectionToTopOrOutside(f, info, info.getXmax()) && (info.getXmax().hasConnectionAtXFromStreet(f + info.getXmax().floorsBelowGround))) {
-            int x = 15;
-            driver.setBlockRange(x, height, 6, height + 4, filler);
-            driver.setBlockRange(x, height, 9, height + 4, filler);
-            driver.current(x, height, 7)
-                    .add(filler)
-                    .add(getDoor(info.doorBlock, false, false, EnumFacing.WEST))
-                    .add(getDoor(info.doorBlock, true, false, EnumFacing.WEST))
-                    .add(filler);
-            driver.current(x, height, 8)
-                    .add(filler)
-                    .add(getDoor(info.doorBlock, false, true, EnumFacing.WEST))
-                    .add(getDoor(info.doorBlock, true, true, EnumFacing.WEST))
-                    .add(filler);
-        }
-        if (info.hasConnectionAtZ(f + info.floorsBelowGround)) {
-            int z = 0;
-            if (hasConnectionWithBuilding(f, info, info.getZmin())) {
-                driver.setBlockRange(6, height, z, height + 4, filler);
-                driver.setBlockRange(9, height, z, height + 4, filler);
-                driver.current(7, height, z).add(filler).add(airChar).add(airChar).add(filler);
-                driver.current(8, height, z).add(filler).add(airChar).add(airChar).add(filler);
-            } else if (hasConnectionToTopOrOutside(f, info, info.getZmin())) {
-                driver.setBlockRange(6, height, z, height + 4, filler);
-                driver.setBlockRange(9, height, z, height + 4, filler);
-                driver.current(7, height, z)
-                        .add(filler)
-                        .add(getDoor(info.doorBlock, false, true, EnumFacing.NORTH))
-                        .add(getDoor(info.doorBlock, true, true, EnumFacing.NORTH))
-                        .add(filler);
-                driver.current(8, height, z)
-                        .add(filler)
-                        .add(getDoor(info.doorBlock, false, false, EnumFacing.NORTH))
-                        .add(getDoor(info.doorBlock, true, false, EnumFacing.NORTH))
-                        .add(filler);
-            }
-        }
-        if (hasConnectionWithBuildingMax(f, info, info.getZmax(), Orientation.Z)) {
-            int z = 15;
-            driver.setBlockRange(6, height, z, height + 4, filler);
-            driver.setBlockRange(9, height, z, height + 4, filler);
-            driver.current(7, height, z).add(filler).add(airChar).add(airChar).add(filler);
-            driver.current(8, height, z).add(filler).add(airChar).add(airChar).add(filler);
-        } else if (hasConnectionToTopOrOutside(f, info, info.getZmax()) && (info.getZmax().hasConnectionAtZFromStreet(f + info.getZmax().floorsBelowGround))) {
-            int z = 15;
-            driver.setBlockRange(6, height, z, height + 4, filler);
-            driver.setBlockRange(9, height, z, height + 4, filler);
-            driver.current(7, height, z)
-                    .add(filler)
-                    .add(getDoor(info.doorBlock, false, false, EnumFacing.SOUTH))
-                    .add(getDoor(info.doorBlock, true, false, EnumFacing.SOUTH))
-                    .add(filler);
-            driver.current(8, height, z)
-                    .add(filler)
-                    .add(getDoor(info.doorBlock, false, true, EnumFacing.SOUTH))
-                    .add(getDoor(info.doorBlock, true, true, EnumFacing.SOUTH))
-                    .add(filler);
-        }
-    }
-
-    private char getDoor(Block door, boolean upper, boolean left, EnumFacing facing) {
-        IBlockState bs = door.getDefaultState()
-                .withProperty(BlockDoor.HALF, upper ? BlockDoor.EnumDoorHalf.UPPER : BlockDoor.EnumDoorHalf.LOWER)
-                .withProperty(BlockDoor.HINGE, left ? BlockDoor.EnumHingePosition.LEFT : BlockDoor.EnumHingePosition.RIGHT)
-                .withProperty(BlockDoor.FACING, facing);
-        return (char) Block.BLOCK_STATE_IDS.get(bs);
-    }
-
-    private void generateCorridorConnections(BuildingInfo info) {
-        if (info.getXmin().hasXCorridor()) {
-            int x = 0;
-            for (int z = 7; z <= 10; z++) {
-                driver.setBlockRange(x, info.groundLevel-5, z, info.groundLevel-2, airChar);
-            }
-        }
-        if (info.getXmax().hasXCorridor()) {
-            int x = 15;
-            for (int z = 7; z <= 10; z++) {
-                driver.setBlockRange(x, info.groundLevel-5, z, info.groundLevel-2, airChar);
-            }
-        }
-        if (info.getZmin().hasXCorridor()) {
-            int z = 0;
-            for (int x = 7; x <= 10; x++) {
-                driver.setBlockRange(x, info.groundLevel-5, z, info.groundLevel-2, airChar);
-            }
-        }
-        if (info.getZmax().hasXCorridor()) {
-            int z = 15;
-            for (int x = 7; x <= 10; x++) {
-                driver.setBlockRange(x, info.groundLevel-5, z, info.groundLevel-2, airChar);
-            }
-        }
-    }
-
-    private boolean hasConnectionWithBuildingMax(int localLevel, BuildingInfo info, BuildingInfo info2, Orientation x) {
-        if (info.isValidFloor(localLevel) && info.getFloor(localLevel).getMetaBoolean("dontconnect")) {
-            return false;
-        }
-        int globalLevel = info.localToGlobal(localLevel);
-        int localAdjacent = info2.globalToLocal(globalLevel);
-        if (info2.isValidFloor(localAdjacent) && info2.getFloor(localAdjacent).getMetaBoolean("dontconnect")) {
-            return false;
-        }
-        int level = localAdjacent + info2.floorsBelowGround;
-        return info2.hasBuilding && ((localAdjacent >= 0 && localAdjacent < info2.getNumFloors()) || (localAdjacent < 0 && (-localAdjacent) <= info2.floorsBelowGround)) && info2.hasConnectionAt(level, x);
-    }
-
-    private boolean hasConnectionToTopOrOutside(int localLevel, BuildingInfo info, BuildingInfo info2) {
-        int globalLevel = info.localToGlobal(localLevel);
-        int localAdjacent = info2.globalToLocal(globalLevel);
-        if (info.getFloor(localLevel).getMetaBoolean("dontconnect")) {
-            return false;
-        }
-        return (info2.isCity && !info2.hasBuilding && localLevel == 0 && localAdjacent == 0) || (info2.hasBuilding && localAdjacent == info2.getNumFloors());
-//        return (!info2.hasBuilding && localLevel == localAdjacent) || (info2.hasBuilding && localAdjacent == info2.getNumFloors());
-    }
-
-    private boolean hasConnectionWithBuilding(int localLevel, BuildingInfo info, BuildingInfo info2) {
-        int globalLevel = info.localToGlobal(localLevel);
-        int localAdjacent = info2.globalToLocal(globalLevel);
-        return info2.hasBuilding && ((localAdjacent >= 0 && localAdjacent < info2.getNumFloors()) || (localAdjacent < 0 && (-localAdjacent) <= info2.floorsBelowGround));
     }
 }
