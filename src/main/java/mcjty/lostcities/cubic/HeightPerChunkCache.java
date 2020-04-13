@@ -1,5 +1,6 @@
 package mcjty.lostcities.cubic;
 
+import mcjty.lostcities.cubic.world.CubicCityWorldPopulator;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.varia.ChunkCoord;
 
@@ -20,7 +21,6 @@ public class HeightPerChunkCache {
     }
 
     public static Integer getCityLevel(BuildingInfo info) {
-        // TODO: dimension
-        return getCityLevel(new ChunkCoord(0, info.chunkX, info.chunkX));
+        return getCityLevel(new ChunkCoord(CubicCityWorldPopulator.provider.getDimensionId(), info.chunkX, info.chunkX));
     }
 }

@@ -163,6 +163,10 @@ public class CubeDriver implements ICubeDriver {
         return "/tp "+getX()+" "+getY()+" "+getZ();
     }
 
+    public String getTp(int x, int z) {
+        return "/tp "+(getX() + x)+" "+getY()+" "+(getZ() + z);
+    }
+
     private boolean isSamePosition(BlockPos pos) { return isSamePosition(pos.getX(), pos.getY(), pos.getZ()); }
 
     private boolean isSamePosition(int x, int y, int z) { return getX() == x && getY() == y && getZ() == z; }

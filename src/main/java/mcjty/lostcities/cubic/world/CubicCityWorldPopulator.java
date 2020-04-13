@@ -94,14 +94,14 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
             // Update profile GROUNDLEVEL for this city
             // TODO: Check if this is really working
             profile.GROUNDLEVEL = y;
-            HeightPerChunkCache.add(new ChunkCoord(0, chunkX, chunkZ), y);
+            HeightPerChunkCache.add(new ChunkCoord(provider.dimensionId, chunkX, chunkZ), y);
 
             // Btm, use this impl, because we check for entire columns above.
             if (!groundLevels.containsKey(chunkCoord)) {
                 groundLevels.put(chunkCoord, y);
             }
 
-            generateNear(random, x, z, chunkX, chunkY, chunkZ, info, heightmap);
+            generateNear(random, x, z, chunkX, chunkY, chunkZ, heightmap);
             doTodoPopulate(chunkX, chunkZ, provider, info);
         }
     }
@@ -116,16 +116,16 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
             return null;
 
         HeightmapModel model = HeightmapModel.getModel(chunkX, chunkY, chunkZ);
-        if(model == null)
+        if (model == null)
             return null;
 
-        if(!model.surface)
+        if (!model.surface)
             return null;
 
-        if(!(LostCitiesDebug.debug
+        if (!(LostCitiesDebug.debug
                 ? CubicHeightmap.hasValidSteepness_Debug(model.heightmap, chunkX, chunkY, chunkZ)
                 : CubicHeightmap.hasValidSteepness(model.heightmap))) {
-            if(LostCitiesDebug.debug) System.out.println("On Chunk: "+chunkX+", "+chunkY+", "+chunkZ);
+            if (LostCitiesDebug.debug) System.out.println("On Chunk: " + chunkX + ", " + chunkY + ", " + chunkZ);
             return null;
         }
 
@@ -135,13 +135,13 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         double spawnChance = 1.0; // RogueConfig.getDouble(RogueConfig.SPAWNCHANCE); // TODO
         Random rand = new Random(Objects.hash(chunkX, chunkZ, 31));
 
-        if(rand.nextFloat() < spawnChance)
+        if (rand.nextFloat() < spawnChance)
             return model;
 
         return null;
     }
 
-    private boolean isCityChunk(int chunkX, int chunkZ) {
+    public static boolean isCityChunk(int chunkX, int chunkZ) {
         double d = interpolate(perlin, perlin.getValue(chunkX, 0, chunkZ));
         return d >= 0.5;
     }
@@ -153,20 +153,22 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         return (d - min) / (max - min);
     }
 
-    private boolean generateNear(Random rand, int x, int z, int chunkX, int chunkY, int chunkZ, BuildingInfo info, ICommonHeightmap heightmap) {
-            Coord location = getNearbyCoord(rand, x, z, 40, 100);
+    private boolean generateNear(Random rand, int x, int z, int chunkX, int chunkY, int chunkZ, ICommonHeightmap heightmap) {
+        Coord location = getNearbyCoord(rand, x, z, 40, 100);
 
-            if (!validLocation(location))
-                return false;
+        if (!validLocation(location))
+            return false;
 
-            generate(chunkX, chunkY, chunkZ, info, heightmap);
+        generate(chunkX, chunkY, chunkZ, heightmap);
 
-            return true;
+        return true;
     }
 
-    private void generate(int chunkX, int chunkY, int chunkZ, BuildingInfo info, ICommonHeightmap heightmap) {
+    private void generate(int chunkX, int chunkY, int chunkZ, ICommonHeightmap heightmap) {
         // driver.setPrimer(primer);
         // BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
+
+        BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
 
         // @todo this setup is not very clean
         CityStyle cityStyle = info.getCityStyle();
@@ -178,7 +180,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         street2 = info.getCompiledPalette().get(cityStyle.getStreetVariantBlock());
         streetBorder = (16 - cityStyle.getStreetWidth()) / 2;
 
-        doCityChunk(chunkX, chunkY, chunkZ, info, heightmap);
+        doCityChunk(chunkX, chunkY, chunkZ, heightmap);
 
         Railway.RailChunkInfo railInfo = info.getRailInfo();
         if (railInfo.getType() != RailChunkType.NONE) {
@@ -201,7 +203,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         //LostCityEvent.PreExplosionEvent event = new LostCityEvent.PreExplosionEvent(provider.worldObj, provider, chunkX, chunkZ, driver.getPrimer());
         //if (!MinecraftForge.EVENT_BUS.post(event)) {
 
-        if(generateRuins) {
+        if (generateRuins) {
             if (info.getDamageArea().hasExplosions()) {
                 debrisGenerator.breakBlocksForDamage(chunkX, chunkZ, info);
                 debrisGenerator.fixAfterExplosionNew(info, worldObj.rand);
@@ -231,7 +233,8 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
     *
     * */
 
-    private void doCityChunk(int chunkX, int chunkY, int chunkZ, BuildingInfo info, ICommonHeightmap heightmap) {
+    private void doCityChunk(int chunkX, int chunkY, int chunkZ, ICommonHeightmap heightmap) {
+        BuildingInfo info = BuildingInfo.getBuildingInfo(chunkX, chunkZ, this);
         boolean building = info.hasBuilding;
 
         Random rand = new Random(worldObj.getSeed() * 377 + chunkZ * 341873128712L + chunkX * 132897987541L);

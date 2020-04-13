@@ -49,6 +49,7 @@ public class CubicCityUtils {
     public static RubbleGenerator rubbleGenerator;
     public static DebrisGenerator debrisGenerator;
     public static RuinsGenerator ruinsGenerator;
+    public static DoorsGenerator doorsGenerator;
 
     public static WorldStyle worldStyle;
 
@@ -105,9 +106,6 @@ public class CubicCityUtils {
         rubbleGenerator = new RubbleGenerator();
         debrisGenerator = new DebrisGenerator();
         ruinsGenerator = new RuinsGenerator();
-    }
-
-    public static double getRandom(double min, double max) {
-        return (Math.random() * (max + 1 - min)) + min;
+        doorsGenerator = new DoorsGenerator();
     }
 }

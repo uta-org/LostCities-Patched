@@ -1029,30 +1029,22 @@ public class BuildingInfo implements ILostChunkInfo {
      * This function does not use the cache. So safe to use when the cache is building
      */
     public static int getCityLevel(int chunkX, int chunkZ, ICommonGeneratorProvider provider) {
-        // This won't work...
-        //if(CubicCityWorldProcessor.checkForCubicWorld(provider.getWorld()))
-        //    return provider.getProfile().GROUNDLEVEL;
         int level;
-        int type = -1;
 
         if (provider.otherGenerator != null) {
             int height = provider.otherGenerator.getHeight(chunkX, chunkZ, 8, 8);
             level = getLevelBasedOnHeight(height, provider.getProfile());
-            type = 0;
         } else if (provider.getProfile().isSpace()) {
             level = getCityLevelSpace(chunkX, chunkZ, provider);
-            type = 1;
         } else if (provider.getProfile().isFloating()) {
             level = getCityLevelFloating(chunkX, chunkZ, provider);
-            type = 2;
         } else if (provider.getProfile().isCavern()) {
             level = getCityLevelCavern(chunkX, chunkZ, provider);
-            type = 3;
         } else {
             level = getCityLevelNormal(chunkX, chunkZ, provider, provider.getProfile());
-            type = 4;
         }
 
+        // On cubic chunks + t121 (forest), level = 0, type = 4
         // System.out.println("Level: "+level+"\nType: "+type);
         return level;
     }

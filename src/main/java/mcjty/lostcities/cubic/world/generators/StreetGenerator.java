@@ -338,8 +338,8 @@ public class StreetGenerator {
         boolean put2 = rand.nextBoolean();
         boolean put3 = rand.nextBoolean();
 
-        if(!(put0 && put1 && put2 && put3)) {
-            int v = (int)getRandom(0, 4);
+        if(!(put0 || put1 || put2 || put3)) {
+            int v = rand.nextInt(4);
             switch (v) {
                 case 0:
                     put0 = true;

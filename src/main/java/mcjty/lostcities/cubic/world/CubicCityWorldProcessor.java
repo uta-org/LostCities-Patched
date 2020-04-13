@@ -4,22 +4,18 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.cubic.CubeCityGenerator;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
-import mcjty.lostcities.cubic.world.generators.BuildingGenerator;
-import mcjty.lostcities.cubic.world.generators.DoorGenerator;
+import mcjty.lostcities.cubic.world.generators.DoorsGenerator;
 import mcjty.lostcities.cubic.world.generators.SpawnersGenerator;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockSapling;
 import net.minecraft.block.BlockVine;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -31,8 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Random;
 
-import static mcjty.lostcities.cubic.world.CubicCityUtils.airChar;
-import static mcjty.lostcities.cubic.world.CubicCityUtils.getRandom;
+import static mcjty.lostcities.cubic.world.CubicCityUtils.*;
 
 public class CubicCityWorldProcessor extends CubeCityGenerator {
     @Nonnull
@@ -60,7 +55,7 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
 
         ICommonGeneratorProvider provider = init();
 
-        spawnersGenerator = new SpawnersGenerator(CubicCityUtils.profile, provider);
+        spawnersGenerator = new SpawnersGenerator(profile, provider);
     }
 
     private static ICommonGeneratorProvider init()
@@ -109,7 +104,7 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
         generateVines(worldObj.rand, chunkX, chunkZ, worldObj, provider);
 
         generateLadders(info); // TODO: Add wall (railways)
-        DoorGenerator.generateDoors(info, provider); // TODO: Add stairs to doors
+        doorsGenerator.generateDoors(info, provider); // TODO: Add stairs to doors
 
         // TODO: Fix railways
     }

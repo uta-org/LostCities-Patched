@@ -1,6 +1,7 @@
 package mcjty.lostcities.cubic.world.generators;
 
 import mcjty.lostcities.config.LostCityConfiguration;
+import mcjty.lostcities.cubic.world.CubicCityWorldPopulator;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Transform;
@@ -175,7 +176,12 @@ public class BuildingGenerator {
             // Check for doors
             boolean isTop = f == info.getNumFloors();
             if(!isTop)
-                info.addDoorTodo(new DoorModel(new ChunkCoord(0, driver.getLocalX() / 16, driver.getLocalZ() / 16), height, f));
+                info.addDoorTodo(
+                        new DoorModel(
+                                new ChunkCoord(
+                                        CubicCityWorldPopulator.provider.getDimensionId(),
+                                        driver.getLocalX() / 16,
+                                        driver.getLocalZ() / 16), height, f));
 
             height += 6;    // We currently only support 6 here
         }
