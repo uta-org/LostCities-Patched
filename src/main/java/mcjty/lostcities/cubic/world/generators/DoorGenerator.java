@@ -123,8 +123,6 @@ public class DoorGenerator {
                     .add(getDoor(info.doorBlock, false, true, facing))
                     .add(getDoor(info.doorBlock, true, true, facing))
                     .add(filler);
-
-            // TODO: Clear blocks and do border
         }
     }
 
@@ -147,13 +145,13 @@ public class DoorGenerator {
         int z = driver.getLocalZ();
 
         if (facing == EnumFacing.NORTH) {
-            z -= 1;
-        } else if (facing == EnumFacing.SOUTH) {
             z += 1;
+        } else if (facing == EnumFacing.SOUTH) {
+            z -= 1;
         } else if (facing == EnumFacing.WEST) {
-            x -= 1;
-        } else if (facing == EnumFacing.EAST) {
             x += 1;
+        } else if (facing == EnumFacing.EAST) {
+            x -= 1;
         }
 
         return BuildingInfo.getBuildingInfo(x, z, provider);

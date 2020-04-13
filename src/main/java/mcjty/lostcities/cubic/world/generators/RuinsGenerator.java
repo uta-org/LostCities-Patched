@@ -35,7 +35,7 @@ public class RuinsGenerator {
             this.leavesBuffer = this.leavesNoise.getRegion(this.leavesBuffer, (chunkX * 64), (chunkZ * 64), 16, 16, 1.0 / 64.0, 1.0 / 64.0, 4.0D);
         }
 
-        int baseheight = (int) (info.getCityGroundLevel() + 1 + (info.ruinHeight * info.getNumFloors() * 6.0f));
+        int baseheight = (int) (info.getCityGroundLevel(false) + 1 + (info.ruinHeight * info.getNumFloors() * 6.0f));
 
         for (int x = 0; x < 16; ++x) {
             zLoop: for (int z = 0; z < 16; ++z) {

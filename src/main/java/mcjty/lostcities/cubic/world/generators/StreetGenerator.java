@@ -33,16 +33,6 @@ public class StreetGenerator {
 
     private static final boolean generateBorders = false;
 
-    private static final boolean USE_HEIGHT_CACHE = true;
-
-    // private static char slabChar;
-
-    /*
-    public StreetGenerator() {
-        slabChar = (char)Block.BLOCK_STATE_IDS.get(Blocks.DOUBLE_STONE_SLAB.getDefaultState());
-    }
-    */
-
     public void generate(BuildingInfo info, ICommonHeightmap heightmap, Random rand) {
         boolean xRail = info.hasXCorridor();
         boolean zRail = info.hasZCorridor();
@@ -399,13 +389,12 @@ public class StreetGenerator {
                         continue;
 
                     IBlockState filler = worldObj.getBiome(pos.getCenterBlockPos()).fillerBlock;
-                    if(filler.getBlock().getUnlocalizedName().contains("dirt")) filler = Blocks.GRASS.getDefaultState();
+                    if(filler.getBlock().getUnlocalizedName().contains("dirt"))
+                        filler = Blocks.GRASS.getDefaultState();
                     b = (char)Block.BLOCK_STATE_IDS.get(filler);
                 }
-                else {
-                    fixDriver();
-                }
 
+                fixDriver();
                 driver.block(b);
             }
         }
@@ -415,15 +404,20 @@ public class StreetGenerator {
     private void fixDriver() {
         // Fix Y values, we need to adapt to the terrain
         char cur = driver.getBlock();
+        IBlockState curState = driver.getBlockState();
 
         char up = driver.getBlockUp();
         IBlockState upState = driver.getBlockStateUp();
 
+        boolean curStateNotValid = !invalid.contains(curState.getMaterial());
+        boolean upStateNotValid = !invalid.contains(upState.getMaterial());
+
         if(cur == airChar) {
             goDownOnDriver();
         }
-        else if(!invalid.contains(upState.getMaterial())) {
+        else if(curStateNotValid || upStateNotValid) {
             goDownOnDriver();
+            // driver.decY();
         }
         else if(up != airChar) {
             // Restore in case we are on a invalid material

@@ -3,30 +3,25 @@ package mcjty.lostcities.cubic.world.generators;
 import mcjty.lostcities.config.LostCityConfiguration;
 import mcjty.lostcities.cubic.world.ICommonHeightmap;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
-import mcjty.lostcities.dimensions.world.lost.Orientation;
 import mcjty.lostcities.dimensions.world.lost.Transform;
 import mcjty.lostcities.dimensions.world.lost.cityassets.BuildingPart;
 import mcjty.lostcities.dimensions.world.lost.cityassets.CompiledPalette;
 import mcjty.lostcities.varia.ChunkCoord;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockPlanks;
 import net.minecraft.block.BlockSapling;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.HashSet;
 import java.util.Set;
 
+import static mcjty.lostcities.cubic.world.CubicCityUtils.airChar;
+import static mcjty.lostcities.cubic.world.CubicCityUtils.baseChar;
+import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 import static mcjty.lostcities.cubic.world.generators.PartGenerator.generatePart;
 import static mcjty.lostcities.cubic.world.generators.States.addStates;
-
-import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
-
-import static mcjty.lostcities.cubic.world.CubicCityUtils.*;
 import static mcjty.lostcities.cubic.world.generators.Utils.*;
 
 public class BuildingGenerator {
@@ -94,22 +89,10 @@ public class BuildingGenerator {
         return rotatableChars;
     }
 
-    private void setBlocksFromPalette(int x, int y, int z, int y2, CompiledPalette palette, char character) {
-        if (palette.isSimple(character)) {
-            char b = palette.get(character);
-            driver.setBlockRangeSafe(x, y, z, y2, b);
-        } else {
-            driver.current(x, y, z);
-            while (y < y2) {
-                driver.add(palette.get(character));
-                y++;
-            }
-        }
-    }
-
     public void generate(BuildingInfo info, ICommonHeightmap heightmap) {
-        int lowestLevel = info.getCityGroundLevel() - info.floorsBelowGround * 6;
-        int highestLevel = info.getCityGroundLevel() + info.getNumFloors() * 6;
+        int heightLevel = info.getCityGroundLevel(false);
+        int lowestLevel = heightLevel - info.floorsBelowGround * 6;
+        int highestLevel = heightLevel + info.getNumFloors() * 6;
 
         Character borderBlock = info.getCityStyle().getBorderBlock();
         CompiledPalette palette = info.getCompiledPalette();
@@ -127,7 +110,7 @@ public class BuildingGenerator {
                         driver.setBlockRange(x, height+1, z, lowestLevel, baseChar);
                     }
                     // Also clear the inside of buildings to avoid geometry that doesn't really belong there
-                    clearRange(info, x, z, lowestLevel, info.getCityGroundLevel() + info.getNumFloors() * 6, info.waterLevel > info.groundLevel);
+                    clearRange(info, x, z, lowestLevel, heightLevel + info.getNumFloors() * 6, info.waterLevel > info.groundLevel);
                 }
             }
         } else if (info.profile.isSpace()) {
@@ -136,7 +119,7 @@ public class BuildingGenerator {
             // Also clear the inside of buildings to avoid geometry that doesn't really belong there
             for (int x = 0; x < 16; ++x) {
                 for (int z = 0; z < 16; ++z) {
-                    clearRange(info, x, z, lowestLevel, info.getCityGroundLevel() + info.getNumFloors() * 6, false);     // Never water in bubbles?
+                    clearRange(info, x, z, lowestLevel, heightLevel + info.getNumFloors() * 6, false);     // Never water in bubbles?
                 }
             }
         } else {
@@ -168,7 +151,7 @@ public class BuildingGenerator {
                     if (info.profile.isCavern()) {
                         // Also clear the inside of buildings to avoid geometry that doesn't really belong there
 //                        clearRange(primer, index, lowestLevel, info.getCityGroundLevel() + info.getNumFloors() * 6, waterLevel > mainGroundLevel);
-                        clearRange(info, x, z, lowestLevel, info.getCityGroundLevel() + info.getNumFloors() * 6, info.waterLevel > info.groundLevel);
+                        clearRange(info, x, z, lowestLevel, heightLevel+ info.getNumFloors() * 6, info.waterLevel > info.groundLevel);
                     }
                 }
             }
@@ -190,14 +173,6 @@ public class BuildingGenerator {
             }
 
             // Check for doors
-            /*
-            boolean isTop = f == info.getNumFloors();   // The top does not need generated doors
-            if (!isTop) {
-                // generateDoors(info, height + 1, f);
-                info.addDoorTodo(new DoorModel(new ChunkCoord(0, driver.getLocalX() / 16, driver.getLocalZ() / 16), height, f));
-            }
-            */
-
             boolean isTop = f == info.getNumFloors();
             if(!isTop)
                 info.addDoorTodo(new DoorModel(new ChunkCoord(0, driver.getLocalX() / 16, driver.getLocalZ() / 16), height, f));
@@ -206,14 +181,6 @@ public class BuildingGenerator {
         }
 
         info.disableCurrentFloor();
-
-        /*
-        // TODO: Remove this
-        if (info.floorsBelowGround >= 1) {
-            // We have to potentially connect to corridors
-            generateCorridorConnections(info);
-        }
-         */
     }
 
     public class DoorModel {

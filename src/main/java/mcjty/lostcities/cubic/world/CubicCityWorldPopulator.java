@@ -48,7 +48,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
     private int currentChunkY;
     private HeightmapModel currentModel;
 
-    private static final boolean generateRuins = false;
+    private static final boolean generateRuins = true;
 
     public CubicCityWorldPopulator() {
         // TODO: Refactor this
@@ -142,8 +142,6 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
     }
 
     private boolean isCityChunk(int chunkX, int chunkZ) {
-        // return perlin.getValue(chunkX, 0, chunkZ) >= 0.5;
-
         double d = interpolate(perlin, perlin.getValue(chunkX, 0, chunkZ));
         return d >= 0.5;
     }

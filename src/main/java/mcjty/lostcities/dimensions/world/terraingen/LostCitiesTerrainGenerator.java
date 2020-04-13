@@ -1593,6 +1593,7 @@ public class LostCitiesTerrainGenerator extends NormalTerrainGenerator {
                 && (railInfo.getType() != RailChunkType.STATION_EXTENSION_SURFACE || railInfo.getLevel() < info.cityLevel);
 
         if (canDoParks) {
+            // groundLevel + cityLevel * 6
             int height = info.getCityGroundLevel();
 
             BuildingInfo.StreetType streetType = info.streetType;

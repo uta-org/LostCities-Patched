@@ -1,5 +1,6 @@
 package mcjty.lostcities.cubic.world.generators;
 
+import mcjty.lostcities.cubic.HeightPerChunkCache;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Transform;
 import mcjty.lostcities.dimensions.world.lost.cityassets.*;
@@ -32,6 +33,19 @@ public class PartGenerator {
         if (localPalette != null) {
             compiledPalette = new CompiledPalette(compiledPalette, localPalette);
         }
+
+        /*
+        // Fix height (oy)
+        if(!info.hasBuilding) {
+            try {
+                int ry = HeightPerChunkCache.getCityLevel(info);
+                if(Math.abs(ox - ry) >= 3)
+                    oy = ry;
+            } catch(Exception ex) {
+                // try-catch NullPointerException TODO
+            }
+        }
+        */
 
         boolean nowater = part.getMetaBoolean("nowater");
 
@@ -150,7 +164,11 @@ public class PartGenerator {
     }
 
     public static void generateHighwayPart(BuildingInfo info, int level, Transform transform, BuildingInfo adjacent1, BuildingInfo adjacent2, String suffix) {
-        int highwayGroundLevel = info.groundLevel + level * 6;
+        // groundLevel + cityLevel * 6
+        // int height = info.getCityGroundLevel();
+
+        // int highwayGroundLevel = info.groundLevel + level * 6;
+        int highwayGroundLevel = info.getCityGroundLevel(false);
 
         BuildingPart part;
         if (info.isTunnel(level)) {

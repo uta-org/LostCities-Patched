@@ -19,7 +19,9 @@ import static mcjty.lostcities.cubic.world.CubicCityWorldPopulator.*;
 
 import static mcjty.lostcities.cubic.world.CubicCityWorldProcessor.driver;
 
-public class Utils {
+public class Utils
+{
+    public static final boolean USE_HEIGHT_CACHE = true;
 
     private static int g_seed = 123456789;
     private static char[] randomLeafs = null;

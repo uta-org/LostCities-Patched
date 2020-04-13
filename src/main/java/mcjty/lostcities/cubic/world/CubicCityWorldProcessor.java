@@ -108,8 +108,10 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
         generateTrees(worldObj.rand, chunkX, chunkZ, worldObj, provider);
         generateVines(worldObj.rand, chunkX, chunkZ, worldObj, provider);
 
-        generateLadders(info);
-        DoorGenerator.generateDoors(info, provider);
+        generateLadders(info); // TODO: Add wall (railways)
+        DoorGenerator.generateDoors(info, provider); // TODO: Add stairs to doors
+
+        // TODO: Fix railways
     }
 
 
