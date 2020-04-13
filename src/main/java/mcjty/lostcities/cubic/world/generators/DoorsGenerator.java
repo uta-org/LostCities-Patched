@@ -158,67 +158,14 @@ public class DoorsGenerator
     public void generateDoors(BuildingInfo info, ICommonGeneratorProvider provider) {
         char filler = info.getCompiledPalette().get(info.getBuilding().getFillerBlock());
         FacingModel facingModel = new FacingModel(info, filler);
+        facingModel.init(provider);
 
         for (BuildingGenerator.DoorModel door : info.getDoorTodo()) {
             driver.setLocalBlock(door.getCoord().getChunkX(), 0, door.getCoord().getChunkZ());
             driver.current(0, door.getHeight(), 0);
 
             facingModel.setDoor(door);
-
-            /*
-
-            boolean eastFacing = false;
-                    // worldObj.rand.nextBoolean();
-            boolean westFacing = false;
-                    // worldObj.rand.nextBoolean();
-            boolean northFacing = false;
-                    // worldObj.rand.nextBoolean();
-            boolean southFacing = false;
-                    // worldObj.rand.nextBoolean();
-
-            // if (!(eastFacing || westFacing || northFacing || southFacing)) {
-                // int v = getFacingDirection();
-                int v = (int) getRandom(0, 4);
-
-                switch (v) {
-                    case 0:
-                        eastFacing = true;
-                        break;
-
-                    case 1:
-                        westFacing = true;
-                        break;
-
-                    case 2:
-                        northFacing = true;
-                        break;
-
-                    case 3:
-                        southFacing = true;
-                        break;
-                }
-            // }
-
-            int pos = 7;
-            int upper = 15;
-            int down = 0;
-
-            if (northFacing) {
-                boolean isAdjacentBuilding = isAdjacentBuilding(EnumFacing.NORTH, provider);
-                generateDoors(info, door, pos, down, EnumFacing.NORTH, isAdjacentBuilding, filler);
-            } else if (southFacing) {
-                boolean isAdjacentBuilding = isAdjacentBuilding(EnumFacing.SOUTH, provider);
-                generateDoors(info, door, pos, upper, EnumFacing.SOUTH, isAdjacentBuilding, filler);
-            } else if (westFacing) {
-                boolean isAdjacentBuilding = isAdjacentBuilding(EnumFacing.WEST, provider);
-                generateDoors(info, door, down, pos, EnumFacing.WEST, isAdjacentBuilding, filler);
-            } else if (eastFacing) {
-                boolean isAdjacentBuilding = isAdjacentBuilding(EnumFacing.EAST, provider);
-                generateDoors(info, door, upper, pos, EnumFacing.EAST, isAdjacentBuilding, filler);
-            }
-
-            */
-
+            facingModel.generateDoors();
         }
 
         info.clearDoorTodo();
