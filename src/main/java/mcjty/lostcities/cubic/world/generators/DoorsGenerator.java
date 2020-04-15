@@ -165,6 +165,10 @@ public class DoorsGenerator
         public boolean isX() {
             return currentFacing == EnumFacing.NORTH || currentFacing == EnumFacing.SOUTH;
         }
+
+        public boolean isLeftOpened(int i) {
+            return (currentFacing == EnumFacing.SOUTH || currentFacing == EnumFacing.EAST) == (i == 0);
+        }
     }
 
     public void generateDoors(BuildingInfo info, ICommonGeneratorProvider provider) {
@@ -233,10 +237,12 @@ public class DoorsGenerator
             sx = x + (isX ? i : 0);
             sz = z + (!isX ? i : 0);
 
+            boolean isLeftOpened = facingModel.isLeftOpened(i);
+
             driver.current(sx, height, sz)
                     .add(filler)
-                    .add(getDoor(info.doorBlock, false, i != 0, facing))
-                    .add(getDoor(info.doorBlock, true, i != 0, facing))
+                    .add(getDoor(info.doorBlock, false, isLeftOpened, facing))
+                    .add(getDoor(info.doorBlock, true, isLeftOpened, facing))
                     .add(filler);
         }
 

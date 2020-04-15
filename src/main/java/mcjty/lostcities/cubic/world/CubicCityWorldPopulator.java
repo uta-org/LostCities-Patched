@@ -48,7 +48,8 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
     private int currentChunkY;
     private HeightmapModel currentModel;
 
-    private static final boolean generateRuins = true;
+    // Disable this (this is very laggy): https://spark.lucko.me/#hUmHPbEOXv
+    private static final boolean generateRuins = false;
 
     public CubicCityWorldPopulator() {
         // TODO: Refactor this
