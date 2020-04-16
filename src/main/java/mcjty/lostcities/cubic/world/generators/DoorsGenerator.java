@@ -167,7 +167,7 @@ public class DoorsGenerator
         }
 
         public boolean isLeftOpened(int i) {
-            return (currentFacing == EnumFacing.SOUTH || currentFacing == EnumFacing.EAST) == (i == 0);
+            return (currentFacing == EnumFacing.SOUTH || currentFacing == EnumFacing.EAST) == (i != 0);
         }
     }
 
