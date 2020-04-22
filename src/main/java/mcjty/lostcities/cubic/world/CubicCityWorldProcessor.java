@@ -5,6 +5,8 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.terra121.EarthTerrainProcessor;
+import io.github.terra121.IEarthProcessor;
+import io.github.terra121.projection.GeographicProjection;
 import mcjty.lostcities.cubic.CubeCityGenerator;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
 import mcjty.lostcities.cubic.world.generators.SpawnersGenerator;
@@ -27,7 +29,7 @@ import java.util.Random;
 import static mcjty.lostcities.cubic.world.CubicCityUtils.doorsGenerator;
 import static mcjty.lostcities.cubic.world.CubicCityUtils.profile;
 
-public class CubicCityWorldProcessor extends CubeCityGenerator {
+public class CubicCityWorldProcessor extends CubeCityGenerator implements IEarthProcessor {
     @Nonnull
     public static CubeDriver driver = new CubeDriver();
 
@@ -40,6 +42,8 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
     public static ICubicWorld cubicWorld;
 
     private static SpawnersGenerator spawnersGenerator;
+
+    private static EarthTerrainProcessor processor;
 
     public CubicCityWorldProcessor(World world) {
         super(world);
@@ -57,7 +61,7 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
 
     private static ICommonGeneratorProvider init() {
         CubicCityWorldPopulator populator = new CubicCityWorldPopulator();
-        EarthTerrainProcessor processor = new EarthTerrainProcessor(worldObj);
+        processor = new EarthTerrainProcessor(worldObj);
 
         processor.addSurfacePopulator(populator);
         terrainProcessor = processor;
@@ -197,5 +201,15 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
         }
 
         return isCubicWorld;
+    }
+
+    @Override
+    public GeographicProjection getProjection() {
+        return null;
+    }
+
+    @Override
+    public EarthTerrainProcessor getProcessor() {
+        return processor;
     }
 }
