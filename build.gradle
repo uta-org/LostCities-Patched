@@ -109,6 +109,7 @@ dependencies {
     }
 
     compile 'org.spongepowered:noise:2.0.0-SNAPSHOT'
+    provided files("lib/CubicWorldGen-1.12.2-0.0.123.0-SNAPSHOT-all-deobf.jar")
     provided files("lib/terra121-0.1.jar")
 }
 
