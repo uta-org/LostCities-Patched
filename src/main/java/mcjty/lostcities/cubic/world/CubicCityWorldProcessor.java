@@ -4,9 +4,9 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
+import io.github.terra121.EarthTerrainProcessor;
 import mcjty.lostcities.cubic.CubeCityGenerator;
 import mcjty.lostcities.cubic.world.driver.CubeDriver;
-import mcjty.lostcities.cubic.world.generators.DoorsGenerator;
 import mcjty.lostcities.cubic.world.generators.SpawnersGenerator;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcp.MethodsReturnNonnullByDefault;
@@ -21,13 +21,11 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Random;
 
-import static mcjty.lostcities.cubic.world.CubicCityUtils.*;
+import static mcjty.lostcities.cubic.world.CubicCityUtils.doorsGenerator;
+import static mcjty.lostcities.cubic.world.CubicCityUtils.profile;
 
 public class CubicCityWorldProcessor extends CubeCityGenerator {
     @Nonnull
@@ -58,32 +56,14 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
         spawnersGenerator = new SpawnersGenerator(profile, provider);
     }
 
-    private static ICommonGeneratorProvider init()
-            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException {
-        Class<?> clazz = Class.forName("io.github.terra121.EarthTerrainProcessor");
-        Constructor<?> constructor = clazz.getConstructor(World.class);
-        Object instance = constructor.newInstance(worldObj);
-        ICommonGeneratorProvider provider = addCubicPopulator(instance);
+    private static ICommonGeneratorProvider init() {
+        CubicCityWorldPopulator populator = new CubicCityWorldPopulator();
+        EarthTerrainProcessor processor = new EarthTerrainProcessor(worldObj);
+
+        processor.addSurfacePopulator(populator);
+        terrainProcessor = processor;
 
         CubicCityUtils.init(worldObj.getSeed());
-        return provider;
-    }
-
-    private static ICommonGeneratorProvider addCubicPopulator(Object instance)
-            throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException, InstantiationException {
-        // Thanks to: https://stackoverflow.com/questions/40461684/java-reflections-list-nosuchmethodexception
-        Class<?> interfaze = Class.forName("io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator");
-
-        Field fieldDefinition = instance.getClass().getDeclaredField("surfacePopulators");
-        fieldDefinition.setAccessible(true);
-
-        Object fieldValue = fieldDefinition.get(instance);
-
-        CubicCityWorldPopulator populator = new CubicCityWorldPopulator();
-        Method myMethod = fieldValue.getClass().getDeclaredMethod("add", Object.class);
-        myMethod.invoke(fieldValue, populator);
-
-        terrainProcessor = (ICubeGenerator) interfaze.cast(instance);
         return populator;
     }
 

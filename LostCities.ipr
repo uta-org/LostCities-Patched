@@ -201,7 +201,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LostCities.iml" filepath="$PROJECT_DIR$/LostCities.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../terra121/terra121.iml" filepath="$PROJECT_DIR$/../terra121/terra121.iml" />
       <module fileurl="file://$PROJECT_DIR$/../terra121/terra121.api.iml" filepath="$PROJECT_DIR$/../terra121/terra121.api.iml" />
       <module fileurl="file://$PROJECT_DIR$/../terra121/terra121.main.iml" filepath="$PROJECT_DIR$/../terra121/terra121.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/../terra121/terra121.test.iml" filepath="$PROJECT_DIR$/../terra121/terra121.test.iml" />
@@ -252,7 +251,22 @@
   </component>
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../terra121" vcs="Git" />
+  </component>
+  <component name="libraryTable">
+    <library name="CubicChunks-1.12.2-0.0.1049.0-SNAPSHOT-all-deobf">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/CubicChunks-1.12.2-0.0.1049.0-SNAPSHOT-all-deobf.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="CubicWorldGen-1.12.2-0.0.123.0-SNAPSHOT-all-deobf">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/CubicWorldGen-1.12.2-0.0.123.0-SNAPSHOT-all-deobf.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
   </component>
   <component name="masterDetails">
     <states>
