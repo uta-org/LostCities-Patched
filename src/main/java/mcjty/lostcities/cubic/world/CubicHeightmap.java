@@ -1,14 +1,9 @@
 package mcjty.lostcities.cubic.world;
 
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
-import io.github.terra121.EarthTerrainProcessor;
-import io.github.terra121.dataset.HeightmapModel;
-import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.config.LandscapeType;
+import mcjty.lostcities.cubic.HeightmapModel;
 import mcjty.lostcities.cubic.world.driver.ICubeDriver;
-
-import java.util.Objects;
 
 public class CubicHeightmap implements ICommonHeightmap {
     private int chunkX, chunkY, chunkZ;
@@ -55,7 +50,7 @@ public class CubicHeightmap implements ICommonHeightmap {
 
     private double getInternalHeight(int x, int z)
     {
-        return model.heightmap[x][z];
+        return model.getHeightmap()[x][z];
     }
 
     public static boolean hasValidSteepness(double[][] arr) {
@@ -112,15 +107,15 @@ public class CubicHeightmap implements ICommonHeightmap {
     }
 
     public int getFullMinHeight() {
-        return (int)getMinValue(model.heightmap);
+        return (int)getMinValue(model.getHeightmap());
     }
 
     public int getFullMaxHeight() {
-        return (int)getMaxValue(model.heightmap);
+        return (int)getMaxValue(model.getHeightmap());
     }
 
     public int getFullAverageHeight() {
-        return (int)getAverageValue(model.heightmap);
+        return (int)getAverageValue(model.getHeightmap());
     }
 
     public int getAverageHeight() {

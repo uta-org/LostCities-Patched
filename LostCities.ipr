@@ -8,8 +8,11 @@
     <wildcardResourcePatterns>
       <entry name="!?*.java" />
       <entry name="!?*.groovy" />
+      <entry name="!?*.class" />
+      <entry name="!?*.scala" />
     </wildcardResourcePatterns>
-    <bytecodeTargetLevel>
+    <bytecodeTargetLevel target="1.8">
+      <module name="terra121" target="1.8" />
       <module name="terra121.api" target="1.8" />
       <module name="terra121.main" target="1.8" />
       <module name="terra121.test" target="1.8" />
@@ -18,6 +21,9 @@
   <component name="CopyrightManager" default="" />
   <component name="DependencyValidationManager">
     <option name="SKIP_IMPORT_STATEMENTS" value="false" />
+  </component>
+  <component name="DiscordProjectSettings">
+    <option name="show" value="true" />
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="GradleMigrationSettings" migrationVersion="1" />
@@ -195,6 +201,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LostCities.iml" filepath="$PROJECT_DIR$/LostCities.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../terra121/terra121.iml" filepath="$PROJECT_DIR$/../terra121/terra121.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../terra121/terra121.api.iml" filepath="$PROJECT_DIR$/../terra121/terra121.api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../terra121/terra121.main.iml" filepath="$PROJECT_DIR$/../terra121/terra121.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../terra121/terra121.test.iml" filepath="$PROJECT_DIR$/../terra121/terra121.test.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" project-jdk-name="1.8" project-jdk-type="JavaSDK">
@@ -231,21 +241,18 @@
       <option name="name" value="forge" />
       <option name="url" value="https://files.minecraftforge.net/maven" />
     </remote-repository>
+    <remote-repository>
+      <option name="id" value="deobfDeps" />
+      <option name="name" value="deobfDeps" />
+      <option name="url" value="file:/$PROJECT_DIR$/../../../../GRADLE/cache/caches/minecraft/deobfedDeps/" />
+    </remote-repository>
   </component>
   <component name="SvnBranchConfigurationManager">
     <option name="mySupportsUserInfoFilter" value="true" />
   </component>
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-  </component>
-  <component name="libraryTable">
-    <library name="terra121-0.1">
-      <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/terra121-0.1.jar!/" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES />
-    </library>
+    <mapping directory="$PROJECT_DIR$/../terra121" vcs="Git" />
   </component>
   <component name="masterDetails">
     <states>

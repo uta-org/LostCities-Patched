@@ -3,12 +3,13 @@ package mcjty.lostcities.cubic.world;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.terra121.EarthTerrainProcessor;
-import io.github.terra121.dataset.HeightmapModel;
+import io.github.terra121.TerraConfig;
 import io.github.terra121.populator.RoadGenerator;
 import mcjty.lostcities.LostCitiesDebug;
 import mcjty.lostcities.api.*;
 import mcjty.lostcities.config.LostCityProfile;
 import mcjty.lostcities.cubic.HeightPerChunkCache;
+import mcjty.lostcities.cubic.HeightmapModel;
 import mcjty.lostcities.dimensions.world.lost.BuildingInfo;
 import mcjty.lostcities.dimensions.world.lost.Railway;
 import mcjty.lostcities.dimensions.world.lost.cityassets.AssetRegistries;
@@ -108,7 +109,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
     }
 
     private HeightmapModel canSpawnInChunk(int chunkX, int chunkY, int chunkZ) {
-        int spawnSize = EarthTerrainProcessor.spawnSize;
+        int spawnSize = TerraConfig.spawnSize;
 
         if (chunkX >= -spawnSize && chunkX <= spawnSize || chunkZ >= -spawnSize && chunkZ <= spawnSize)
             return null; // don't spawn nothing on 5x5 chunks on spawn
@@ -120,12 +121,12 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider, ICubic
         if (model == null)
             return null;
 
-        if (!model.surface)
+        if (!model.isSurface())
             return null;
 
         if (!(LostCitiesDebug.debug
-                ? CubicHeightmap.hasValidSteepness_Debug(model.heightmap, chunkX, chunkY, chunkZ)
-                : CubicHeightmap.hasValidSteepness(model.heightmap))) {
+                ? CubicHeightmap.hasValidSteepness_Debug(model.getHeightmap(), chunkX, chunkY, chunkZ)
+                : CubicHeightmap.hasValidSteepness(model.getHeightmap()))) {
             if (LostCitiesDebug.debug) System.out.println("On Chunk: " + chunkX + ", " + chunkY + ", " + chunkZ);
             return null;
         }
