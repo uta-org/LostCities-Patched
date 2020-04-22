@@ -3,7 +3,8 @@ package mcjty.lostcities.cubic.world;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import mcjty.lostcities.LostCitiesDebug;
+import io.github.terra121.EarthBiomeProvider;
+import io.github.terra121.control.EarthGui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiScreen;
@@ -17,31 +18,18 @@ import net.minecraft.world.biome.BiomeProvider;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-
 public class CubicCityWorldType extends WorldType implements ICubicWorldType {
     public CubicCityWorldType () { super("CityCubic"); }
 
     public static CubicCityWorldType create() { return new CubicCityWorldType(); }
 
     public ICubeGenerator createCubeGenerator(World world) {
-        try {
-            return new CubicCityWorldProcessor(world);
-        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchFieldException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return new CubicCityWorldProcessor(world);
     }
 
     @Override
     public BiomeProvider getBiomeProvider(World world) {
-        try {
-            return getEarthBiomeProvider(Biomes.FOREST, world);
-        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return getEarthBiomeProvider(Biomes.FOREST, world);
     }
 
     @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
@@ -67,31 +55,17 @@ public class CubicCityWorldType extends WorldType implements ICubicWorldType {
 
     @SideOnly(Side.CLIENT)
     public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
-        try {
-            mc.displayGuiScreen(getEarthGui(guiCreateWorld, mc));
-        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-            e.printStackTrace();
-        }
+        mc.displayGuiScreen(getEarthGui(guiCreateWorld, mc));
     }
 
 
     private static GuiScreen getEarthGui(GuiCreateWorld guiCreateWorld, Minecraft minecraft)
-            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
     {
-        if(LostCitiesDebug.debug) System.out.println("getEarthGui");
-        Class<?> clazz = Class.forName("io.github.terra121.control.EarthGui");
-        Constructor<?> constructor = clazz.getConstructor(GuiCreateWorld.class, Minecraft.class);
-        return (GuiScreen) constructor.newInstance(guiCreateWorld, minecraft);
-        // return (GuiScreen) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new ClassFactory(instance));
+        return new EarthGui(guiCreateWorld, minecraft);
     }
 
     private static BiomeProvider getEarthBiomeProvider(Biome biomeIn, World world)
-            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
     {
-        if(LostCitiesDebug.debug) System.out.println("getEarthBiomeProvider");
-        Class<?> clazz = Class.forName("io.github.terra121.EarthBiomeProvider");
-        Constructor<?> constructor = clazz.getConstructor(Biome.class, World.class);
-        return (BiomeProvider) constructor.newInstance(biomeIn, world);
-        // return (BiomeProvider) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new ClassFactory(instance));
+        return new EarthBiomeProvider(biomeIn, world);
     }
 }

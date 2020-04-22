@@ -41,8 +41,7 @@ public class CubicCityWorldProcessor extends CubeCityGenerator {
 
     private static SpawnersGenerator spawnersGenerator;
 
-    public CubicCityWorldProcessor(World world)
-            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException {
+    public CubicCityWorldProcessor(World world) {
         super(world);
 
         worldObj = world;
