@@ -23,13 +23,15 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Random;
 
 import static mcjty.lostcities.cubic.world.CubicCityUtils.doorsGenerator;
 import static mcjty.lostcities.cubic.world.CubicCityUtils.profile;
 
-public class CubicCityWorldProcessor extends CubeCityGenerator implements IEarthProcessor {
+public class CubicCityWorldProcessor implements IEarthProcessor {
+    // extends CubeCityGenerator
+
     @Nonnull
     public static CubeDriver driver = new CubeDriver();
 
@@ -41,35 +43,32 @@ public class CubicCityWorldProcessor extends CubeCityGenerator implements IEarth
     public static World worldObj;
     public static ICubicWorld cubicWorld;
 
-    private static SpawnersGenerator spawnersGenerator;
+    public static SpawnersGenerator spawnersGenerator;
 
     private static EarthTerrainProcessor processor;
 
     public CubicCityWorldProcessor(World world) {
-        super(world);
-
         worldObj = world;
         driver.setWorld(world);
         driver.useLocal();
 
-        populator = new CubicCityWorldPopulator();
-
         ICommonGeneratorProvider provider = init();
-
         spawnersGenerator = new SpawnersGenerator(profile, provider);
     }
 
     private static ICommonGeneratorProvider init() {
-        CubicCityWorldPopulator populator = new CubicCityWorldPopulator();
+        populator = new CubicCityWorldPopulator();
         processor = new EarthTerrainProcessor(worldObj);
 
-        processor.addSurfacePopulator(populator);
+        // todo: remove?
+        // processor.addSurfacePopulator(populator);
         terrainProcessor = processor;
 
         CubicCityUtils.init(worldObj.getSeed());
         return populator;
     }
 
+    /*
     @MethodsReturnNonnullByDefault
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
         return terrainProcessor.generateCube(cubeX, cubeY, cubeZ);
@@ -81,6 +80,7 @@ public class CubicCityWorldProcessor extends CubeCityGenerator implements IEarth
         terrainProcessor.populate(cube);
         spawnersGenerator.populate(worldObj.rand, cube.getX(), cube.getZ(), world);
     }
+    */
 
     public static void doTodoPopulate(int chunkX, int chunkZ, ICommonGeneratorProvider provider, BuildingInfo info) {
         generateTrees(worldObj.rand, chunkX, chunkZ, worldObj, provider);
@@ -210,6 +210,11 @@ public class CubicCityWorldProcessor extends CubeCityGenerator implements IEarth
 
     @Override
     public EarthTerrainProcessor getProcessor() {
+        return processor;
+    }
+
+    public static ICubeGenerator getCubeGenerator(World world) {
+        CubicCityWorldProcessor _processor = new CubicCityWorldProcessor(world);
         return processor;
     }
 }

@@ -24,7 +24,8 @@ public class CubicCityWorldType extends WorldType implements ICubicWorldType {
     public static CubicCityWorldType create() { return new CubicCityWorldType(); }
 
     public ICubeGenerator createCubeGenerator(World world) {
-        return new CubicCityWorldProcessor(world);
+        return CubicCityWorldProcessor.getCubeGenerator(world);
+                // new CubicCityWorldProcessor(world);
     }
 
     @Override

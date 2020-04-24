@@ -11,7 +11,7 @@
     </content>
     <orderEntry type="inheritedJdk"/>
     <orderEntry type="sourceFolder" forTests="false"/>
-    <orderEntry type="library" name="CubicWorldGen-1.12.2-0.0.123.0-SNAPSHOT-all-deobf" level="project"/>
+    <orderEntry type="library" name="CubicWorldGen-1.12.2-0.0.115.0-SNAPSHOT-all-deobf" level="project"/>
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -77,6 +77,32 @@
         <JAVADOC/>
         <SOURCES>
           <root url="jar://E:/GRADLE/cache/caches/minecraft/deobfedDeps/deobf/io/github/opencubicchunks/cubicchunks-api/1.12.2-0.0-SNAPSHOT/cubicchunks-api-1.12.2-0.0-SNAPSHOT-sources.jar!/"/>
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://E:/GRADLE/cache/caches/modules-2/files-2.1/com.squareup.okhttp3/okhttp/3.14.6/3922cd2edd3df7616aa85a170398e5010989f212/okhttp-3.14.6.jar!/"/>
+        </CLASSES>
+        <JAVADOC>
+          <root url="jar://E:/GRADLE/cache/caches/modules-2/files-2.1/com.squareup.okhttp3/okhttp/3.14.6/e0a16a7a19c5276ab69b99ff3625d96dfe756702/okhttp-3.14.6-javadoc.jar!/"/>
+        </JAVADOC>
+        <SOURCES>
+          <root url="jar://E:/GRADLE/cache/caches/modules-2/files-2.1/com.squareup.okhttp3/okhttp/3.14.6/a8f244f4b2c9eaf25592ac96eb62e5a82ab40f95/okhttp-3.14.6-sources.jar!/"/>
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://E:/GRADLE/cache/caches/modules-2/files-2.1/com.squareup.okio/okio/1.17.2/78c7820b205002da4d2d137f6f312bd64b3d6049/okio-1.17.2.jar!/"/>
+        </CLASSES>
+        <JAVADOC>
+          <root url="jar://E:/GRADLE/cache/caches/modules-2/files-2.1/com.squareup.okio/okio/1.17.2/b223e35cf99bb8c3d2a5b369b6b52093a6a750c2/okio-1.17.2-javadoc.jar!/"/>
+        </JAVADOC>
+        <SOURCES>
+          <root url="jar://E:/GRADLE/cache/caches/modules-2/files-2.1/com.squareup.okio/okio/1.17.2/331ecaeba2fd87c06a0766e8ebe718e1e294f27d/okio-1.17.2-sources.jar!/"/>
         </SOURCES>
       </library>
     </orderEntry>
@@ -818,6 +844,15 @@
         <SOURCES>
           <root url="jar://$MODULE_DIR$/.gradle/minecraft/forgeSrc-1.12.2-14.23.5.2847-PROJECT(LostCities)-sources.jar!/"/>
         </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/CubicChunks-1.12.2-0.0.1049.0-SNAPSHOT-all-deobf.jar!/"/>
+        </CLASSES>
+        <JAVADOC/>
+        <SOURCES/>
       </library>
     </orderEntry>
     <orderEntry type="module-library">

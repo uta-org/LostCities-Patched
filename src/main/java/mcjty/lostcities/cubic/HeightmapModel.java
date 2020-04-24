@@ -10,7 +10,7 @@ import java.util.Map;
  * @author z3nth10n
  */
 public class HeightmapModel {
-    private static final Map<CubePos, HeightmapModel> cachedHeightmaps = new HashMap<>();
+    // private static final Map<CubePos, HeightmapModel> cachedHeightmaps = new HashMap<>();
 
     private boolean surface;
     private double[][] heightmap;
@@ -31,6 +31,7 @@ public class HeightmapModel {
         return surface;
     }
 
+    /*
     public static HeightmapModel getModel(int chunkX, int chunkY, int chunkZ) {
         return getModel(new CubePos(chunkX, chunkY, chunkZ), true);
     }
@@ -51,4 +52,5 @@ public class HeightmapModel {
     public static void add(CubePos pos, HeightmapModel model) {
         cachedHeightmaps.put(pos, model);
     }
+    */
 }

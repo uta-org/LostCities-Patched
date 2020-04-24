@@ -98,6 +98,8 @@ dependencies {
     // https://mvnrepository.com/artifact/cglib/cglib
     // compile group: 'cglib', name: 'cglib', version: '3.3.0' // not compatible with MC
 
+    implementation 'com.squareup.okhttp3:okhttp:3.14.6'
+
     deobfCompile "mezz.jei:jei_${jei_version}"
     deobfCompile "mcp.mobius.waila:Hwyla:${waila_version}"
     deobfCompile "mcjty.theoneprobe:TheOneProbe-${top_version}"
@@ -109,6 +111,7 @@ dependencies {
     }
 
     compile 'org.spongepowered:noise:2.0.0-SNAPSHOT'
+    provided files("lib/CubicChunks-1.12.2-0.0.1049.0-SNAPSHOT-all-deobf.jar")
     provided files("lib/CubicWorldGen-1.12.2-0.0.123.0-SNAPSHOT-all-deobf.jar")
     provided files("lib/terra121-0.1.jar")
 }
