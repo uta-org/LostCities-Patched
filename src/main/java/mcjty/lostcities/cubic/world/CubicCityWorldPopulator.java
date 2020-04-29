@@ -2,6 +2,7 @@ package mcjty.lostcities.cubic.world;
 
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.TerraMod;
 import io.github.terra121.populator.RoadGenerator;
@@ -37,6 +38,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider {
     // ICubicPopulator, Comparable<Object>
 
     private static final Map<CubePos, CubicHeightmap> cachedHeightmaps = new HashMap<>();
+    private static final Map<CubePos, CubePrimer> cachedPrimers = new HashMap<>();
     private static final Map<ChunkCoord, Integer> groundLevels = new HashMap<>();
 
     // Needed fields
@@ -78,7 +80,10 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider {
     }
     */
 
-    public void spawnInChunk(int chunkX, int chunkY, int chunkZ, HeightmapModel model) {
+    public void spawnInChunk(CubePrimer primer, int chunkX, int chunkY, int chunkZ, HeightmapModel model) {
+        driver.setPrimer(primer);
+        // CubePos cubePos = new CubePos(chunkX, chunkY, chunkZ);
+        // cachedPrimers.put(cubePos, primer);
         currentChunkY = chunkY;
 
         // We need this in order to generate once per column
@@ -106,12 +111,11 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider {
                 groundLevels.put(chunkCoord, y);
             }
 
-            try {
+            //try {
                 generateNear(random, x, z, chunkX, chunkY, chunkZ, heightmap);
-                doTodoPopulate(chunkX, chunkZ, provider, info);
-            } catch(Exception e) {
-                TerraMod.LOGGER.error(e);
-            }
+            //} catch(Exception e) {
+            //    TerraMod.LOGGER.error(e);
+            //}
         }
     }
 
@@ -252,7 +256,7 @@ public class CubicCityWorldPopulator implements ICommonGeneratorProvider {
         rand.nextFloat();
         rand.nextFloat();
 
-        driver.setLocalBlock(chunkX, chunkY, chunkZ);
+        // driver.setLocalBlock(chunkX, chunkY, chunkZ);
 
         if (info.profile.isDefault()) {
             /* // TODO

@@ -13,7 +13,6 @@ import java.util.Objects;
 
 public class CubeDriver implements ICubeDriver {
     private CubePrimer primer;
-    private ICube cube;
     private int currentX;
     private int currentY;
     private int currentZ;
@@ -33,14 +32,6 @@ public class CubeDriver implements ICubeDriver {
     @Override
     public CubePrimer getPrimer() {
         return primer;
-    }
-
-    public ICube getCube() {
-        return cube;
-    }
-
-    public void setCube(ICube cube) {
-        this.cube = cube;
     }
 
     public void setWorld(World world) { useWorld = true; this.world = world; }
@@ -179,7 +170,7 @@ public class CubeDriver implements ICubeDriver {
             if(useWorld)
                 world.setBlockState(useLocal ? new BlockPos(x + localX, y, z + localZ) : new BlockPos(x, y, z), state);
             else
-                cube.setBlockState(new BlockPos(x, y, z), state);
+                primer.setBlockState(x, wrapY(y), z, state);
             y++;
         }
     }
@@ -192,7 +183,7 @@ public class CubeDriver implements ICubeDriver {
             if(useWorld)
                 world.setBlockState(useLocal ? new BlockPos(x + localX, y, z + localZ) : new BlockPos(x, y, z), state);
             else
-                cube.setBlockState(new BlockPos(x, y, z), state);
+                primer.setBlockState(x, wrapY(y), z, state);
             y++;
         }
     }
@@ -204,7 +195,7 @@ public class CubeDriver implements ICubeDriver {
         if(useWorld)
             world.setBlockState(new BlockPos(getX(), currentY, getZ()), state);
         else
-            cube.setBlockState(new BlockPos(currentX, currentY, currentZ), state);
+            primer.setBlockState(currentX, wrapY(currentY), currentZ, state);
 
         return this;
     }
@@ -214,7 +205,7 @@ public class CubeDriver implements ICubeDriver {
         if(useWorld)
             world.setBlockState(new BlockPos(getX(), currentY, getZ()), c);
         else
-            cube.setBlockState(new BlockPos(currentX, currentY, currentZ), c);
+            primer.setBlockState(currentX, wrapY(currentY), currentZ, c);
 
         return this;
     }
@@ -228,7 +219,7 @@ public class CubeDriver implements ICubeDriver {
             world.setBlockState(pos, state);
         }
         else
-            cube.setBlockState(new BlockPos(currentX, currentY++, currentZ), state);
+            primer.setBlockState(currentX, wrapY(currentY++), currentZ, state);
 
         return this;
     }
@@ -238,21 +229,21 @@ public class CubeDriver implements ICubeDriver {
         if(useWorld)
             return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(getX(), currentY, getZ())));
         else
-            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY, currentZ));
+            return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, wrapY(currentY), currentZ));
     }
 
     public IBlockState getBlockState() {
         if(useWorld)
             return world.getBlockState(new BlockPos(getX(), currentY, getZ()));
         else
-            return cube.getBlockState(currentX, currentY, currentZ);
+            return primer.getBlockState(currentX, wrapY(currentY), currentZ);
     }
 
     public IBlockState getBlockState(int x, int y, int z) {
         if(useWorld)
             return world.getBlockState(useLocal ? new BlockPos(x + localX, y, z + localZ) : new BlockPos(x, y, z));
         else
-            return cube.getBlockState(x, y, z);
+            return primer.getBlockState(x, wrapY(y), z);
     }
 
     @Override
@@ -260,21 +251,21 @@ public class CubeDriver implements ICubeDriver {
         if(useWorld)
             return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(getX(), currentY - 1, getZ())));
         else
-            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY - 1, currentZ));
+            return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, wrapY(currentY - 1), currentZ));
     }
 
     public char getBlockUp() {
         if(useWorld)
             return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(getX(), currentY + 1, getZ())));
         else
-            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY + 1, currentZ));
+            return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, wrapY(currentY + 1), currentZ));
     }
 
     public IBlockState getBlockStateUp() {
         if(useWorld)
             return world.getBlockState(new BlockPos(getX(), currentY + 1, getZ()));
         else
-            return cube.getBlockState(currentX, currentY + 1, currentZ);
+            return primer.getBlockState(currentX, wrapY(currentY + 1), currentZ);
     }
 
     @Override
@@ -282,7 +273,7 @@ public class CubeDriver implements ICubeDriver {
         if(useWorld)
             return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(getX() + 1, currentY, getZ())));
         else
-            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX + 1, currentY, currentZ));
+            return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX + 1, wrapY(currentY), currentZ));
     }
 
     @Override
@@ -290,7 +281,7 @@ public class CubeDriver implements ICubeDriver {
         if(useWorld)
             return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(getX() - 1, currentY, getZ())));
         else
-            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX - 1, currentY, currentZ));
+            return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX - 1, wrapY(currentY), currentZ));
     }
 
     @Override
@@ -298,7 +289,7 @@ public class CubeDriver implements ICubeDriver {
         if(useWorld)
             return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(getX(), currentY, getZ() + 1)));
         else
-            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY, currentZ + 1));
+            return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, wrapY(currentY), currentZ + 1));
     }
 
     @Override
@@ -306,7 +297,7 @@ public class CubeDriver implements ICubeDriver {
         if(useWorld)
             return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(new BlockPos(getX(), currentY, getZ() - 1)));
         else
-            return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(currentX, currentY, currentZ - 1));
+            return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(currentX, wrapY(currentY), currentZ - 1));
     }
 
 
@@ -315,7 +306,7 @@ public class CubeDriver implements ICubeDriver {
         if(useWorld)
             return (char) Block.BLOCK_STATE_IDS.get(world.getBlockState(useLocal ? new BlockPos(x + localX, y, z + localZ) : new BlockPos(x, y, z)));
         else
-        return (char) Block.BLOCK_STATE_IDS.get(cube.getBlockState(x, y, z));
+        return (char) Block.BLOCK_STATE_IDS.get(primer.getBlockState(x, wrapY(y), z));
     }
 
     @Override
@@ -360,7 +351,6 @@ public class CubeDriver implements ICubeDriver {
         driver.currentY = currentY;
         driver.currentZ = currentZ;
         driver.primer = primer;
-        driver.cube = cube;
         driver.useWorld = useWorld;
         driver.world = world;
         driver.localX = localX;
@@ -369,5 +359,13 @@ public class CubeDriver implements ICubeDriver {
         driver.usedBlockPosition = usedBlockPosition;
 
         return driver;
+    }
+
+    // TODO: This is not the best approach
+    private int wrapY(int y) {
+        if(y >= 0 && y < 16) return y; // This value is wrapped. But we need to ensure that it comes from a wrapped approach (if not, we would be skipping unwrapped cases)
+        y = y % 15;
+        if (y < 0) y += 16; // wrap negative chunks
+        return y;
     }
 }

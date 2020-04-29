@@ -49,8 +49,8 @@ public class CubicCityWorldProcessor implements IEarthProcessor {
 
     public CubicCityWorldProcessor(World world) {
         worldObj = world;
-        driver.setWorld(world);
-        driver.useLocal();
+        // driver.setWorld(world);
+        // driver.useLocal();
 
         ICommonGeneratorProvider provider = init();
         spawnersGenerator = new SpawnersGenerator(profile, provider);
